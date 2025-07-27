@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,11 @@ const announcements = [
 ];
 
 export function RightColumn() {
-    const [date, setDate] = useState<Date | undefined>(new Date('2024-08-15'));
+    const [date, setDate] = useState<Date | undefined>(undefined);
+
+    useEffect(() => {
+        setDate(new Date('2024-08-15'));
+    }, []);
 
     const selectedDateString = date ? new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0] : '';
     const selectedEvents = eventsByDate[selectedDateString] || [];
@@ -35,6 +39,7 @@ export function RightColumn() {
                         selected={date}
                         onSelect={setDate}
                         className="rounded-md"
+                        disabled={!date}
                     />
                 </CardContent>
             </Card>
