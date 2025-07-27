@@ -1,5 +1,6 @@
 import { MainSidebar } from '@/components/main-sidebar';
 import { RightColumn } from '@/components/right-column';
+import { Button } from '@/components/ui/button';
 import {
     Sheet,
     SheetContent,
