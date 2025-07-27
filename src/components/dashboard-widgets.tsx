@@ -1,5 +1,4 @@
 "use client"
-import type { LucideIcon } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Sector, Label } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -7,29 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { ShieldAlert, TrendingUp } from 'lucide-react'
 import type { AnalyzeStudentDataOutput } from "@/ai/flows/intelligent-notifications"
-
-// StatCard Component
-interface StatCardProps {
-    title: string;
-    value: string;
-    description: string;
-    icon: LucideIcon;
-}
-
-export function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-                <p className="text-xs text-muted-foreground">{description}</p>
-            </CardContent>
-        </Card>
-    );
-}
 
 // FinancialChart Component
 const financialChartData = [
