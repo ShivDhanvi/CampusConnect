@@ -1,6 +1,6 @@
 "use client"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Sector, Label } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Sector } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -62,14 +62,14 @@ export function AttendanceChart() {
       <CardHeader className="items-center pb-0">
         <CardTitle>Overall Attendance</CardTitle>
         <CardDescription>Today's Attendance Rate</CardDescription>
-      </Header>
+      </CardHeader>
       <CardContent className="flex-1 pb-0 flex items-center justify-center">
         <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-full max-h-[250px]">
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5}>
-                {attendanceChartData.map((entry) => (
-                    <Sector key={entry.category} fill={entry.fill} />
+                {attendanceChartData.map((entry, index) => (
+                    <Sector key={`cell-${index}`} fill={entry.fill} />
                 ))}
             </Pie>
           </PieChart>

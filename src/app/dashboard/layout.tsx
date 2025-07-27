@@ -1,3 +1,5 @@
+"use client";
+
 import { MainSidebar } from '@/components/main-sidebar';
 import { RightColumn } from '@/components/right-column';
 import { Button } from '@/components/ui/button';
@@ -21,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
 
     return (
         <SidebarProvider>
@@ -56,11 +59,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                         <Link href="/" className='w-full flex items-center'>
-                                            <LogOut className="mr-2 h-4 w-4" />
-                                            <span>Log out</span>
-                                        </Link>
+                                    <DropdownMenuItem onClick={() => router.push('/')}>
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Log out</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
