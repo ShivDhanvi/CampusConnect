@@ -16,7 +16,7 @@ const attendanceData = [
 export default function AttendancePage() {
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Attendance</h1>
                     <p className="text-muted-foreground">Track student and staff attendance.</p>
@@ -32,33 +32,35 @@ export default function AttendancePage() {
                     <CardDescription>A log of student attendance records.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Student ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead className="text-right">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {attendanceData.map((record) => (
-                                <TableRow key={record.studentId + record.date}>
-                                    <TableCell className="font-medium">{record.studentId}</TableCell>
-                                    <TableCell>{record.name}</TableCell>
-                                    <TableCell>{record.date}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant={
-                                            record.status === 'Present' ? 'default' :
-                                            record.status === 'Late' ? 'secondary' : 'destructive'
-                                        }>
-                                            {record.status}
-                                        </Badge>
-                                    </TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Student ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead className="text-right">Status</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {attendanceData.map((record) => (
+                                    <TableRow key={record.studentId + record.date}>
+                                        <TableCell className="font-medium whitespace-nowrap">{record.studentId}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{record.name}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{record.date}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant={
+                                                record.status === 'Present' ? 'default' :
+                                                record.status === 'Late' ? 'secondary' : 'destructive'
+                                            }>
+                                                {record.status}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -32,7 +32,7 @@ export default function IntelligentAlertsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Intelligent Alerts</h1>
                     <p className="text-muted-foreground">AI-powered analysis of school data.</p>
@@ -46,7 +46,7 @@ export default function IntelligentAlertsPage() {
              <Card>
                 <CardHeader>
                     <div className="flex items-start gap-4">
-                        <Bot className="h-8 w-8 text-primary" />
+                        <Bot className="h-8 w-8 text-primary flex-shrink-0" />
                         <div>
                             <CardTitle>Analysis Summary</CardTitle>
                             <CardDescription>{data.summary}</CardDescription>
@@ -58,7 +58,7 @@ export default function IntelligentAlertsPage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-3">
-                        <ShieldAlert className="h-6 w-6 text-primary" />
+                        <ShieldAlert className="h-6 w-6 text-primary flex-shrink-0" />
                         <div>
                             <CardTitle>Detected Anomalies</CardTitle>
                             <CardDescription>A list of potential issues identified by the AI.</CardDescription>
@@ -66,28 +66,30 @@ export default function IntelligentAlertsPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Identifier</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Severity</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.anomalies.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.studentId}</TableCell>
-                                    <TableCell>{item.anomalyType}</TableCell>
-                                    <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant={severityVariantMap[item.severity]} className="capitalize">{item.severity}</Badge>
-                                    </TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Identifier</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Severity</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {data.anomalies.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="font-medium whitespace-nowrap">{item.studentId}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{item.anomalyType}</TableCell>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant={severityVariantMap[item.severity]} className="capitalize">{item.severity}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

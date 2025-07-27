@@ -32,7 +32,7 @@ const announcements = [
 export default function AnnouncementsPage() {
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Announcements</h1>
                     <p className="text-muted-foreground">Read the latest news and updates.</p>
@@ -44,12 +44,12 @@ export default function AnnouncementsPage() {
             </div>
             <div className="grid gap-6 md:grid-cols-2">
                 {announcements.map((item, index) => (
-                    <Card key={index}>
+                    <Card key={index} className="flex flex-col">
                         <CardHeader>
                             <CardTitle>{item.title}</CardTitle>
                             <CardDescription>Posted on {item.date} by {item.author}</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-1">
                             <p>{item.content}</p>
                         </CardContent>
                         <CardFooter>

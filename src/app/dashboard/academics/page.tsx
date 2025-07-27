@@ -27,13 +27,13 @@ export default function AcademicsPage() {
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
             </div>
             <Tabs defaultValue="assignments">
-                <TabsList>
+                <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
                     <TabsTrigger value="assignments">Assignments</TabsTrigger>
                     <TabsTrigger value="results">Results</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assignments">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                             <div>
                                 <CardTitle>Assignments</CardTitle>
                                 <CardDescription>Manage and track student assignments.</CardDescription>
@@ -44,37 +44,39 @@ export default function AcademicsPage() {
                             </Button>
                         </CardHeader>
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Title</TableHead>
-                                        <TableHead>Subject</TableHead>
-                                        <TableHead>Due Date</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {assignments.map(item => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="font-medium">{item.title}</TableCell>
-                                            <TableCell>{item.subject}</TableCell>
-                                            <TableCell>{item.dueDate}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={
-                                                    item.status === 'Graded' ? 'default' :
-                                                    item.status === 'Submitted' ? 'secondary' : 'outline'
-                                                }>{item.status}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon">
-                                                    <Upload className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Title</TableHead>
+                                            <TableHead>Subject</TableHead>
+                                            <TableHead>Due Date</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {assignments.map(item => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="font-medium">{item.title}</TableCell>
+                                                <TableCell>{item.subject}</TableCell>
+                                                <TableCell>{item.dueDate}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={
+                                                        item.status === 'Graded' ? 'default' :
+                                                        item.status === 'Submitted' ? 'secondary' : 'outline'
+                                                    }>{item.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon">
+                                                        <Upload className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -85,36 +87,38 @@ export default function AcademicsPage() {
                             <CardDescription>View and manage student grades.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Student</TableHead>
-                                        <TableHead>Subject</TableHead>
-                                        <TableHead>Grade</TableHead>
-                                        <TableHead>Score</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {results.map(item => (
-                                        <TableRow key={item.student + item.subject}>
-                                            <TableCell className="font-medium">{item.student}</TableCell>
-                                            <TableCell>{item.subject}</TableCell>
-                                            <TableCell>
-                                                <Badge>{item.grade}</Badge>
-                                            </TableCell>
-                                            <TableCell>{item.score}</TableCell>
-                                            <TableCell>{item.date}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon">
-                                                    <Download className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
+                             <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Student</TableHead>
+                                            <TableHead>Subject</TableHead>
+                                            <TableHead>Grade</TableHead>
+                                            <TableHead>Score</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {results.map(item => (
+                                            <TableRow key={item.student + item.subject}>
+                                                <TableCell className="font-medium">{item.student}</TableCell>
+                                                <TableCell>{item.subject}</TableCell>
+                                                <TableCell>
+                                                    <Badge>{item.grade}</Badge>
+                                                </TableCell>
+                                                <TableCell>{item.score}</TableCell>
+                                                <TableCell>{item.date}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon">
+                                                        <Download className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
