@@ -15,6 +15,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import {
+    SidebarHeader,
+    SidebarContent,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+    SidebarFooter,
+    useSidebar
+} from '@/components/ui/sidebar';
+
 
 const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,48 +40,62 @@ const adminNavItems = [
 
 export function MainSidebar() {
   const pathname = usePathname();
+  const { state } = useSidebar();
 
   const navItems = adminNavItems;
 
   return (
-    <div className="flex h-full max-h-screen flex-col">
-        <div className="flex h-16 items-center border-b px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-                <GraduationCap className="h-6 w-6 text-primary" />
-                <span className="">CampusConnect</span>
-            </Link>
-        </div>
-        <div className="flex-1 overflow-auto py-4">
-            <nav className="grid items-start px-4 text-sm font-medium">
+    <>
+        <SidebarHeader>
+            <div className="flex h-16 items-center px-2">
+                <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
+                    <GraduationCap className="h-6 w-6 text-primary" />
+                    {state === 'expanded' && <span className="">CampusConnect</span>}
+                </Link>
+            </div>
+        </SidebarHeader>
+        <SidebarContent>
+            <SidebarMenu>
                 {navItems.map(({ href, label, icon: Icon, badge }) => (
-                    <Link
-                        key={href+label}
-                        href={href}
-                        className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-sidebar-accent",
-                            pathname === href && "bg-sidebar-accent text-primary font-semibold"
-                        )}
-                    >
-                        <Icon className="h-4 w-4" />
-                        {label}
-                        {badge && <span className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">{badge}</span>}
-                    </Link>
+                    <SidebarMenuItem key={href+label}>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname === href}
+                            tooltip={{
+                                children: label,
+                                side: "right",
+                            }}
+                        >
+                            <Link href={href}>
+                                <Icon className="h-4 w-4" />
+                                <span>{label}</span>
+                                {badge && <span className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">{badge}</span>}
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
                 ))}
-            </nav>
-        </div>
-        <div className="mt-auto p-4">
+            </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
             <Separator className="my-2" />
-             <Link
-                href="/dashboard/settings"
-                className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-sidebar-accent",
-                    pathname === "/dashboard/settings" && "bg-sidebar-accent text-primary font-semibold"
-                )}
-            >
-                <Settings className="h-4 w-4" />
-                Settings
-            </Link>
-        </div>
-    </div>
+             <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === "/dashboard/settings"}
+                        tooltip={{
+                            children: "Settings",
+                            side: "right",
+                        }}
+                    >
+                        <Link href="/dashboard/settings">
+                            <Settings className="h-4 w-4" />
+                            <span>Settings</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
+    </>
   );
 }
