@@ -34,13 +34,13 @@ export function RightColumn() {
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    <Calendar
+                    {date && <Calendar
                         mode="single"
                         selected={date}
                         onSelect={setDate}
                         className="rounded-md"
                         disabled={!date}
-                    />
+                    />}
                 </CardContent>
             </Card>
             <div className="space-y-2">
