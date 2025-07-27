@@ -18,14 +18,14 @@ import { Separator } from './ui/separator';
 
 const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '#', label: 'User Management', icon: Users },
-  { href: '#', label: 'Academics', icon: GraduationCap },
-  { href: '#', label: 'Attendance', icon: ClipboardList },
-  { href: '#', label: 'Insights', icon: BarChart3 },
-  { href: '#', label: 'Calendar', icon: Calendar },
-  { href: '#', label: 'Announcements', icon: Megaphone },
-  { href: '#', label: 'Messages', icon: MessageSquare },
-  { href: '#', label: 'Intelligent Alerts', icon: ShieldAlert, badge: 5 },
+  { href: '/dashboard/user-management', label: 'User Management', icon: Users },
+  { href: '/dashboard/academics', label: 'Academics', icon: GraduationCap },
+  { href: '/dashboard/attendance', label: 'Attendance', icon: ClipboardList },
+  { href: '/dashboard/insights', label: 'Insights', icon: BarChart3 },
+  { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/dashboard/announcements', label: 'Announcements', icon: Megaphone },
+  { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/dashboard/intelligent-alerts', label: 'Intelligent Alerts', icon: ShieldAlert, badge: 5 },
 ];
 
 export function MainSidebar() {
@@ -62,9 +62,10 @@ export function MainSidebar() {
         <div className="mt-auto p-4">
             <Separator className="my-2" />
              <Link
-                href="#"
+                href="/dashboard/settings"
                 className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-sidebar-accent",
+                    pathname === "/dashboard/settings" && "bg-sidebar-accent text-primary font-semibold"
                 )}
             >
                 <Settings className="h-4 w-4" />
