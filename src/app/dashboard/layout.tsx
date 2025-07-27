@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import {
     Sheet,
     SheetContent,
+    SheetHeader,
+    SheetTitle,
     SheetTrigger
 } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
@@ -38,6 +40,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 w-72 md:hidden">
+                                <SheetHeader>
+                                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                                </SheetHeader>
                                 <MainSidebar />
                             </SheetContent>
                         </Sheet>
