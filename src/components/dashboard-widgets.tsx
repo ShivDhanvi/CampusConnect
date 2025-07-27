@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { ShieldAlert, TrendingUp } from 'lucide-react'
 import type { AnalyzeStudentDataOutput } from "@/ai/flows/intelligent-notifications"
+import { Button } from './ui/button';
 
 // FinancialChart Component
 const financialChartData = [
@@ -61,7 +62,7 @@ export function AttendanceChart() {
       <CardHeader className="items-center pb-0">
         <CardTitle>Overall Attendance</CardTitle>
         <CardDescription>Today's Attendance Rate</CardDescription>
-      </CardHeader>
+      </Header>
       <CardContent className="flex-1 pb-0 flex items-center justify-center">
         <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-full max-h-[250px]">
           <PieChart>
@@ -89,13 +90,11 @@ export function AttendanceChart() {
 // IntelligentNotifications Component
 const mockData: AnalyzeStudentDataOutput = {
     anomalies: [
-        { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
-        { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
-        { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
-        { studentId: 'T-004', anomalyType: 'Leave Plan', description: 'Teacher scheduled a 3-day leave next week. Substitute needed.', severity: 'medium' },
-        { studentId: 'ALL-PARENTS', anomalyType: 'Fee Reminder', description: 'Term fee payment is due in 7 days.', severity: 'low' },
+        // { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
+        // { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
+        // { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
     ],
-    summary: 'Detected 5 anomalies requiring attention. Two are high severity concerning student performance and attendance.'
+    summary: 'AI analysis is currently disabled to conserve quota.'
 }
 
 const severityVariantMap: Record<AnalyzeStudentDataOutput['anomalies'][0]['severity'], 'destructive' | 'secondary' | 'outline'> = {
@@ -110,12 +109,17 @@ export function IntelligentNotifications() {
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center gap-3">
-                    <ShieldAlert className="h-6 w-6 text-primary" />
-                    <div>
-                        <CardTitle>Intelligent Alerts</CardTitle>
-                        <CardDescription>{data.summary}</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <ShieldAlert className="h-6 w-6 text-primary" />
+                        <div>
+                            <CardTitle>Intelligent Alerts</CardTitle>
+                            <CardDescription>{data.summary}</CardDescription>
+                        </div>
                     </div>
+                    <Button variant="link" size="sm" asChild>
+                        <a href="/dashboard/intelligent-alerts">View all</a>
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -129,7 +133,7 @@ export function IntelligentNotifications() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.anomalies.map((item, index) => (
+                        {data.anomalies.length > 0 ? data.anomalies.map((item, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-medium">{item.studentId}</TableCell>
                                 <TableCell>{item.anomalyType}</TableCell>
@@ -138,7 +142,13 @@ export function IntelligentNotifications() {
                                     <Badge variant={severityVariantMap[item.severity]} className="capitalize">{item.severity}</Badge>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )) : (
+                             <TableRow>
+                                <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
+                                    No anomalies to display.
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>
