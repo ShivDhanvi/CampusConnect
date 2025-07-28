@@ -189,6 +189,26 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                                             {errors.role && <p className="text-destructive text-sm mt-1">{errors.role.message}</p>}
                                         </div>
                                         <div>
+                                            <Label htmlFor="phone">Phone Number</Label>
+                                            <Input id="phone" {...register("phone")} />
+                                            {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>}
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="bloodGroup" className="flex items-center gap-2">
+                                                Blood Group
+                                                    <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Info className="h-4 w-4 text-muted-foreground" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>e.g., O+, A-, AB+</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </Label>
+                                            <Input id="bloodGroup" {...register("bloodGroup")} placeholder="e.g. O+" />
+                                            {errors.bloodGroup && <p className="text-destructive text-sm mt-1">{errors.bloodGroup.message}</p>}
+                                        </div>
+                                         <div>
                                             <Label htmlFor="profilePicture" className="flex items-center gap-2">
                                                 Profile Picture
                                                 <Tooltip>
@@ -219,26 +239,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                                             </div>
                                             {errors.profilePicture && <p className="text-destructive text-sm mt-1">{errors.profilePicture.message as string}</p>}
                                         </div>
-                                        <div>
-                                            <Label htmlFor="phone">Phone Number</Label>
-                                            <Input id="phone" {...register("phone")} />
-                                            {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>}
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="bloodGroup" className="flex items-center gap-2">
-                                                Blood Group
-                                                    <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Info className="h-4 w-4 text-muted-foreground" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>e.g., O+, A-, AB+</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </Label>
-                                            <Input id="bloodGroup" {...register("bloodGroup")} />
-                                            {errors.bloodGroup && <p className="text-destructive text-sm mt-1">{errors.bloodGroup.message}</p>}
-                                        </div>
+
                                     </div>
 
                                     {/* Column 2 */}
@@ -346,5 +347,3 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
         </Dialog>
     );
 }
-
-    
