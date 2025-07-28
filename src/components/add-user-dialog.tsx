@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,15 +144,15 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
             </DialogTrigger>
             <DialogContent className="sm:max-w-4xl p-0">
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <DialogHeader className="px-6 pt-6 pb-4">
+                    <DialogHeader className="px-6 pt-6 pb-4 border-b">
                         <DialogTitle>Add New User</DialogTitle>
                         <DialogDescription>
                             Fill in the details below to add a new user to the system. All fields are required.
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <ScrollArea className="max-h-[65vh] px-6">
-                        <div className="py-4">
+                    <ScrollArea className="max-h-[65vh]">
+                        <div className="px-6 py-4">
                             <TooltipProvider>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     {/* Column 1 */}
@@ -346,3 +345,5 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
         </Dialog>
     );
 }
+
+    
