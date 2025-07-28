@@ -83,16 +83,16 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-4xl p-0">
+            <DialogContent className="sm:max-w-4xl">
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <DialogHeader className="p-6">
+                    <DialogHeader>
                         <DialogTitle>Add New User</DialogTitle>
                         <DialogDescription>
                             Fill in the details below to add a new user to the system.
                         </DialogDescription>
                     </DialogHeader>
-                    <Card className="max-h-[70vh] overflow-y-auto rounded-t-none border-x-0 border-y">
-                        <CardContent className="p-6">
+                    <Card className="max-h-[70vh] overflow-y-auto my-4 border-none shadow-none">
+                        <CardContent className="p-0">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Column 1 */}
                                 <div className="space-y-4">
@@ -208,7 +208,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                                             </div>
                                             <div>
                                                 <Label htmlFor="interests">Interests</Label>
-                                                <Textarea id="interests" {...register("interests")} placeholder="e.g. Reading, Sports, Music" />
+                                                <Input id="interests" {...register("interests")} placeholder="e.g. Reading, Sports, Music" />
                                                 {errors.interests && <p className="text-destructive text-sm mt-1">{errors.interests.message}</p>}
                                             </div>
                                         </>
@@ -234,7 +234,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                             </div>
                         </CardContent>
                     </Card>
-                    <DialogFooter className="p-6">
+                    <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                         <Button type="submit">Add User</Button>
                     </DialogFooter>
