@@ -10,8 +10,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, PlusCircle, ArrowUpDown, ChevronDown } from "lucide-react"
+import { AddUserDialog } from "@/components/add-user-dialog";
 
-const users = [
+const initialUsers = [
   {
     id: "U001",
     name: "John Doe",
@@ -92,6 +93,7 @@ const ITEMS_PER_PAGE = 5;
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function UserManagementPage() {
+    const [users, setUsers] = useState(initialUsers);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilters, setRoleFilters] = useState<Record<string, boolean>>({
         Student: true,
@@ -121,7 +123,7 @@ export default function UserManagementPage() {
         }
         
         return filtered;
-    }, [searchTerm, roleFilters, sortColumn, sortDirection]);
+    }, [users, searchTerm, roleFilters, sortColumn, sortDirection]);
 
     const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
     const paginatedUsers = filteredUsers.slice(
@@ -137,6 +139,27 @@ export default function UserManagementPage() {
             setSortDirection('asc');
         }
     };
+
+    const handleAddUser = (newUser: Omit<typeof initialUsers[0], 'id' | 'avatar' | 'initials' | 'status'>) => {
+        const getInitials = (name: string) => {
+            const names = name.split(' ');
+            if (names.length > 1) {
+                return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        };
+
+        const newId = `U${(users.length + 1).toString().padStart(3, '0')}`;
+
+        const userToAdd = {
+            ...newUser,
+            id: newId,
+            status: "Active",
+            avatar: "https://placehold.co/32x32.png",
+            initials: getInitials(newUser.name),
+        };
+        setUsers(prev => [...prev, userToAdd]);
+    };
     
     return (
         <div className="space-y-8">
@@ -145,10 +168,12 @@ export default function UserManagementPage() {
                     <h1 className="text-3xl font-bold font-headline">User Management</h1>
                     <p className="text-muted-foreground">Manage students, teachers, and staff.</p>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add User
-                </Button>
+                <AddUserDialog onUserAdded={handleAddUser}>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add User
+                    </Button>
+                </AddUserDialog>
             </div>
 
             <Card>
