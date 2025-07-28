@@ -83,7 +83,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-4xl bg-muted/30 p-0">
+            <DialogContent className="sm:max-w-4xl p-0">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader className="p-6">
                         <DialogTitle>Add New User</DialogTitle>
@@ -91,7 +91,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                             Fill in the details below to add a new user to the system.
                         </DialogDescription>
                     </DialogHeader>
-                    <Card className="max-h-[70vh] overflow-y-auto rounded-t-none border-x-0">
+                    <Card className="max-h-[70vh] overflow-y-auto rounded-t-none border-x-0 border-y">
                         <CardContent className="p-6">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Column 1 */}
@@ -234,7 +234,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                             </div>
                         </CardContent>
                     </Card>
-                    <DialogFooter className="p-6 bg-muted/30">
+                    <DialogFooter className="p-6">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                         <Button type="submit">Add User</Button>
                     </DialogFooter>
@@ -243,5 +243,3 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
         </Dialog>
     );
 }
-
-    
