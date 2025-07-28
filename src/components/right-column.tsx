@@ -31,21 +31,20 @@ export function RightColumn() {
     const selectedEvents = eventsByDate[selectedDateString] || [];
     
     const handleDateSelect = (newDate: Date | undefined) => {
-        if (newDate) {
-            setDate(newDate);
-        }
+        setDate(newDate);
     };
 
     return (
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    {date && <Calendar
+                    <Calendar
                         mode="single"
                         selected={date}
                         onSelect={handleDateSelect}
                         className="rounded-md"
-                    />}
+                        initialFocus
+                    />
                 </CardContent>
             </Card>
             <div className="space-y-2">
