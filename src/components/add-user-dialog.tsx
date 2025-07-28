@@ -152,7 +152,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <ScrollArea className="max-h-[65vh] px-6">
+                    <ScrollArea className="max-h-[65vh] px-6 bg-card">
                         <div className="py-4">
                             <TooltipProvider>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -346,5 +346,3 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
         </Dialog>
     );
 }
-
-    
