@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -96,7 +96,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
     const profilePicture = watch("profilePicture");
     const [preview, setPreview] = useState<string | null>(null);
     
-    React.useEffect(() => {
+    useEffect(() => {
         if (profilePicture && profilePicture.length > 0) {
             const file = profilePicture[0];
             if (file instanceof File) {
