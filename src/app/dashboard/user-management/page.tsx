@@ -155,7 +155,7 @@ export default function UserManagementPage() {
             ...newUser,
             id: newId,
             status: "Active",
-            avatar: newUser.profilePicture ? URL.createObjectURL(newUser.profilePicture) : "https://placehold.co/32x32.png",
+            avatar: newUser.profilePicture?.[0] ? URL.createObjectURL(newUser.profilePicture[0]) : "https://placehold.co/32x32.png",
             initials: getInitials(newUser.name),
         };
         setUsers(prev => [...prev, userToAdd]);
