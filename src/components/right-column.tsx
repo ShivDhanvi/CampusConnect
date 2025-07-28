@@ -51,7 +51,7 @@ const isSameDay = (d1: Date, d2: Date) => {
 
 
 export function RightColumn() {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(undefined);
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -60,15 +60,16 @@ export function RightColumn() {
     }, []);
     
     const handleDateSelect = (newDate: Date | undefined) => {
-        if (!newDate) return; // Should not happen with the new logic, but good practice
+        if (!newDate) return; 
         
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         if (date && isSameDay(newDate, date) && !isSameDay(newDate, today)) {
-             // Deselecting a date that is not today, revert to today
+             // If a selected date (that is not today) is clicked again, revert to today
             setDate(today);
         } else {
-            // Selecting a new date or clicking today
+            // Otherwise, select the new date
             setDate(newDate);
         }
     };
@@ -77,14 +78,17 @@ export function RightColumn() {
     let titleMessage = "No date selected";
 
     if (isClient && date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         const selectedDateString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
         eventsToShow = eventsByDate[selectedDateString] || [];
         
-        if(isSameDay(date, new Date())){
+        if(isSameDay(date, today)){
             titleMessage = "Today's Events";
             if(eventsToShow.length === 0){
                  const upcoming = findNextUpcomingEvents(getTodayString());
-                 if(upcoming && !isSameDay(upcoming.date, new Date())){
+                 if(upcoming && !isSameDay(upcoming.date, today)){
                     eventsToShow = upcoming.events;
                     titleMessage = `Upcoming: ${upcoming.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
                  }
@@ -129,7 +133,7 @@ export function RightColumn() {
                     </ul>
                 ) : (
                     <p className="text-sm text-muted-foreground pt-2">
-                         No events to show.
+                         No events to show for the selected date.
                     </p>
                 )}
             </div>
