@@ -1,13 +1,19 @@
+
+"use client";
+
+import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle } from "lucide-react"
+import { MoreHorizontal, PlusCircle, ArrowUpDown, ChevronDown } from "lucide-react"
 
 const users = [
   {
+    id: "U001",
     name: "John Doe",
     email: "john.doe@example.com",
     role: "Student",
@@ -16,6 +22,7 @@ const users = [
     status: "Active",
   },
   {
+    id: "U002",
     name: "Jane Smith",
     email: "jane.smith@example.com",
     role: "Teacher",
@@ -24,6 +31,7 @@ const users = [
     status: "Active",
   },
   {
+    id: "U003",
     name: "Peter Jones",
     email: "peter.jones@example.com",
     role: "Parent",
@@ -32,6 +40,7 @@ const users = [
     status: "Inactive",
   },
   {
+    id: "U004",
     name: "Mary Williams",
     email: "mary.williams@example.com",
     role: "Student",
@@ -39,7 +48,8 @@ const users = [
     initials: "MW",
     status: "Active",
   },
-    {
+  {
+    id: "U005",
     name: "David Brown",
     email: "david.brown@example.com",
     role: "Teacher",
@@ -47,9 +57,87 @@ const users = [
     initials: "DB",
     status: "Active",
   },
-]
+  {
+    id: "U006",
+    name: "Sarah Miller",
+    email: "sarah.miller@example.com",
+    role: "Student",
+    avatar: "https://placehold.co/32x32.png",
+    initials: "SM",
+    status: "Active",
+  },
+  {
+    id: "U007",
+    name: "Michael Wilson",
+    email: "michael.wilson@example.com",
+    role: "Parent",
+    avatar: "https://placehold.co/32x32.png",
+    initials: "MW",
+    status: "Active",
+  },
+  {
+    id: "U008",
+    name: "Emily Garcia",
+    email: "emily.garcia@example.com",
+    role: "Teacher",
+    avatar: "https://placehold.co/32x32.png",
+    initials: "EG",
+    status: "Inactive",
+  },
+];
+
+const ROLES = ["Student", "Teacher", "Parent"];
+const ITEMS_PER_PAGE = 5;
+
+type SortDirection = 'asc' | 'desc' | null;
 
 export default function UserManagementPage() {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [roleFilters, setRoleFilters] = useState<Record<string, boolean>>({
+        Student: true,
+        Teacher: true,
+        Parent: true,
+    });
+    const [sortColumn, setSortColumn] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const filteredUsers = useMemo(() => {
+        let filtered = users.filter(user =>
+            (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             user.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
+            roleFilters[user.role]
+        );
+
+        if (sortColumn && sortDirection) {
+            filtered.sort((a, b) => {
+                const aValue = a[sortColumn as keyof typeof a];
+                const bValue = b[sortColumn as keyof typeof b];
+
+                if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        
+        return filtered;
+    }, [searchTerm, roleFilters, sortColumn, sortDirection]);
+
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+    const paginatedUsers = filteredUsers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+    
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -62,25 +150,63 @@ export default function UserManagementPage() {
                     Add User
                 </Button>
             </div>
+
             <Card>
-                <CardHeader>
+                 <CardHeader>
                     <CardTitle>Users</CardTitle>
                     <CardDescription>A list of all users in the system.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                        <Input
+                            placeholder="Search by name or ID..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="max-w-sm"
+                        />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="ml-auto">
+                                    Filter by Role <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {ROLES.map(role => (
+                                     <DropdownMenuCheckboxItem
+                                        key={role}
+                                        checked={roleFilters[role]}
+                                        onCheckedChange={(checked) => {
+                                            setRoleFilters(prev => ({...prev, [role]: !!checked}));
+                                            setCurrentPage(1);
+                                        }}
+                                     >
+                                        {role}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>User</TableHead>
+                                    <TableHead>
+                                        <Button variant="ghost" onClick={() => handleSort('name')}>
+                                            User
+                                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user) => (
-                                    <TableRow key={user.email}>
+                                {paginatedUsers.map((user) => (
+                                    <TableRow key={user.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar>
@@ -107,7 +233,7 @@ export default function UserManagementPage() {
                                                 {user.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -128,6 +254,34 @@ export default function UserManagementPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                         {paginatedUsers.length === 0 && (
+                            <div className="text-center py-10 text-muted-foreground">
+                                No users found.
+                            </div>
+                        )}
+                    </div>
+                     <div className="flex items-center justify-between mt-6">
+                        <div className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
