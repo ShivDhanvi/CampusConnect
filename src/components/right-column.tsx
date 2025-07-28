@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -20,31 +21,86 @@ const announcements = [
     { title: 'Photography Club', content: 'The first meeting of the new photography club will be this Friday.' },
 ];
 
+const getTodayString = () => {
+    const today = new Date();
+    return new Date(today.getTime() - (today.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
+}
+
+const findNextUpcomingEvents = (todayString: string): { date: Date, events: any[] } | null => {
+    const sortedDates = Object.keys(eventsByDate).sort();
+    const nextDateString = sortedDates.find(date => date >= todayString);
+
+    if (nextDateString) {
+        const date = new Date(nextDateString);
+        date.setDate(date.getDate() + 1); // Adjust for timezone
+        return {
+            date: date,
+            events: eventsByDate[nextDateString]
+        };
+    }
+    return null;
+}
+
 export function RightColumn() {
     const [date, setDate] = useState<Date | undefined>(undefined);
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setDate(new Date('2024-08-15'));
+        setIsClient(true);
+        // We set a default selected date to avoid hydration issues
+        // and keep the calendar consistent on server and client.
+        const defaultDate = new Date('2024-08-15');
+        setDate(defaultDate);
     }, []);
 
-    const selectedDateString = date ? new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0] : '';
-    const selectedEvents = eventsByDate[selectedDateString] || [];
-    
     const handleDateSelect = (newDate: Date | undefined) => {
-        setDate(newDate);
+        // If the user clicks the same date, deselect it.
+        if (date && newDate && date.getTime() === newDate.getTime()) {
+            setDate(undefined);
+        } else {
+            setDate(newDate);
+        }
     };
+    
+    let displayDate = date;
+    let eventsToShow = [];
+    let noDateSelectedMessage = "No date selected";
+
+    if (!date) {
+        const todayString = getTodayString();
+        if (eventsByDate[todayString]) {
+            displayDate = new Date();
+            eventsToShow = eventsByDate[todayString];
+            noDateSelectedMessage = "Today's Events";
+        } else {
+            const upcoming = findNextUpcomingEvents(todayString);
+            if (upcoming) {
+                displayDate = upcoming.date;
+                eventsToShow = upcoming.events;
+                noDateSelectedMessage = "Upcoming Events";
+            } else {
+                 noDateSelectedMessage = "No upcoming events.";
+            }
+        }
+    } else {
+        const selectedDateString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
+        eventsToShow = eventsByDate[selectedDateString] || [];
+    }
+
 
     return (
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={handleDateSelect}
-                        className="rounded-md"
-                        initialFocus
-                    />
+                    {isClient && (
+                         <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={handleDateSelect}
+                            className="rounded-md"
+                            initialFocus
+                        />
+                    )}
                 </CardContent>
             </Card>
             <div className="space-y-2">
@@ -53,11 +109,11 @@ export function RightColumn() {
                     <Button variant="link" size="sm" className="text-primary">View all</Button>
                 </div>
                 <CardDescription>
-                    {date ? date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'No date selected'}
+                    {displayDate ? displayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : noDateSelectedMessage}
                 </CardDescription>
-                 {selectedEvents.length > 0 ? (
+                 {eventsToShow.length > 0 ? (
                     <ul className="space-y-3 pt-2">
-                       {selectedEvents.map((event, index) => (
+                       {eventsToShow.map((event, index) => (
                            <li key={index} className="flex items-start gap-3 text-sm">
                                <div className="font-semibold text-muted-foreground w-20 pt-0.5">{event.time}</div>
                                <div className="flex-1 text-foreground font-medium">{event.title}</div>
@@ -66,7 +122,9 @@ export function RightColumn() {
                        ))}
                     </ul>
                 ) : (
-                    <p className="text-sm text-muted-foreground pt-2">No events for this day.</p>
+                    <p className="text-sm text-muted-foreground pt-2">
+                        {date ? "No events for this day." : (noDateSelectedMessage === "No upcoming events." ? noDateSelectedMessage : "No events today.")}
+                    </p>
                 )}
             </div>
 
