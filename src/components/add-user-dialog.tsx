@@ -144,15 +144,15 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                 {children}
             </DialogTrigger>
             <DialogContent className="sm:max-w-4xl p-0">
-                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <DialogHeader className="p-6 pb-4">
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <DialogHeader className="px-6 pt-6 pb-4">
                         <DialogTitle>Add New User</DialogTitle>
                         <DialogDescription>
                             Fill in the details below to add a new user to the system. All fields are required.
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <ScrollArea className="max-h-[65vh] px-6 bg-card">
+                    <ScrollArea className="max-h-[65vh] px-6">
                         <div className="py-4">
                             <TooltipProvider>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -337,7 +337,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
                             </TooltipProvider>
                         </div>
                     </ScrollArea>
-                    <DialogFooter className="p-6 pt-4 border-t">
+                    <DialogFooter className="px-6 pb-6 pt-4 border-t">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                         <Button type="submit">Add User</Button>
                     </DialogFooter>
