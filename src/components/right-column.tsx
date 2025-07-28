@@ -43,49 +43,54 @@ const findNextUpcomingEvents = (todayString: string): { date: Date, events: any[
     return null;
 }
 
+const isSameDay = (d1: Date, d2: Date) => {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+}
+
+
 export function RightColumn() {
-    const [date, setDate] = useState<Date | undefined>(undefined);
+    const [date, setDate] = useState<Date | undefined>(new Date());
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
+        setDate(new Date());
     }, []);
-
+    
     const handleDateSelect = (newDate: Date | undefined) => {
-        if (date && newDate && date.getTime() === newDate.getTime()) {
-            setDate(undefined);
+        if (!newDate) return; // Should not happen with the new logic, but good practice
+        
+        const today = new Date();
+
+        if (date && isSameDay(newDate, date) && !isSameDay(newDate, today)) {
+             // Deselecting a date that is not today, revert to today
+            setDate(today);
         } else {
+            // Selecting a new date or clicking today
             setDate(newDate);
         }
     };
     
-    let displayDate: Date | undefined = date;
     let eventsToShow: any[] = [];
     let titleMessage = "No date selected";
 
-    if (isClient) { // Only run this logic on the client
-        if (date) {
-            const selectedDateString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
-            eventsToShow = eventsByDate[selectedDateString] || [];
-            titleMessage = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-        } else {
-            const todayString = getTodayString();
-            const todayEvents = eventsByDate[todayString];
-
-            if (todayEvents) {
-                displayDate = new Date();
-                eventsToShow = todayEvents;
-                titleMessage = "Today's Events";
-            } else {
-                const upcoming = findNextUpcomingEvents(todayString);
-                if (upcoming) {
-                    displayDate = upcoming.date;
+    if (isClient && date) {
+        const selectedDateString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
+        eventsToShow = eventsByDate[selectedDateString] || [];
+        
+        if(isSameDay(date, new Date())){
+            titleMessage = "Today's Events";
+            if(eventsToShow.length === 0){
+                 const upcoming = findNextUpcomingEvents(getTodayString());
+                 if(upcoming && !isSameDay(upcoming.date, new Date())){
                     eventsToShow = upcoming.events;
                     titleMessage = `Upcoming: ${upcoming.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
-                } else {
-                    titleMessage = "No upcoming events";
-                }
+                 }
             }
+        } else {
+            titleMessage = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
         }
     }
 
@@ -124,7 +129,7 @@ export function RightColumn() {
                     </ul>
                 ) : (
                     <p className="text-sm text-muted-foreground pt-2">
-                        {date ? "No events for this day." : (titleMessage === "No upcoming events" ? "No upcoming events to show." : "No events today.")}
+                         No events to show.
                     </p>
                 )}
             </div>
