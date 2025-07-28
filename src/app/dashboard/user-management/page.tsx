@@ -140,7 +140,7 @@ export default function UserManagementPage() {
         }
     };
 
-    const handleAddUser = (newUser: Omit<typeof initialUsers[0], 'id' | 'avatar' | 'initials' | 'status'>) => {
+    const handleAddUser = (newUser: any) => {
         const getInitials = (name: string) => {
             const names = name.split(' ');
             if (names.length > 1) {
@@ -155,7 +155,7 @@ export default function UserManagementPage() {
             ...newUser,
             id: newId,
             status: "Active",
-            avatar: "https://placehold.co/32x32.png",
+            avatar: newUser.profilePicture ? URL.createObjectURL(newUser.profilePicture) : "https://placehold.co/32x32.png",
             initials: getInitials(newUser.name),
         };
         setUsers(prev => [...prev, userToAdd]);
