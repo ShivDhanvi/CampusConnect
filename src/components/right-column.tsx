@@ -29,6 +29,12 @@ export function RightColumn() {
 
     const selectedDateString = date ? new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0] : '';
     const selectedEvents = eventsByDate[selectedDateString] || [];
+    
+    const handleDateSelect = (newDate: Date | undefined) => {
+        if (newDate) {
+            setDate(newDate);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -37,9 +43,8 @@ export function RightColumn() {
                     {date && <Calendar
                         mode="single"
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={handleDateSelect}
                         className="rounded-md"
-                        disabled={!date}
                     />}
                 </CardContent>
             </Card>
