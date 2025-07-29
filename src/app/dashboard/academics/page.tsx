@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle, Clock } from "lucide-react";
+import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const initialAssignments = [
     { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending' },
@@ -68,7 +69,11 @@ export default function AcademicsPage() {
 
     // State for Exams
     const [exams, setExams] = useState(initialExams);
+    const [examSearch, setExamSearch] = useState("");
     const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [examSortColumn, setExamSortColumn] = useState<string | null>(null);
+    const [examSortDirection, setExamSortDirection] = useState<SortDirection>(null);
+    const [examCurrentPage, setExamCurrentPage] = useState(1);
 
     // Generic sort handler
     const handleSort = (column: string, sortColumn: any, setSortColumn: any, sortDirection: any, setSortDirection: any) => {
@@ -79,11 +84,20 @@ export default function AcademicsPage() {
             setSortDirection('asc');
         }
     };
+    
+    // Generic filter toggle handler
+    const toggleAllFilters = (options: string[], filters: Record<string, boolean>, setFilters: React.Dispatch<React.SetStateAction<Record<string, boolean>>>) => {
+        const allSelected = options.every(option => filters[option]);
+        const newFilters = options.reduce((acc, option) => ({ ...acc, [option]: !allSelected }), {});
+        setFilters(newFilters);
+    };
 
     // Memoized filtered and sorted data
     const filteredAssignments = useMemo(() => {
         let filtered = assignments.filter(item =>
-            item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) && assignmentStatusFilters[item.status]
+            (item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) || 
+             item.subject.toLowerCase().includes(assignmentSearch.toLowerCase())) && 
+             assignmentStatusFilters[item.status]
         );
         if (assignmentSortColumn && assignmentSortDirection) {
             filtered.sort((a, b) => {
@@ -98,8 +112,12 @@ export default function AcademicsPage() {
     }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection]);
 
     const filteredResults = useMemo(() => {
+        const searchTermLower = resultSearch.toLowerCase();
         let filtered = results.filter(item =>
-            item.student.toLowerCase().includes(resultSearch.toLowerCase()) && resultClassFilters[item.class]
+            (item.student.toLowerCase().includes(searchTermLower) ||
+             item.class.toLowerCase().includes(searchTermLower) ||
+             item.subject.toLowerCase().includes(searchTermLower)) && 
+             resultClassFilters[item.class]
         );
          if (resultSortColumn && resultSortDirection) {
             filtered.sort((a, b) => {
@@ -114,8 +132,24 @@ export default function AcademicsPage() {
     }, [results, resultSearch, resultClassFilters, resultSortColumn, resultSortDirection]);
 
     const filteredExams = useMemo(() => {
-        return exams.filter(item => examClassFilters[item.class]);
-    }, [exams, examClassFilters]);
+        const searchTermLower = examSearch.toLowerCase();
+        let filtered = exams.filter(item => 
+            (item.title.toLowerCase().includes(searchTermLower) ||
+             item.class.toLowerCase().includes(searchTermLower)) && 
+             examClassFilters[item.class]
+        );
+        if (examSortColumn && examSortDirection) {
+            filtered.sort((a, b) => {
+                const aValue = a[examSortColumn as keyof typeof a];
+                const bValue = b[examSortColumn as keyof typeof b];
+                if (aValue < bValue) return examSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return examSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return filtered;
+    }, [exams, examSearch, examClassFilters, examSortColumn, examSortDirection]);
+
 
     // Pagination logic
     const paginatedAssignments = filteredAssignments.slice((assignmentCurrentPage - 1) * ITEMS_PER_PAGE, assignmentCurrentPage * ITEMS_PER_PAGE);
@@ -123,6 +157,9 @@ export default function AcademicsPage() {
 
     const paginatedResults = filteredResults.slice((resultCurrentPage - 1) * ITEMS_PER_PAGE, resultCurrentPage * ITEMS_PER_PAGE);
     const totalResultPages = Math.ceil(filteredResults.length / ITEMS_PER_PAGE);
+    
+    const paginatedExams = filteredExams.slice((examCurrentPage - 1) * ITEMS_PER_PAGE, examCurrentPage * ITEMS_PER_PAGE);
+    const totalExamPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
 
     const handleCreateAssignment = (data: any) => {
         const newAssignment = {
@@ -149,8 +186,8 @@ export default function AcademicsPage() {
             <Tabs defaultValue="assignments">
                 <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
                     <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                    <TabsTrigger value="results">Results</TabsTrigger>
                     <TabsTrigger value="exams">Exams</TabsTrigger>
+                    <TabsTrigger value="results">Results</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assignments">
                     <Card>
@@ -168,7 +205,7 @@ export default function AcademicsPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search assignments..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
+                                <Input placeholder="Search by title or subject..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="ml-auto">
@@ -176,6 +213,9 @@ export default function AcademicsPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => toggleAllFilters(STATUS_OPTIONS, assignmentStatusFilters, setAssignmentStatusFilters)}>
+                                            {STATUS_OPTIONS.every(s => assignmentStatusFilters[s]) ? 'Unselect All' : 'Select All'}
+                                        </DropdownMenuItem>
                                         {STATUS_OPTIONS.map(status => (
                                             <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
                                         ))}
@@ -186,9 +226,9 @@ export default function AcademicsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'title' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'subject' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'dueDate' && 'text-foreground')} /></Button></TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -217,6 +257,62 @@ export default function AcademicsPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
+                <TabsContent value="exams">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Exam Schedule</CardTitle>
+                            <CardDescription>View upcoming exam dates and details.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                <Input placeholder="Search by title or class..." value={examSearch} onChange={(e) => { setExamSearch(e.target.value); setExamCurrentPage(1); }} className="max-w-sm" />
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="ml-auto">
+                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, examClassFilters, setExamClassFilters)}>
+                                            {CLASS_OPTIONS.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                        </DropdownMenuItem>
+                                        {CLASS_OPTIONS.map(c => (
+                                            <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); setExamCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                             <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'title' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'class' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'date' && 'text-foreground')} /></Button></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {paginatedExams.map(item => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="font-medium">{item.title}</TableCell>
+                                                <TableCell>{item.class}</TableCell>
+                                                <TableCell>{item.date}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                {paginatedExams.length === 0 && <div className="text-center py-10 text-muted-foreground">No exams found.</div>}
+                            </div>
+                            <div className="flex items-center justify-between mt-6">
+                                <div className="text-sm text-muted-foreground">Page {examCurrentPage} of {totalExamPages}</div>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.max(prev - 1, 1))} disabled={examCurrentPage === 1}>Previous</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.min(prev + 1, totalExamPages))} disabled={examCurrentPage === totalExamPages}>Next</Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
                 <TabsContent value="results">
                      <Card>
                         <CardHeader>
@@ -225,7 +321,7 @@ export default function AcademicsPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                <Input placeholder="Search by student, class or subject..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="ml-auto">
@@ -233,6 +329,9 @@ export default function AcademicsPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
+                                            {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                        </DropdownMenuItem>
                                         {CLASS_OPTIONS.map(c => (
                                             <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                         ))}
@@ -243,12 +342,12 @@ export default function AcademicsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
-                                            <TableHead>Subject</TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'student' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'class' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'subject' && 'text-foreground')} /></Button></TableHead>
                                             <TableHead>Grade</TableHead>
                                             <TableHead>Score</TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'date' && 'text-foreground')} /></Button></TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -274,52 +373,6 @@ export default function AcademicsPage() {
                                     <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
                                     <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                 <TabsContent value="exams">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Exam Schedule</CardTitle>
-                            <CardDescription>View upcoming exam dates and details.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <div className="flex-grow" />
-                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="ml-auto">
-                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        {CLASS_OPTIONS.map(c => (
-                                            <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); }}>{c}</DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                             <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Exam Title</TableHead>
-                                            <TableHead>Class</TableHead>
-                                            <TableHead>Date</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredExams.map(item => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.title}</TableCell>
-                                                <TableCell>{item.class}</TableCell>
-                                                <TableCell>{item.date}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {filteredExams.length === 0 && <div className="text-center py-10 text-muted-foreground">No exams found for the selected classes.</div>}
                             </div>
                         </CardContent>
                     </Card>
