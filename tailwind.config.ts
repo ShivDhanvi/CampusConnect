@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
+        body: ['var(--font-inter)', 'sans-serif'],
+        headline: ['var(--font-inter)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -65,6 +65,12 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        cvaSky: "#C3EBFA",
+        cvaSkyLight: "#EDF9FD",
+        cvaPurple: "#CFCEFF",
+        cvaPurpleLight: "#F1F0FF",
+        cvaYellow: "#FAE27C",
+        cvaYellowLight: "#FEFCE8",
       },
       borderRadius: {
         lg: 'var(--radius)',
