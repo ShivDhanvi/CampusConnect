@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -20,27 +21,96 @@ const announcements = [
     { title: 'Photography Club', content: 'The first meeting of the new photography club will be this Friday.' },
 ];
 
+const getTodayString = () => {
+    const today = new Date();
+    return new Date(today.getTime() - (today.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
+}
+
+const findNextUpcomingEvents = (todayString: string): { date: Date, events: any[] } | null => {
+    const sortedDates = Object.keys(eventsByDate).sort();
+    const nextDateString = sortedDates.find(date => date >= todayString);
+
+    if (nextDateString) {
+        const date = new Date(nextDateString);
+        // Adjust for timezone when creating date from string to avoid off-by-one errors
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        const adjustedDate = new Date(date.getTime() + tzOffset);
+        return {
+            date: adjustedDate,
+            events: eventsByDate[nextDateString]
+        };
+    }
+    return null;
+}
+
+const isSameDay = (d1: Date, d2: Date) => {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+}
+
+
 export function RightColumn() {
     const [date, setDate] = useState<Date | undefined>(undefined);
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setDate(new Date('2024-08-15'));
+        setIsClient(true);
+        setDate(new Date());
     }, []);
+    
+    const handleDateSelect = (newDate: Date | undefined) => {
+        if (!newDate) return; 
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    const selectedDateString = date ? new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0] : '';
-    const selectedEvents = eventsByDate[selectedDateString] || [];
+        if (date && isSameDay(newDate, date) && !isSameDay(newDate, today)) {
+             // If a selected date (that is not today) is clicked again, revert to today
+            setDate(today);
+        } else {
+            // Otherwise, select the new date
+            setDate(newDate);
+        }
+    };
+    
+    let eventsToShow: any[] = [];
+    let titleMessage = "No date selected";
+
+    if (isClient && date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const selectedDateString = new Date(date.getTime() - (date.getTimezoneOffset() * 60000 )).toISOString().split('T')[0];
+        eventsToShow = eventsByDate[selectedDateString] || [];
+        
+        if(isSameDay(date, today)){
+            titleMessage = "Today's Events";
+            if(eventsToShow.length === 0){
+                 const upcoming = findNextUpcomingEvents(getTodayString());
+                 if(upcoming && !isSameDay(upcoming.date, today)){
+                    eventsToShow = upcoming.events;
+                    titleMessage = `Upcoming: ${upcoming.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
+                 }
+            }
+        } else {
+            titleMessage = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+    }
+
 
     return (
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    {date && <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="rounded-md"
-                        disabled={!date}
-                    />}
+                    {isClient && (
+                         <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={handleDateSelect}
+                            className="rounded-md"
+                        />
+                    )}
                 </CardContent>
             </Card>
             <div className="space-y-2">
@@ -49,11 +119,11 @@ export function RightColumn() {
                     <Button variant="link" size="sm" className="text-primary">View all</Button>
                 </div>
                 <CardDescription>
-                    {date ? date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'No date selected'}
+                    {titleMessage}
                 </CardDescription>
-                 {selectedEvents.length > 0 ? (
+                 {eventsToShow.length > 0 ? (
                     <ul className="space-y-3 pt-2">
-                       {selectedEvents.map((event, index) => (
+                       {eventsToShow.map((event, index) => (
                            <li key={index} className="flex items-start gap-3 text-sm">
                                <div className="font-semibold text-muted-foreground w-20 pt-0.5">{event.time}</div>
                                <div className="flex-1 text-foreground font-medium">{event.title}</div>
@@ -62,7 +132,9 @@ export function RightColumn() {
                        ))}
                     </ul>
                 ) : (
-                    <p className="text-sm text-muted-foreground pt-2">No events for this day.</p>
+                    <p className="text-sm text-muted-foreground pt-2">
+                         No events to show for the selected date.
+                    </p>
                 )}
             </div>
 
