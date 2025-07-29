@@ -1,25 +1,145 @@
+
+"use client";
+
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, PlusCircle, Upload } from "lucide-react";
+import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
+import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
+import { useToast } from "@/hooks/use-toast";
 
-const assignments = [
+const initialAssignments = [
     { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending' },
     { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', status: 'Submitted' },
     { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', status: 'Graded' },
     { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', status: 'Pending' },
+    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', status: 'Submitted' },
+    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', status: 'Graded' },
 ];
 
-const results = [
-    { student: 'John Doe', subject: 'Mathematics', grade: 'A', score: '95%', date: '2024-08-20' },
-    { student: 'John Doe', subject: 'History', grade: 'B+', score: '88%', date: '2024-08-21' },
-    { student: 'Jane Smith', subject: 'Biology', grade: 'A-', score: '92%', date: '2024-08-22' },
-    { student: 'Jane Smith', subject: 'English', grade: 'A', score: '97%', date: '2024-08-23' },
+const initialResults = [
+    { student: 'John Doe', class: '10-A', subject: 'Mathematics', grade: 'A', score: '95%', date: '2024-08-20' },
+    { student: 'John Doe', class: '10-A', subject: 'History', grade: 'B+', score: '88%', date: '2024-08-21' },
+    { student: 'Jane Smith', class: '10-B', subject: 'Biology', grade: 'A-', score: '92%', date: '2024-08-22' },
+    { student: 'Jane Smith', class: '10-B', subject: 'English', grade: 'A', score: '97%', date: '2024-08-23' },
+    { student: 'Peter Jones', class: '11-A', subject: 'Physics', grade: 'C', score: '72%', date: '2024-08-24' },
+    { student: 'Mary Williams', class: '11-B', subject: 'Chemistry', grade: 'B', score: '85%', date: '2024-08-25' },
 ]
 
+const initialExams = [
+    { id: 'E001', title: 'Mid-Term Mathematics', class: '10-A', date: '2024-10-01' },
+    { id: 'E002', title: 'Mid-Term History', class: '10-A', date: '2024-10-03' },
+    { id: 'E003', title: 'Mid-Term Biology', class: '10-B', date: '2024-10-01' },
+    { id: 'E004', title: 'Mid-Term English', class: '10-B', date: '2024-10-03' },
+    { id: 'E005', title: 'Final Physics', class: '11-A', date: '2024-12-10' },
+    { id: 'E006', title: 'Final Chemistry', class: '11-B', date: '2024-12-12' },
+];
+
+
+const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
+const CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const ITEMS_PER_PAGE = 5;
+
+type SortDirection = 'asc' | 'desc' | null;
+
 export default function AcademicsPage() {
+    const { toast } = useToast();
+
+    // State for Assignments
+    const [assignments, setAssignments] = useState(initialAssignments);
+    const [assignmentSearch, setAssignmentSearch] = useState("");
+    const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true });
+    const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
+    const [assignmentSortDirection, setAssignmentSortDirection] = useState<SortDirection>(null);
+    const [assignmentCurrentPage, setAssignmentCurrentPage] = useState(1);
+    
+    // State for Results
+    const [results, setResults] = useState(initialResults);
+    const [resultSearch, setResultSearch] = useState("");
+    const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [resultSortColumn, setResultSortColumn] = useState<string | null>(null);
+    const [resultSortDirection, setResultSortDirection] = useState<SortDirection>(null);
+    const [resultCurrentPage, setResultCurrentPage] = useState(1);
+
+    // State for Exams
+    const [exams, setExams] = useState(initialExams);
+    const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+
+    // Generic sort handler
+    const handleSort = (column: string, sortColumn: any, setSortColumn: any, sortDirection: any, setSortDirection: any) => {
+        if (sortColumn === column) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
+    // Memoized filtered and sorted data
+    const filteredAssignments = useMemo(() => {
+        let filtered = assignments.filter(item =>
+            item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) && assignmentStatusFilters[item.status]
+        );
+        if (assignmentSortColumn && assignmentSortDirection) {
+            filtered.sort((a, b) => {
+                const aValue = a[assignmentSortColumn as keyof typeof a];
+                const bValue = b[assignmentSortColumn as keyof typeof b];
+                if (aValue < bValue) return assignmentSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return assignmentSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return filtered;
+    }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection]);
+
+    const filteredResults = useMemo(() => {
+        let filtered = results.filter(item =>
+            item.student.toLowerCase().includes(resultSearch.toLowerCase()) && resultClassFilters[item.class]
+        );
+         if (resultSortColumn && resultSortDirection) {
+            filtered.sort((a, b) => {
+                const aValue = a[resultSortColumn as keyof typeof a];
+                const bValue = b[resultSortColumn as keyof typeof b];
+                if (aValue < bValue) return resultSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return resultSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return filtered;
+    }, [results, resultSearch, resultClassFilters, resultSortColumn, resultSortDirection]);
+
+    const filteredExams = useMemo(() => {
+        return exams.filter(item => examClassFilters[item.class]);
+    }, [exams, examClassFilters]);
+
+    // Pagination logic
+    const paginatedAssignments = filteredAssignments.slice((assignmentCurrentPage - 1) * ITEMS_PER_PAGE, assignmentCurrentPage * ITEMS_PER_PAGE);
+    const totalAssignmentPages = Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE);
+
+    const paginatedResults = filteredResults.slice((resultCurrentPage - 1) * ITEMS_PER_PAGE, resultCurrentPage * ITEMS_PER_PAGE);
+    const totalResultPages = Math.ceil(filteredResults.length / ITEMS_PER_PAGE);
+
+    const handleCreateAssignment = (data: any) => {
+        const newAssignment = {
+            id: `A${(assignments.length + 1).toString().padStart(3, '0')}`,
+            title: data.title,
+            subject: data.subject,
+            dueDate: data.dueDate.toISOString().split('T')[0],
+            status: 'Pending',
+        };
+        setAssignments(prev => [newAssignment, ...prev]);
+        toast({
+            title: "Assignment Created",
+            description: `"${data.title}" has been successfully created.`,
+            action: <CheckCircle className="text-green-500" />,
+        })
+    };
+    
     return (
         <div className="space-y-8">
             <div>
@@ -27,9 +147,10 @@ export default function AcademicsPage() {
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
             </div>
             <Tabs defaultValue="assignments">
-                <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
+                <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
                     <TabsTrigger value="assignments">Assignments</TabsTrigger>
                     <TabsTrigger value="results">Results</TabsTrigger>
+                    <TabsTrigger value="exams">Exams</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assignments">
                     <Card>
@@ -38,44 +159,60 @@ export default function AcademicsPage() {
                                 <CardTitle>Assignments</CardTitle>
                                 <CardDescription>Manage and track student assignments.</CardDescription>
                             </div>
-                            <Button>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Create Assignment
-                            </Button>
+                            <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
+                                <Button>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Create Assignment
+                                </Button>
+                            </CreateAssignmentDialog>
                         </CardHeader>
                         <CardContent>
+                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                <Input placeholder="Search assignments..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="ml-auto">
+                                            Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {STATUS_OPTIONS.map(status => (
+                                            <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Title</TableHead>
-                                            <TableHead>Subject</TableHead>
-                                            <TableHead>Due Date</TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {assignments.map(item => (
+                                        {paginatedAssignments.map(item => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">{item.title}</TableCell>
                                                 <TableCell>{item.subject}</TableCell>
                                                 <TableCell>{item.dueDate}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={
-                                                        item.status === 'Graded' ? 'default' :
-                                                        item.status === 'Submitted' ? 'secondary' : 'outline'
-                                                    }>{item.status}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon">
-                                                        <Upload className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
+                                                <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
+                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button></TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
+                                {paginatedAssignments.length === 0 && <div className="text-center py-10 text-muted-foreground">No assignments found.</div>}
+                            </div>
+                             <div className="flex items-center justify-between mt-6">
+                                <div className="text-sm text-muted-foreground">Page {assignmentCurrentPage} of {totalAssignmentPages}</div>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.max(prev - 1, 1))} disabled={assignmentCurrentPage === 1}>Previous</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.min(prev + 1, totalAssignmentPages))} disabled={assignmentCurrentPage === totalAssignmentPages}>Next</Button>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -87,37 +224,102 @@ export default function AcademicsPage() {
                             <CardDescription>View and manage student grades.</CardDescription>
                         </CardHeader>
                         <CardContent>
+                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="ml-auto">
+                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {CLASS_OPTIONS.map(c => (
+                                            <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                              <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Student</TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
                                             <TableHead>Subject</TableHead>
                                             <TableHead>Grade</TableHead>
                                             <TableHead>Score</TableHead>
-                                            <TableHead>Date</TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date<ArrowUpDown className="ml-2 h-4 w-4" /></Button></TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {results.map(item => (
+                                        {paginatedResults.map(item => (
                                             <TableRow key={item.student + item.subject}>
                                                 <TableCell className="font-medium">{item.student}</TableCell>
+                                                <TableCell>{item.class}</TableCell>
                                                 <TableCell>{item.subject}</TableCell>
-                                                <TableCell>
-                                                    <Badge>{item.grade}</Badge>
-                                                </TableCell>
+                                                <TableCell><Badge>{item.grade}</Badge></TableCell>
                                                 <TableCell>{item.score}</TableCell>
                                                 <TableCell>{item.date}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon">
-                                                        <Download className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
+                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button></TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
+                                {paginatedResults.length === 0 && <div className="text-center py-10 text-muted-foreground">No results found.</div>}
+                            </div>
+                             <div className="flex items-center justify-between mt-6">
+                                <div className="text-sm text-muted-foreground">Page {resultCurrentPage} of {totalResultPages}</div>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                 <TabsContent value="exams">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Exam Schedule</CardTitle>
+                            <CardDescription>View upcoming exam dates and details.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                <div className="flex-grow" />
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="ml-auto">
+                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {CLASS_OPTIONS.map(c => (
+                                            <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); }}>{c}</DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                             <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Exam Title</TableHead>
+                                            <TableHead>Class</TableHead>
+                                            <TableHead>Date</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredExams.map(item => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="font-medium">{item.title}</TableCell>
+                                                <TableCell>{item.class}</TableCell>
+                                                <TableCell>{item.date}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                {filteredExams.length === 0 && <div className="text-center py-10 text-muted-foreground">No exams found for the selected classes.</div>}
                             </div>
                         </CardContent>
                     </Card>
