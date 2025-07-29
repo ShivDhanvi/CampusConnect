@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle } from "lucide-react";
+import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
@@ -24,12 +24,12 @@ const initialAssignments = [
 ];
 
 const initialResults = [
-    { student: 'John Doe', class: '10-A', subject: 'Mathematics', grade: 'A', score: '95%', date: '2024-08-20' },
-    { student: 'John Doe', class: '10-A', subject: 'History', grade: 'B+', score: '88%', date: '2024-08-21' },
-    { student: 'Jane Smith', class: '10-B', subject: 'Biology', grade: 'A-', score: '92%', date: '2024-08-22' },
-    { student: 'Jane Smith', class: '10-B', subject: 'English', grade: 'A', score: '97%', date: '2024-08-23' },
-    { student: 'Peter Jones', class: '11-A', subject: 'Physics', grade: 'C', score: '72%', date: '2024-08-24' },
-    { student: 'Mary Williams', class: '11-B', subject: 'Chemistry', grade: 'B', score: '85%', date: '2024-08-25' },
+    { student: 'John Doe', class: '10-A', subject: 'Mathematics', examTitle: 'Mid-Term Mathematics', grade: 'A', score: '95%', date: '2024-08-20' },
+    { student: 'John Doe', class: '10-A', subject: 'History', examTitle: 'Mid-Term History', grade: 'B+', score: '88%', date: '2024-08-21' },
+    { student: 'Jane Smith', class: '10-B', subject: 'Biology', examTitle: 'Mid-Term Biology', grade: 'A-', score: '92%', date: '2024-08-22' },
+    { student: 'Jane Smith', class: '10-B', subject: 'English', examTitle: 'Mid-Term English', grade: 'A', score: '97%', date: '2024-08-23' },
+    { student: 'Peter Jones', class: '11-A', subject: 'Physics', examTitle: 'Final Physics', grade: 'C', score: '72%', date: '2024-08-24' },
+    { student: 'Mary Williams', class: '11-B', subject: 'Chemistry', examTitle: 'Final Chemistry', grade: 'B', score: '85%', date: '2024-08-25' },
 ]
 
 const initialExams = [
@@ -92,6 +92,17 @@ export default function AcademicsPage() {
         setFilters(newFilters);
     };
 
+    // Generic sort icon renderer
+    const renderSortIcon = (column: string, sortColumn: string | null, sortDirection: SortDirection) => {
+        if (sortColumn !== column) {
+            return <ArrowUpDown className="ml-2 h-4 w-4" />;
+        }
+        if (sortDirection === 'asc') {
+            return <ArrowUp className="ml-2 h-4 w-4 text-foreground" />;
+        }
+        return <ArrowDown className="ml-2 h-4 w-4 text-foreground" />;
+    };
+
     // Memoized filtered and sorted data
     const filteredAssignments = useMemo(() => {
         let filtered = assignments.filter(item =>
@@ -116,7 +127,10 @@ export default function AcademicsPage() {
         let filtered = results.filter(item =>
             (item.student.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower) ||
-             item.subject.toLowerCase().includes(searchTermLower)) && 
+             item.subject.toLowerCase().includes(searchTermLower) ||
+             item.examTitle.toLowerCase().includes(searchTermLower) ||
+             item.grade.toLowerCase().includes(searchTermLower) ||
+             item.score.toLowerCase().includes(searchTermLower)) && 
              resultClassFilters[item.class]
         );
          if (resultSortColumn && resultSortDirection) {
@@ -226,9 +240,9 @@ export default function AcademicsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'title' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'subject' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date<ArrowUpDown className={cn("ml-2 h-4 w-4", assignmentSortColumn === 'dueDate' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -286,9 +300,9 @@ export default function AcademicsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'title' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'class' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date<ArrowUpDown className={cn("ml-2 h-4 w-4", examSortColumn === 'date' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -321,7 +335,7 @@ export default function AcademicsPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search by student, class or subject..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="ml-auto">
@@ -342,21 +356,23 @@ export default function AcademicsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'student' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'class' && 'text-foreground')} /></Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'subject' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student {renderSortIcon('student', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class {renderSortIcon('class', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject {renderSortIcon('subject', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                             <TableHead>Grade</TableHead>
                                             <TableHead>Score</TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date<ArrowUpDown className={cn("ml-2 h-4 w-4", resultSortColumn === 'date' && 'text-foreground')} /></Button></TableHead>
+                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {paginatedResults.map(item => (
-                                            <TableRow key={item.student + item.subject}>
+                                            <TableRow key={item.student + item.subject + item.examTitle}>
                                                 <TableCell className="font-medium">{item.student}</TableCell>
                                                 <TableCell>{item.class}</TableCell>
                                                 <TableCell>{item.subject}</TableCell>
+                                                <TableCell>{item.examTitle}</TableCell>
                                                 <TableCell><Badge>{item.grade}</Badge></TableCell>
                                                 <TableCell>{item.score}</TableCell>
                                                 <TableCell>{item.date}</TableCell>
