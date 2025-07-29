@@ -65,12 +65,6 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        cvaSky: "#C3EBFA",
-        cvaSkyLight: "#EDF9FD",
-        cvaPurple: "#CFCEFF",
-        cvaPurpleLight: "#F1F0FF",
-        cvaYellow: "#FAE27C",
-        cvaYellowLight: "#FEFCE8",
       },
       borderRadius: {
         lg: 'var(--radius)',
