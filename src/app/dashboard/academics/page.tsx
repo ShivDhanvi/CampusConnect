@@ -407,7 +407,7 @@ export default function AcademicsPage() {
                                                 <TableCell>{item.class}</TableCell>
                                                 <TableCell>{item.subject}</TableCell>
                                                 <TableCell>{item.examTitle}</TableCell>
-                                                <TableCell><Badge>{item.grade}</TableCell>
+                                                <TableCell><Badge>{item.grade}</Badge></TableCell>
                                                 <TableCell>{item.score}</TableCell>
                                                 <TableCell>{item.date}</TableCell>
                                             </TableRow>
