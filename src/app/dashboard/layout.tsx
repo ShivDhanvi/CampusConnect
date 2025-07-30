@@ -21,14 +21,11 @@ import {
 } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const pathname = usePathname();
-
-    const showRightSidebar = pathname !== '/dashboard/academics';
 
     return (
         <SidebarProvider>
@@ -46,6 +43,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
                         <div className="flex items-center gap-4">
                             <ThemeToggle />
+                             <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button variant="outline" size="icon" className="shrink-0">
+                                        <Menu className="h-5 w-5" />
+                                        <span className="sr-only">Toggle right sidebar</span>
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="right" className="p-0 w-[350px] sm:max-w-[350px]">
+                                    <div className="p-4">
+                                     <RightColumn />
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -71,32 +81,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="outline" size="icon" className="md:hidden">
-                                        <Menu className="h-6 w-6" />
-                                        <span className="sr-only">Toggle Menu</span>
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="p-0 w-72 md:hidden">
-                                    <SheetHeader>
-                                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                                    </SheetHeader>
-                                    <MainSidebar />
-                                </SheetContent>
-                            </Sheet>
                         </div>
                     </header>
                     <div className="flex flex-1">
                         <main className="flex-1 p-4 md:p-6 lg:p-8">
                             {children}
                         </main>
-                        {showRightSidebar && (
-                            <aside className="hidden shrink-0 border-l bg-card p-4 lg:block lg:w-[350px]">
-                                <RightColumn />
-                            </aside>
-                        )}
                     </div>
                 </div>
             </div>
