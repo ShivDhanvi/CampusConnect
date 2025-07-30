@@ -206,7 +206,7 @@ export default function AcademicsPage() {
                 <TabsContent value="assignments">
                     <Card>
                         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
+                            <div className="flex-1">
                                 <CardTitle>Assignments</CardTitle>
                                 <CardDescription>Manage and track student assignments.</CardDescription>
                             </div>
@@ -397,3 +397,5 @@ export default function AcademicsPage() {
         </div>
     )
 }
+
+    
