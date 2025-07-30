@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from './ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 const eventsByDate: Record<string, { time: string; title: string; type: 'event' | 'holiday' | 'exam' }[]> = {
     '2024-08-15': [{ time: '10:00 AM', title: 'Parent-Teacher Meeting', type: 'event' }],
@@ -19,6 +20,14 @@ const announcements = [
     { title: 'New Library Books', content: 'We have added a new collection of fiction and non-fiction books to the library.' },
     { title: 'Exam Schedule Update', content: 'The final exam schedule for the term has been updated. Please check the notice board.' },
     { title: 'Photography Club', content: 'The first meeting of the new photography club will be this Friday.' },
+];
+
+const cardColors = [
+    "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900",
+    "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900",
+    "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-900",
+    "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900",
+    "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-900",
 ];
 
 const getTodayString = () => {
@@ -55,6 +64,7 @@ export function RightColumn() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        // This ensures the component has mounted on the client before using `new Date()`
         setIsClient(true);
         setDate(new Date());
     }, []);
@@ -159,7 +169,7 @@ export function RightColumn() {
                <ScrollArea className="h-48 pr-4">
                     <div className="space-y-4">
                         {announcements.map((ann, index) => (
-                            <Card key={index} className="bg-background">
+                            <Card key={index} className={cn("bg-background", cardColors[index % cardColors.length])}>
                                 <CardHeader className="p-4">
                                     <CardTitle className="text-sm">{ann.title}</CardTitle>
                                     <CardDescription className="text-xs">{ann.content}</CardDescription>
