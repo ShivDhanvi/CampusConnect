@@ -1,3 +1,4 @@
+
 "use client";
 
 import { MainSidebar } from '@/components/main-sidebar';
@@ -20,11 +21,14 @@ import {
 } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const pathname = usePathname();
+
+    const showRightSidebar = pathname !== '/dashboard/academics';
 
     return (
         <SidebarProvider>
@@ -88,9 +92,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <main className="flex-1 p-4 md:p-6 lg:p-8">
                             {children}
                         </main>
-                        <aside className="hidden shrink-0 border-l bg-card p-4 lg:block lg:w-[350px]">
-                            <RightColumn />
-                        </aside>
+                        {showRightSidebar && (
+                            <aside className="hidden shrink-0 border-l bg-card p-4 lg:block lg:w-[350px]">
+                                <RightColumn />
+                            </aside>
+                        )}
                     </div>
                 </div>
             </div>
