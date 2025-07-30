@@ -225,7 +225,7 @@ export default function UserManagementPage() {
                                         </Button>
                                     </TableHead>
                                     <TableHead>Role</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead className="hidden md:table-cell">Status</TableHead>
                                     <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -249,7 +249,7 @@ export default function UserManagementPage() {
                                                 {user.role}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             <Badge variant={user.status === 'Active' ? 'outline' : 'destructive'} className="whitespace-nowrap">
                                             {user.status === 'Active' ? 
                                                 <span className="relative mr-2 flex h-2 w-2 rounded-full bg-green-500" /> : 
