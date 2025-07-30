@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, PlusCircle, Upload, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
@@ -24,12 +24,12 @@ const initialAssignments = [
 ];
 
 const initialResults = [
-    { student: 'John Doe', class: '10-A', subject: 'Mathematics', examTitle: 'Mid-Term Mathematics', grade: 'A', score: '95%', date: '2024-08-20' },
-    { student: 'John Doe', class: '10-A', subject: 'History', examTitle: 'Mid-Term History', grade: 'B+', score: '88%', date: '2024-08-21' },
-    { student: 'Jane Smith', class: '10-B', subject: 'Biology', examTitle: 'Mid-Term Biology', grade: 'A-', score: '92%', date: '2024-08-22' },
-    { student: 'Jane Smith', class: '10-B', subject: 'English', examTitle: 'Mid-Term English', grade: 'A', score: '97%', date: '2024-08-23' },
-    { student: 'Peter Jones', class: '11-A', subject: 'Physics', examTitle: 'Final Physics', grade: 'C', score: '72%', date: '2024-08-24' },
-    { student: 'Mary Williams', class: '11-B', subject: 'Chemistry', examTitle: 'Final Chemistry', grade: 'B', score: '85%', date: '2024-08-25' },
+    { student: 'John Doe', class: '10-A', subject: 'Mathematics', examTitle: 'Mid-Term Mathematics', score: '95%', date: '2024-08-20' },
+    { student: 'John Doe', class: '10-A', subject: 'History', examTitle: 'Mid-Term History', score: '88%', date: '2024-08-21' },
+    { student: 'Jane Smith', class: '10-B', subject: 'Biology', examTitle: 'Mid-Term Biology', score: '92%', date: '2024-08-22' },
+    { student: 'Jane Smith', class: '10-B', subject: 'English', examTitle: 'Mid-Term English', score: '97%', date: '2024-08-23' },
+    { student: 'Peter Jones', class: '11-A', subject: 'Physics', examTitle: 'Final Physics', score: '72%', date: '2024-08-24' },
+    { student: 'Mary Williams', class: '11-B', subject: 'Chemistry', examTitle: 'Final Chemistry', score: '85%', date: '2024-08-25' },
 ]
 
 const initialExams = [
@@ -89,7 +89,7 @@ export default function AcademicsPage() {
     // Generic sort handler
     const handleSort = (column: string, sortColumn: any, setSortColumn: any, sortDirection: any, setSortDirection: any) => {
         if (sortColumn === column) {
-            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+            setSortDirection((prev: SortDirection) => prev === 'asc' ? 'desc' : 'asc');
         } else {
             setSortColumn(column);
             setSortDirection('asc');
@@ -208,221 +208,223 @@ export default function AcademicsPage() {
                 <h1 className="text-3xl font-bold font-headline">Academics</h1>
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
             </div>
-            <Tabs defaultValue="assignments">
-                <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
-                    <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                    <TabsTrigger value="exams">Exams</TabsTrigger>
-                    <TabsTrigger value="results">Results</TabsTrigger>
-                </TabsList>
-                <TabsContent value="assignments">
-                    <Card>
-                        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle>Assignments</CardTitle>
-                                <CardDescription>Manage and track student assignments.</CardDescription>
-                            </div>
-                            <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
-                                <Button>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Create Assignment
-                                </Button>
-                            </CreateAssignmentDialog>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search by title or subject..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="ml-auto">
-                                            Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => toggleAllFilters(STATUS_OPTIONS, assignmentStatusFilters, setAssignmentStatusFilters)}>
-                                            {STATUS_OPTIONS.every(s => assignmentStatusFilters[s]) ? 'Unselect All' : 'Select All'}
-                                        </DropdownMenuItem>
-                                        {STATUS_OPTIONS.map(status => (
-                                            <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedAssignments.map(item => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.title}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
-                                                <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
-                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button></TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {paginatedAssignments.length === 0 && <div className="text-center py-10 text-muted-foreground">No assignments found.</div>}
-                            </div>
-                             <div className="flex items-center justify-between mt-6">
-                                <div className="text-sm text-muted-foreground">Page {assignmentCurrentPage} of {totalAssignmentPages}</div>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.max(prev - 1, 1))} disabled={assignmentCurrentPage === 1}>Previous</Button>
-                                    <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.min(prev + 1, totalAssignmentPages))} disabled={assignmentCurrentPage === totalAssignmentPages}>Next</Button>
+            <div className="max-w-full">
+                <Tabs defaultValue="assignments">
+                    <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
+                        <TabsTrigger value="assignments">Assignments</TabsTrigger>
+                        <TabsTrigger value="exams">Exams</TabsTrigger>
+                        <TabsTrigger value="results">Results</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="assignments">
+                        <Card>
+                            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>Assignments</CardTitle>
+                                    <CardDescription>Manage and track student assignments.</CardDescription>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="exams">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Exam Schedule</CardTitle>
-                            <CardDescription>View upcoming exam dates and details.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search by title or class..." value={examSearch} onChange={(e) => { setExamSearch(e.target.value); setExamCurrentPage(1); }} className="max-w-sm" />
-                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="ml-auto">
-                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, examClassFilters, setExamClassFilters)}>
-                                            {CLASS_OPTIONS.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
-                                        </DropdownMenuItem>
-                                        {CLASS_OPTIONS.map(c => (
-                                            <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); setExamCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                             <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedExams.map(item => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.title}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
-                                                <TableCell>{item.date}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {paginatedExams.length === 0 && <div className="text-center py-10 text-muted-foreground">No exams found.</div>}
-                            </div>
-                            <div className="flex items-center justify-between mt-6">
-                                <div className="text-sm text-muted-foreground">Page {examCurrentPage} of {totalExamPages}</div>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.max(prev - 1, 1))} disabled={examCurrentPage === 1}>Previous</Button>
-                                    <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.min(prev + 1, totalExamPages))} disabled={examCurrentPage === totalExamPages}>Next</Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="results">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Student Results</CardTitle>
-                            <CardDescription>View and manage student grades.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4 mb-6">
-                                <div className="flex flex-col sm:flex-row items-center gap-4">
-                                    <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
+                                    <Button>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Create Assignment
+                                    </Button>
+                                </CreateAssignmentDialog>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                    <Input placeholder="Search by title or subject..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="ml-auto">
+                                                Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={() => toggleAllFilters(STATUS_OPTIONS, assignmentStatusFilters, setAssignmentStatusFilters)}>
+                                                {STATUS_OPTIONS.every(s => assignmentStatusFilters[s]) ? 'Unselect All' : 'Select All'}
+                                            </DropdownMenuItem>
+                                            {STATUS_OPTIONS.map(status => (
+                                                <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedAssignments.map(item => (
+                                                <TableRow key={item.id}>
+                                                    <TableCell className="font-medium">{item.title}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
+                                                    <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
+                                                    <TableCell className="text-right"><Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button></TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {paginatedAssignments.length === 0 && <div className="text-center py-10 text-muted-foreground">No assignments found.</div>}
+                                </div>
+                                 <div className="flex items-center justify-between mt-6">
+                                    <div className="text-sm text-muted-foreground">Page {assignmentCurrentPage} of {totalAssignmentPages}</div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.max(prev - 1, 1))} disabled={assignmentCurrentPage === 1}>Previous</Button>
+                                        <Button variant="outline" size="sm" onClick={() => setAssignmentCurrentPage(prev => Math.min(prev + 1, totalAssignmentPages))} disabled={assignmentCurrentPage === totalAssignmentPages}>Next</Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="exams">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Exam Schedule</CardTitle>
+                                <CardDescription>View upcoming exam dates and details.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                               <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                    <Input placeholder="Search by title or class..." value={examSearch} onChange={(e) => { setExamSearch(e.target.value); setExamCurrentPage(1); }} className="max-w-sm" />
+                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="outline" className="ml-auto">
                                                 Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
-                                                {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                            <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, examClassFilters, setExamClassFilters)}>
+                                                {CLASS_OPTIONS.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
                                             </DropdownMenuItem>
                                             {CLASS_OPTIONS.map(c => (
-                                                <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
+                                                <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); setExamCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                             ))}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap mt-4">
-                                    <Badge
-                                        onClick={() => setResultExamFilter('All')}
-                                        className={cn("cursor-pointer", resultExamFilter !== 'All' && "bg-muted text-muted-foreground hover:bg-muted/80")}
-                                    >
-                                        All
-                                    </Badge>
-                                    {EXAM_TITLE_OPTIONS.map((title, index) => (
-                                        <Badge
-                                            key={title}
-                                            onClick={() => setResultExamFilter(title)}
-                                            className={cn(
-                                                "cursor-pointer",
-                                                resultExamFilter === title ? `border-2 border-primary-foreground/50 ${tagColors[index % tagColors.length]}` : `bg-muted text-muted-foreground hover:bg-muted/80 ${tagColors[index % tagColors.length]} opacity-70`
-                                            )}
-                                        >
-                                            {title}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
-                             <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student {renderSortIcon('student', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class {renderSortIcon('class', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject {renderSortIcon('subject', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead>Score</TableHead>
-                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedResults.map(item => (
-                                            <TableRow key={item.student + item.subject + item.examTitle}>
-                                                <TableCell className="font-medium">{item.student}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{item.examTitle}</TableCell>
-                                                <TableCell>{item.score}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
+                                 <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {paginatedResults.length === 0 && <div className="text-center py-10 text-muted-foreground">No results found.</div>}
-                            </div>
-                             <div className="flex items-center justify-between mt-6">
-                                <div className="text-sm text-muted-foreground">Page {resultCurrentPage} of {totalResultPages}</div>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
-                                    <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedExams.map(item => (
+                                                <TableRow key={item.id}>
+                                                    <TableCell className="font-medium">{item.title}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
+                                                    <TableCell>{item.date}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {paginatedExams.length === 0 && <div className="text-center py-10 text-muted-foreground">No exams found.</div>}
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                                <div className="flex items-center justify-between mt-6">
+                                    <div className="text-sm text-muted-foreground">Page {examCurrentPage} of {totalExamPages}</div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.max(prev - 1, 1))} disabled={examCurrentPage === 1}>Previous</Button>
+                                        <Button variant="outline" size="sm" onClick={() => setExamCurrentPage(prev => Math.min(prev + 1, totalExamPages))} disabled={examCurrentPage === totalExamPages}>Next</Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="results">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Student Results</CardTitle>
+                                <CardDescription>View and manage student grades.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4 mb-6">
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" className="ml-auto">
+                                                    Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
+                                                    {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                                </DropdownMenuItem>
+                                                {CLASS_OPTIONS.map(c => (
+                                                    <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
+                                                ))}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap mt-4">
+                                        <Badge
+                                            onClick={() => setResultExamFilter('All')}
+                                            className={cn("cursor-pointer", resultExamFilter !== 'All' && "bg-muted text-muted-foreground hover:bg-muted/80")}
+                                        >
+                                            All
+                                        </Badge>
+                                        {EXAM_TITLE_OPTIONS.map((title, index) => (
+                                            <Badge
+                                                key={title}
+                                                onClick={() => setResultExamFilter(title)}
+                                                className={cn(
+                                                    "cursor-pointer",
+                                                    resultExamFilter === title ? `border-2 border-primary-foreground/50 ${tagColors[index % tagColors.length]}` : `bg-muted text-muted-foreground hover:bg-muted/80 ${tagColors[index % tagColors.length]} opacity-70`
+                                                )}
+                                            >
+                                                {title}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                                 <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student {renderSortIcon('student', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class {renderSortIcon('class', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject {renderSortIcon('subject', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                <TableHead>Score</TableHead>
+                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedResults.map(item => (
+                                                <TableRow key={item.student + item.subject + item.examTitle}>
+                                                    <TableCell className="font-medium">{item.student}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">{item.examTitle}</TableCell>
+                                                    <TableCell>{item.score}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {paginatedResults.length === 0 && <div className="text-center py-10 text-muted-foreground">No results found.</div>}
+                                </div>
+                                 <div className="flex items-center justify-between mt-6">
+                                    <div className="text-sm text-muted-foreground">Page {resultCurrentPage} of {totalResultPages}</div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
+                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
         </div>
     )
 }
