@@ -51,6 +51,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="right" className="p-0 w-[350px] sm:max-w-[350px]">
+                                     <SheetHeader className="p-4 pb-0">
+                                        <SheetTitle className="sr-only">Notifications & Events</SheetTitle>
+                                    </SheetHeader>
                                     <div className="p-4">
                                      <RightColumn />
                                     </div>
