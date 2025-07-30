@@ -44,9 +44,19 @@ const initialExams = [
 
 const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
 const CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
 
 type SortDirection = 'asc' | 'desc' | null;
+
+const tagColors = [
+  "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
+  "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
+];
 
 export default function AcademicsPage() {
     const { toast } = useToast();
@@ -63,6 +73,7 @@ export default function AcademicsPage() {
     const [results, setResults] = useState(initialResults);
     const [resultSearch, setResultSearch] = useState("");
     const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [resultExamFilter, setResultExamFilter] = useState<string>('All');
     const [resultSortColumn, setResultSortColumn] = useState<string | null>(null);
     const [resultSortDirection, setResultSortDirection] = useState<SortDirection>(null);
     const [resultCurrentPage, setResultCurrentPage] = useState(1);
@@ -131,7 +142,8 @@ export default function AcademicsPage() {
              item.examTitle.toLowerCase().includes(searchTermLower) ||
              item.grade.toLowerCase().includes(searchTermLower) ||
              item.score.toLowerCase().includes(searchTermLower)) && 
-             resultClassFilters[item.class]
+             resultClassFilters[item.class] &&
+             (resultExamFilter === 'All' || item.examTitle === resultExamFilter)
         );
          if (resultSortColumn && resultSortDirection) {
             filtered.sort((a, b) => {
@@ -143,7 +155,7 @@ export default function AcademicsPage() {
             });
         }
         return filtered;
-    }, [results, resultSearch, resultClassFilters, resultSortColumn, resultSortDirection]);
+    }, [results, resultSearch, resultClassFilters, resultSortColumn, resultSortDirection, resultExamFilter]);
 
     const filteredExams = useMemo(() => {
         const searchTermLower = examSearch.toLowerCase();
@@ -206,7 +218,7 @@ export default function AcademicsPage() {
                 <TabsContent value="assignments">
                     <Card>
                         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div className="flex-1">
+                            <div>
                                 <CardTitle>Assignments</CardTitle>
                                 <CardDescription>Manage and track student assignments.</CardDescription>
                             </div>
@@ -334,23 +346,46 @@ export default function AcademicsPage() {
                             <CardDescription>View and manage student grades.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="ml-auto">
-                                            Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
-                                            {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
-                                        </DropdownMenuItem>
-                                        {CLASS_OPTIONS.map(c => (
-                                            <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                            <div className="space-y-4 mb-6">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                    <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="ml-auto">
+                                                Filter by Class <ChevronDown className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
+                                                {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                            </DropdownMenuItem>
+                                            {CLASS_OPTIONS.map(c => (
+                                                <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-medium">Filter by Exam:</span>
+                                    <Badge
+                                        onClick={() => setResultExamFilter('All')}
+                                        className={cn("cursor-pointer", resultExamFilter !== 'All' && "bg-muted text-muted-foreground hover:bg-muted/80")}
+                                    >
+                                        All
+                                    </Badge>
+                                    {EXAM_TITLE_OPTIONS.map((title, index) => (
+                                        <Badge
+                                            key={title}
+                                            onClick={() => setResultExamFilter(title)}
+                                            className={cn(
+                                                "cursor-pointer",
+                                                resultExamFilter === title ? `border-2 border-primary-foreground/50 ${tagColors[index % tagColors.length]}` : `bg-muted text-muted-foreground hover:bg-muted/80 ${tagColors[index % tagColors.length]} opacity-70`
+                                            )}
+                                        >
+                                            {title}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
                              <div className="overflow-x-auto">
                                 <Table>
@@ -363,7 +398,6 @@ export default function AcademicsPage() {
                                             <TableHead>Grade</TableHead>
                                             <TableHead>Score</TableHead>
                                             <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -373,10 +407,9 @@ export default function AcademicsPage() {
                                                 <TableCell>{item.class}</TableCell>
                                                 <TableCell>{item.subject}</TableCell>
                                                 <TableCell>{item.examTitle}</TableCell>
-                                                <TableCell><Badge>{item.grade}</Badge></TableCell>
+                                                <TableCell><Badge>{item.grade}</TableCell>
                                                 <TableCell>{item.score}</TableCell>
                                                 <TableCell>{item.date}</TableCell>
-                                                <TableCell className="text-right"><Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button></TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -397,5 +430,3 @@ export default function AcademicsPage() {
         </div>
     )
 }
-
-    
