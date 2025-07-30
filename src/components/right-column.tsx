@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from './ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 const eventsByDate: Record<string, { time: string; title: string; type: 'event' | 'holiday' | 'exam' }[]> = {
     '2024-08-15': [{ time: '10:00 AM', title: 'Parent-Teacher Meeting', type: 'event' }],
@@ -19,6 +20,14 @@ const announcements = [
     { title: 'New Library Books', content: 'We have added a new collection of fiction and non-fiction books to the library.' },
     { title: 'Exam Schedule Update', content: 'The final exam schedule for the term has been updated. Please check the notice board.' },
     { title: 'Photography Club', content: 'The first meeting of the new photography club will be this Friday.' },
+];
+
+const cardColors = [
+    "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900",
+    "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900",
+    "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-900",
+    "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900",
+    "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-900",
 ];
 
 const getTodayString = () => {
@@ -55,6 +64,7 @@ export function RightColumn() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        // This ensures the component has mounted on the client before using `new Date()`
         setIsClient(true);
         setDate(new Date());
     }, []);
@@ -75,7 +85,7 @@ export function RightColumn() {
     };
     
     let eventsToShow: any[] = [];
-    let titleMessage = "No date selected";
+    let titleMessage = "Loading events...";
 
     if (isClient && date) {
         const today = new Date();
@@ -103,13 +113,26 @@ export function RightColumn() {
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    {isClient && (
+                    {isClient ? (
                          <Calendar
                             mode="single"
                             selected={date}
                             onSelect={handleDateSelect}
                             className="rounded-md"
                         />
+                    ) : (
+                        <div className="p-3">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="h-6 w-24 bg-muted rounded" />
+                            </div>
+                            <div className="space-y-2">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex justify-between">
+                                        {[...Array(7)].map((_, j) => <div key={j} className="h-9 w-9 bg-muted rounded-md" />)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -133,7 +156,7 @@ export function RightColumn() {
                     </ul>
                 ) : (
                     <p className="text-sm text-muted-foreground pt-2">
-                         No events to show for the selected date.
+                         {isClient ? "No events to show for the selected date." : "Loading..."}
                     </p>
                 )}
             </div>
@@ -146,7 +169,7 @@ export function RightColumn() {
                <ScrollArea className="h-48 pr-4">
                     <div className="space-y-4">
                         {announcements.map((ann, index) => (
-                            <Card key={index} className="bg-background">
+                            <Card key={index} className={cn("bg-background", cardColors[index % cardColors.length])}>
                                 <CardHeader className="p-4">
                                     <CardTitle className="text-sm">{ann.title}</CardTitle>
                                     <CardDescription className="text-xs">{ann.content}</CardDescription>
