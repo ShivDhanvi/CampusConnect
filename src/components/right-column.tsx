@@ -75,7 +75,7 @@ export function RightColumn() {
     };
     
     let eventsToShow: any[] = [];
-    let titleMessage = "No date selected";
+    let titleMessage = "Loading events...";
 
     if (isClient && date) {
         const today = new Date();
@@ -103,13 +103,26 @@ export function RightColumn() {
         <div className="space-y-6">
             <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                    {isClient && (
+                    {isClient ? (
                          <Calendar
                             mode="single"
                             selected={date}
                             onSelect={handleDateSelect}
                             className="rounded-md"
                         />
+                    ) : (
+                        <div className="p-3">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="h-6 w-24 bg-muted rounded" />
+                            </div>
+                            <div className="space-y-2">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex justify-between">
+                                        {[...Array(7)].map((_, j) => <div key={j} className="h-9 w-9 bg-muted rounded-md" />)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -133,7 +146,7 @@ export function RightColumn() {
                     </ul>
                 ) : (
                     <p className="text-sm text-muted-foreground pt-2">
-                         No events to show for the selected date.
+                         {isClient ? "No events to show for the selected date." : "Loading..."}
                     </p>
                 )}
             </div>
