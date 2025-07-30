@@ -140,7 +140,6 @@ export default function AcademicsPage() {
              item.class.toLowerCase().includes(searchTermLower) ||
              item.subject.toLowerCase().includes(searchTermLower) ||
              item.examTitle.toLowerCase().includes(searchTermLower) ||
-             item.grade.toLowerCase().includes(searchTermLower) ||
              item.score.toLowerCase().includes(searchTermLower)) && 
              resultClassFilters[item.class] &&
              (resultExamFilter === 'All' || item.examTitle === resultExamFilter)
@@ -253,8 +252,8 @@ export default function AcademicsPage() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -263,8 +262,8 @@ export default function AcademicsPage() {
                                         {paginatedAssignments.map(item => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">{item.title}</TableCell>
-                                                <TableCell>{item.subject}</TableCell>
-                                                <TableCell>{item.dueDate}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
                                                 <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
                                                 <TableCell className="text-right"><Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button></TableCell>
                                             </TableRow>
@@ -313,7 +312,7 @@ export default function AcademicsPage() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
                                             <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -321,7 +320,7 @@ export default function AcademicsPage() {
                                         {paginatedExams.map(item => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">{item.title}</TableCell>
-                                                <TableCell>{item.class}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
                                                 <TableCell>{item.date}</TableCell>
                                             </TableRow>
                                         ))}
@@ -365,8 +364,7 @@ export default function AcademicsPage() {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm font-medium">Filter by Exam:</span>
+                                <div className="flex items-center gap-2 flex-wrap mt-4">
                                     <Badge
                                         onClick={() => setResultExamFilter('All')}
                                         className={cn("cursor-pointer", resultExamFilter !== 'All' && "bg-muted text-muted-foreground hover:bg-muted/80")}
@@ -392,24 +390,22 @@ export default function AcademicsPage() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead><Button variant="ghost" onClick={() => handleSort('student', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Student {renderSortIcon('student', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class {renderSortIcon('class', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject {renderSortIcon('subject', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
-                                            <TableHead>Grade</TableHead>
+                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Class {renderSortIcon('class', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Subject {renderSortIcon('subject', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                             <TableHead>Score</TableHead>
-                                            <TableHead><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                            <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {paginatedResults.map(item => (
                                             <TableRow key={item.student + item.subject + item.examTitle}>
                                                 <TableCell className="font-medium">{item.student}</TableCell>
-                                                <TableCell>{item.class}</TableCell>
-                                                <TableCell>{item.subject}</TableCell>
-                                                <TableCell>{item.examTitle}</TableCell>
-                                                <TableCell><Badge>{item.grade}</Badge></TableCell>
+                                                <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{item.examTitle}</TableCell>
                                                 <TableCell>{item.score}</TableCell>
-                                                <TableCell>{item.date}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
