@@ -240,7 +240,7 @@ export default function UserManagementPage() {
                                                 </Avatar>
                                                 <div>
                                                     <p className="font-medium whitespace-nowrap">{user.name}</p>
-                                                    <p className="text-sm text-muted-foreground whitespace-nowrap">{user.email}</p>
+                                                    <p className="text-sm text-muted-foreground whitespace-nowrap hidden sm:block">{user.email}</p>
                                                 </div>
                                             </div>
                                         </TableCell>
