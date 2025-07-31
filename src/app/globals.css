@@ -84,3 +84,59 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* react-big-calendar custom styling */
+@layer components {
+  .rbc-calendar {
+    @apply font-body;
+  }
+  .rbc-toolbar {
+    @apply mb-4 flex flex-col sm:flex-row gap-4 items-center;
+  }
+  .rbc-toolbar .rbc-toolbar-label {
+    @apply text-lg font-semibold text-foreground flex-grow;
+  }
+  .rbc-btn-group {
+    @apply inline-flex gap-2;
+  }
+  .rbc-btn-group button {
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+    @apply bg-card text-card-foreground border border-input;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  .rbc-btn-group button.rbc-active {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  .rbc-header {
+    @apply p-2 text-center font-semibold border-b text-muted-foreground;
+  }
+  .rbc-day-bg.rbc-off-range-bg {
+    @apply bg-background; /* Removes the gray background for other month's days */
+  }
+  .rbc-day-bg.rbc-today {
+     @apply bg-primary/10;
+  }
+  .rbc-event, .rbc-day-slot .rbc-background-event {
+    @apply bg-primary/80 text-primary-foreground p-1 rounded-md text-xs;
+    border-color: hsl(var(--primary));
+  }
+  .rbc-event.rbc-selected {
+    @apply bg-accent text-accent-foreground;
+  }
+  .rbc-time-view, .rbc-month-view {
+    @apply border-none;
+  }
+  .rbc-time-header-content {
+      @apply border-l-0;
+  }
+  .rbc-time-content, .rbc-time-gutter {
+    @apply border-t-0;
+  }
+  .rbc-time-slot {
+      @apply border-t-0;
+  }
+  .rbc-time-gutter .rbc-timeslot-group {
+      @apply border-b-0;
+  }
+}

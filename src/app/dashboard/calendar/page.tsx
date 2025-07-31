@@ -1,15 +1,15 @@
 
 "use client";
 
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useMemo, useState, useEffect } from 'react';
-import { startOfDay, addHours, getWeek, getMonth, getYear, set, addDays, nextDay } from 'date-fns';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { getWeek, set, addDays, nextDay, eachWeekOfInterval, startOfMonth, endOfMonth, Day } from 'date-fns';
 
 const locales = {
   'en-US': enUS,
@@ -28,75 +28,63 @@ const timetable = {
         { time: '08:00 - 09:00', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
         { time: '09:00 - 10:00', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
         { time: '10:00 - 11:00', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
+        { time: '13:00 - 14:00', subject: 'Chemistry', teacher: 'Mr. Brown', room: 'Lab C' },
     ],
     'Tuesday': [
         { time: '08:00 - 09:00', subject: 'English', teacher: 'Ms. Williams', room: '103' },
         { time: '09:00 - 10:00', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
+        { time: '11:00 - 12:00', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
     ],
     'Wednesday': [
         { time: '08:00 - 09:00', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
         { time: '09:00 - 10:00', subject: 'Art', teacher: 'Ms. Green', room: 'Art Room' },
+        { time: '14:00 - 15:00', subject: 'Computer Science', teacher: 'Mr. Black', room: 'CS Lab' },
     ],
     'Thursday': [
          { time: '09:00 - 10:00', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
          { time: '10:00 - 11:00', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
+         { time: '15:00 - 16:00', subject: 'Geography', teacher: 'Mrs. Clark', room: '104' },
     ],
     'Friday': [
         { time: '08:00 - 09:00', subject: 'English', teacher: 'Ms. Williams', room: '103' },
         { time: '09:00 - 10:00', subject: 'Music', teacher: 'Mrs. White', room: 'Music Room' },
+        { time: '13:00 - 14:00', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
     ],
     'Saturday': [],
     'Sunday': [],
 };
 
-type Day = keyof typeof timetable;
-const dayMapping: Record<Day, number> = {
-    'Sunday': 0,
-    'Monday': 1,
-    'Tuesday': 2,
-    'Wednesday': 3,
-    'Thursday': 4,
-    'Friday': 5,
-    'Saturday': 6,
+type TimetableDay = keyof typeof timetable;
+const dayMapping: Record<TimetableDay, Day> = {
+    'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6,
 };
 
 
-const generateEvents = () => {
+const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     const events: any[] = [];
-    const today = new Date();
-    const currentMonth = getMonth(today);
-    const currentYear = getYear(today);
-    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    
+    const weeks = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 1 /* Monday */ });
 
-    (Object.keys(timetable) as Day[]).forEach(day => {
-        const dayOfWeek = dayMapping[day];
-        let currentDate = nextDay(firstDayOfMonth, dayOfWeek);
-        
-        // Adjust if the first occurrence is in the previous month
-        if (getDay(currentDate) !== dayOfWeek) {
-            currentDate = addDays(currentDate, 7);
-        }
-        if(getMonth(currentDate) < currentMonth) {
-            currentDate = nextDay(addDays(firstDayOfMonth, -7), dayOfWeek);
-        }
+    weeks.forEach(weekStart => {
+        (Object.keys(timetable) as TimetableDay[]).forEach(day => {
+            const dayOfWeek = dayMapping[day];
+            const currentDate = addDays(weekStart, dayOfWeek -1); // Adjust for week start on Monday
 
+            if (currentDate >= startDate && currentDate <= endDate) {
+                timetable[day].forEach(session => {
+                    const [startTime, endTime] = session.time.split(' - ');
+                    const [startHour, startMinute] = startTime.split(':').map(Number);
+                    const [endHour, endMinute] = endTime.split(':').map(Number);
 
-        while(getMonth(currentDate) === currentMonth) {
-            timetable[day].forEach(session => {
-                const [startTime, endTime] = session.time.split(' - ');
-                const [startHour, startMinute] = startTime.split(':').map(Number);
-                const [endHour, endMinute] = endTime.split(':').map(Number);
-
-                events.push({
-                    title: `${session.subject} (${session.teacher})`,
-                    start: set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 }),
-                    end: set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 }),
-                    resource: { room: session.room },
+                    events.push({
+                        title: `${session.subject} (${session.teacher})`,
+                        start: set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 }),
+                        end: set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 }),
+                        resource: { room: session.room },
+                    });
                 });
-            });
-            currentDate = addDays(currentDate, 7);
-        }
-
+            }
+        });
     });
     return events;
 }
@@ -105,12 +93,36 @@ const generateEvents = () => {
 export default function CalendarPage() {
     
     const [isClient, setIsClient] = useState(false);
+    const [events, setEvents] = useState<any[]>([]);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+    
+    const onNavigate = useCallback((newDate: Date) => {
+        const start = startOfMonth(newDate);
+        const end = endOfMonth(newDate);
+        setEvents(generateEventsForDateRange(start, end));
+    }, []);
 
-    const events = useMemo(() => isClient ? generateEvents() : [], [isClient]);
+    useEffect(() => {
+        if(isClient) {
+            const today = new Date();
+            const start = startOfMonth(today);
+            const end = endOfMonth(today);
+            setEvents(generateEventsForDateRange(start, end));
+        }
+    }, [isClient]);
+
+    const { defaultDate, scrollToTime, min, max } = useMemo(() => {
+        const today = new Date();
+        return {
+            defaultDate: today,
+            scrollToTime: set(today, { hours: 8, minutes: 0 }),
+            min: set(today, { hours: 8, minutes: 0 }),
+            max: set(today, { hours: 18, minutes: 0 }),
+        }
+    }, [])
 
     return (
         <div className="space-y-8 h-full flex flex-col">
@@ -118,16 +130,24 @@ export default function CalendarPage() {
                 <h1 className="text-3xl font-bold font-headline">Timetable</h1>
                 <p className="text-muted-foreground">View your weekly class schedule.</p>
             </div>
-            <div className="flex-1 min-h-[70vh]">
+            <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm">
                 {isClient && <Calendar
                     localizer={localizer}
                     events={events}
+                    defaultView={Views.WEEK}
+                    views={['week', 'day']}
                     startAccessor="start"
                     endAccessor="end"
                     style={{ flex: 1 }}
-                    views={['month', 'week', 'day', 'agenda']}
-                    step={60}
-                    showMultiDayTimes
+                    step={30}
+                    timeslots={2}
+                    defaultDate={defaultDate}
+                    scrollToTime={scrollToTime}
+                    onNavigate={onNavigate}
+                    min={min}
+                    max={max}
+                    // Disables the distracting background for dates outside the current month in week view
+                    className="[&_.rbc-off-range-bg]:bg-background"
                 />}
             </div>
         </div>
