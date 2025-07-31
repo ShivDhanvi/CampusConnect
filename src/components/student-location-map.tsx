@@ -23,20 +23,29 @@ const markers = [
 export function StudentLocationMap() {
   const chennaiPosition: LatLngExpression = [13.0, 80.2]; // Centered around Chennai
 
+  const displayMap = React.useMemo(
+    () => (
+      <MapContainer center={chennaiPosition} zoom={11} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {markers.map((marker, index) => (
+          <Marker key={index} position={marker.position} icon={defaultIcon}>
+            <Popup>
+              <div className="font-bold">{marker.name}</div>
+              <p>{marker.students} students</p>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    ),
+    [chennaiPosition]
+  );
+
   return (
-    <MapContainer center={chennaiPosition} zoom={11} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {markers.map((marker, index) => (
-        <Marker key={index} position={marker.position} icon={defaultIcon}>
-          <Popup>
-            <div className="font-bold">{marker.name}</div>
-            <p>{marker.students} students</p>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div style={{ height: '100%', width: '100%' }}>
+      {displayMap}
+    </div>
   );
 }
