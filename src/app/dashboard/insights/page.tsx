@@ -1,7 +1,7 @@
 
 "use client"
 
-import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Sector } from "recharts"
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
@@ -33,9 +33,9 @@ const subjectPerformanceData = [
 ];
 
 const userDemographicsData = [
-    { role: 'Students', count: 1250, fill: "var(--color-students)" },
-    { role: 'Teachers', count: 75, fill: "var(--color-teachers)" },
-    { role: 'Parents', count: 2100, fill: "var(--color-parents)" },
+    { role: 'Students', count: 1250, fill: "hsl(var(--chart-1))" },
+    { role: 'Teachers', count: 75, fill: "hsl(var(--chart-2))" },
+    { role: 'Parents', count: 2100, fill: "hsl(var(--chart-3))" },
 ]
 
 const chartConfigs = {
@@ -151,7 +151,7 @@ export default function InsightsPage() {
                                 <Tooltip content={<ChartTooltipContent hideLabel />} />
                                 <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} >
                                      {userDemographicsData.map((entry, index) => (
-                                        <Sector key={`cell-${index}`} fill={entry.fill} />
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}
                                 </Pie>
                                 <Legend />
