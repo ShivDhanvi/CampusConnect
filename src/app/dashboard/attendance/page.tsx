@@ -41,28 +41,33 @@ const CLASS_OPTIONS = ["All", "10-A", "10-B", "11-A", "11-B"];
 const ITEMS_PER_PAGE = 5;
 type SortDirection = 'asc' | 'desc' | null;
 
-// Generic function to export data to CSV
-const exportToCsv = (filename: string, rows: any[]) => {
-    if (!rows || rows.length === 0) {
-        return;
-    }
-    const header = Object.keys(rows[0]);
-    const csvContent = [
-        header.join(','),
-        ...rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(','))
-    ].join('\n');
+const exportToCsv = (filename: string, studentRows: any[], teacherRows: any[], staffRows: any[]) => {
+    let csvContent = "";
+
+    const createSection = (title: string, rows: any[]) => {
+        if (!rows || rows.length === 0) return "";
+        const header = Object.keys(rows[0]);
+        let sectionCsv = title + '\n';
+        sectionCsv += header.join(',') + '\n';
+        sectionCsv += rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(',')).join('\n');
+        return sectionCsv + '\n\n';
+    };
+    
+    csvContent += createSection("Students", studentRows);
+    csvContent += createSection("Teachers", teacherRows);
+    csvContent += createSection("Staff", staffRows);
+
+    if (csvContent === "") return;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    if (link.href) {
-        URL.revokeObjectURL(link.href);
-    }
     const url = URL.createObjectURL(blob);
     link.href = url;
     link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
 
 
@@ -106,12 +111,10 @@ export default function AttendancePage() {
             case "90":
                 fromDate = addDays(now, -90);
                 break;
+            case "custom":
+                return; // For custom, the calendar will set the date
             default:
-                if (timeframe !== 'custom') {
-                    fromDate = now;
-                } else {
-                    return;
-                }
+                fromDate = now;
         }
         setDateRange({ from: fromDate, to: now });
     }, [timeframe]);
@@ -196,6 +199,25 @@ export default function AttendancePage() {
     const paginatedStaff = filteredStaff.slice((staffCurrentPage - 1) * ITEMS_PER_PAGE, staffCurrentPage * ITEMS_PER_PAGE);
     const totalStaffPages = Math.ceil(filteredStaff.length / ITEMS_PER_PAGE);
 
+    const renderDateLabel = () => {
+        if (timeframe !== 'custom' || !dateRange) {
+            const options: { [key: string]: string } = {
+                today: "Today",
+                "7": "Last 7 days",
+                "30": "Last 30 days",
+                "90": "Last 90 days",
+            };
+            return options[timeframe];
+        }
+        if (dateRange.from) {
+            if (dateRange.to) {
+                return `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}`;
+            }
+            return format(dateRange.from, "LLL dd, y");
+        }
+        return "Pick a date";
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -204,63 +226,49 @@ export default function AttendancePage() {
                     <p className="text-muted-foreground">Track student, teacher, and staff attendance.</p>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            id="date"
-                            variant={"outline"}
-                            className={cn(
-                              "w-[240px] justify-start text-left font-normal",
-                              !dateRange && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                              dateRange.to ? (
-                                <>
-                                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                                  {format(dateRange.to, "LLL dd, y")}
-                                </>
-                              ) : (
-                                format(dateRange.from, "LLL dd, y")
-                              )
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                            <div className="flex">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="m-2">
-                                            {timeframe === 'custom' ? "Custom" : `Last ${timeframe} days`}
-                                            {timeframe === 'today' && "Today"}
-                                            <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuRadioGroup value={timeframe} onValueChange={setTimeframe}>
-                                            <DropdownMenuRadioItem value="today">Today</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="7">Last 7 days</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="30">Last 30 days</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="90">Last 90 days</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="custom">Custom</DropdownMenuRadioItem>
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={dateRange?.from}
-                                    selected={dateRange}
-                                    onSelect={(range) => { setDateRange(range); setTimeframe('custom'); }}
-                                    numberOfMonths={2}
-                                />
-                            </div>
-                        </PopoverContent>
-                      </Popover>
-                    <Button variant="outline" onClick={() => exportToCsv('attendance_report.csv', [...filteredStudents, ...filteredTeachers, ...filteredStaff])}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                             <Button
+                                id="date"
+                                variant={"outline"}
+                                className={cn(
+                                "w-[240px] justify-start text-left font-normal",
+                                !dateRange && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                <span>{renderDateLabel()}</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="end">
+                            <DropdownMenuRadioGroup value={timeframe} onValueChange={setTimeframe}>
+                                <DropdownMenuRadioItem value="today">Today</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="7">Last 7 days</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="30">Last 30 days</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="90">Last 90 days</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" className={cn("w-full justify-start font-normal px-2 py-1.5", timeframe === 'custom' && 'font-bold')}>Custom</Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={(range) => {
+                                            setDateRange(range);
+                                            setTimeframe('custom');
+                                        }}
+                                        numberOfMonths={2}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button variant="outline" onClick={() => exportToCsv('attendance_report.csv', filteredStudents, filteredTeachers, filteredStaff)}>
                         <FileDown className="mr-2 h-4 w-4" />
                         Export Report
                     </Button>
@@ -406,3 +414,5 @@ export default function AttendancePage() {
         </div>
     );
 }
+
+    
