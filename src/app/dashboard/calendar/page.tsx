@@ -88,9 +88,9 @@ interface MyEvent {
 }
 
 const CustomEvent = ({ event }: EventProps<MyEvent>) => (
-  <div className="h-full p-2 flex flex-col justify-center">
-    <p className="text-xs font-medium text-muted-foreground">{event.resource.time}</p>
+  <div className="h-full p-1">
     <p className="font-semibold text-sm leading-tight">{event.title}</p>
+    <p className="text-xs text-muted-foreground">{event.resource.time}</p>
   </div>
 );
 
@@ -165,7 +165,7 @@ export default function CalendarPage() {
     }, [])
 
     const eventStyleGetter = (event: MyEvent) => {
-        const className = `${event.resource.colorClass} rbc-event-custom`;
+        const className = `${event.resource.colorClass} rbc-event-default`;
         return {
             className: className,
         };
@@ -186,8 +186,8 @@ export default function CalendarPage() {
                     startAccessor="start"
                     endAccessor="end"
                     style={{ flex: 1 }}
-                    step={30}
-                    timeslots={2}
+                    step={60}
+                    timeslots={1}
                     defaultDate={defaultDate}
                     scrollToTime={scrollToTime}
                     onNavigate={onNavigate}
