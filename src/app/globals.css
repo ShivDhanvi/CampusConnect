@@ -88,13 +88,13 @@
 /* react-big-calendar custom styling */
 @layer components {
   .rbc-calendar {
-    @apply font-body;
+    @apply font-body text-sm;
   }
   .rbc-toolbar {
     @apply mb-4 flex flex-col sm:flex-row gap-4 items-center;
   }
   .rbc-toolbar .rbc-toolbar-label {
-    @apply text-lg font-semibold text-foreground flex-grow;
+    @apply text-lg font-semibold text-foreground flex-grow text-center sm:text-left;
   }
   .rbc-btn-group {
     @apply inline-flex gap-2;
@@ -109,7 +109,7 @@
     @apply bg-primary text-primary-foreground hover:bg-primary/90;
   }
   .rbc-header {
-    @apply p-2 text-center font-semibold border-b text-muted-foreground;
+    @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
   }
   .rbc-day-bg.rbc-off-range-bg {
     @apply bg-background; /* Removes the gray background for other month's days */
@@ -117,26 +117,48 @@
   .rbc-day-bg.rbc-today {
      @apply bg-primary/10;
   }
-  .rbc-event, .rbc-day-slot .rbc-background-event {
-    @apply bg-primary/80 text-primary-foreground p-1 rounded-md text-xs;
-    border-color: hsl(var(--primary));
+  
+  .rbc-event.rbc-event-custom, .rbc-day-slot .rbc-background-event.rbc-event-custom {
+    @apply p-0 rounded-lg border-l-4 transition-all duration-200 ease-in-out;
+    background-color: var(--event-bg-color);
+    border-color: var(--event-border-color);
+    color: var(--event-text-color);
   }
-  .rbc-event.rbc-selected {
-    @apply bg-accent text-accent-foreground;
+
+  .rbc-event-custom {
+    @apply rounded-lg border-2 !important;
   }
+
   .rbc-time-view, .rbc-month-view {
     @apply border-none;
   }
+
   .rbc-time-header-content {
-      @apply border-l-0;
+      @apply border-l-0 border-b;
   }
   .rbc-time-content, .rbc-time-gutter {
-    @apply border-t-0;
+    @apply border-t;
   }
   .rbc-time-slot {
       @apply border-t-0;
   }
   .rbc-time-gutter .rbc-timeslot-group {
       @apply border-b-0;
+  }
+
+  .rbc-time-gutter .rbc-time-slot {
+    @apply text-right pr-4 text-muted-foreground;
+  }
+
+  .rbc-timeslot-group {
+      @apply border-b;
+  }
+
+  .rbc-time-content > * + * > * {
+    @apply border-l;
+  }
+
+  .rbc-rtl .rbc-time-content > * + * > * {
+    @apply border-l-0 border-r;
   }
 }
