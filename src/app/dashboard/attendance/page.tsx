@@ -41,23 +41,15 @@ const CLASS_OPTIONS = ["All", "10-A", "10-B", "11-A", "11-B"];
 const ITEMS_PER_PAGE = 5;
 type SortDirection = 'asc' | 'desc' | null;
 
-const exportToCsv = (filename: string, studentRows: any[], teacherRows: any[], staffRows: any[]) => {
-    let csvContent = "";
-
-    const createSection = (title: string, rows: any[]) => {
-        if (!rows || rows.length === 0) return "";
-        const header = Object.keys(rows[0]);
-        let sectionCsv = title + '\n';
-        sectionCsv += header.join(',') + '\n';
-        sectionCsv += rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(',')).join('\n');
-        return sectionCsv + '\n\n';
-    };
-    
-    csvContent += createSection("Students", studentRows);
-    csvContent += createSection("Teachers", teacherRows);
-    csvContent += createSection("Staff", staffRows);
-
-    if (csvContent === "") return;
+const exportToCsv = (filename: string, rows: any[]) => {
+    if (!rows || rows.length === 0) {
+        return;
+    }
+    const header = Object.keys(rows[0]);
+    const csvContent = [
+        header.join(','),
+        ...rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(','))
+    ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -267,11 +259,6 @@ export default function AttendancePage() {
                             </Popover>
                         </DropdownMenuContent>
                     </DropdownMenu>
-
-                    <Button variant="outline" onClick={() => exportToCsv('attendance_report.csv', filteredStudents, filteredTeachers, filteredStaff)}>
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Export Report
-                    </Button>
                  </div>
             </div>
             <Tabs defaultValue="students">
@@ -284,9 +271,15 @@ export default function AttendancePage() {
                 {/* Students Tab */}
                 <TabsContent value="students">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Student Attendance</CardTitle>
-                            <CardDescription>Log of student attendance records.</CardDescription>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Student Attendance</CardTitle>
+                                <CardDescription>Log of student attendance records.</CardDescription>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => exportToCsv('student_attendance.csv', filteredStudents)}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Export
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
@@ -340,7 +333,16 @@ export default function AttendancePage() {
                 {/* Teachers Tab */}
                 <TabsContent value="teachers">
                      <Card>
-                        <CardHeader><CardTitle>Teacher Attendance</CardTitle><CardDescription>Log of teacher attendance records.</CardDescription></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Teacher Attendance</CardTitle>
+                                <CardDescription>Log of teacher attendance records.</CardDescription>
+                            </div>
+                             <Button variant="outline" size="sm" onClick={() => exportToCsv('teacher_attendance.csv', filteredTeachers)}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Export
+                            </Button>
+                        </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-4 mb-6"><Input placeholder="Search by name..." value={teacherSearch} onChange={e => {setTeacherSearch(e.target.value); setTeacherCurrentPage(1);}} className="max-w-sm" /></div>
                             <div className="overflow-x-auto">
@@ -377,7 +379,16 @@ export default function AttendancePage() {
                 {/* Staff Tab */}
                 <TabsContent value="staff">
                     <Card>
-                        <CardHeader><CardTitle>Staff Attendance</CardTitle><CardDescription>Log of staff attendance records.</CardDescription></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Staff Attendance</CardTitle>
+                                <CardDescription>Log of staff attendance records.</CardDescription>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => exportToCsv('staff_attendance.csv', filteredStaff)}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Export
+                            </Button>
+                        </CardHeader>
                         <CardContent>
                            <div className="flex items-center gap-4 mb-6"><Input placeholder="Search by name..." value={staffSearch} onChange={e => {setStaffSearch(e.target.value); setStaffCurrentPage(1)}} className="max-w-sm" /></div>
                             <div className="overflow-x-auto">
