@@ -8,7 +8,7 @@ import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { startOfDay, addHours, getWeek, getMonth, getYear, set, addDays, nextDay } from 'date-fns';
 
 const locales = {
@@ -104,7 +104,13 @@ const generateEvents = () => {
 
 export default function CalendarPage() {
     
-    const events = useMemo(() => generateEvents(), []);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    const events = useMemo(() => isClient ? generateEvents() : [], [isClient]);
 
     return (
         <div className="space-y-8 h-full flex flex-col">
@@ -113,7 +119,7 @@ export default function CalendarPage() {
                 <p className="text-muted-foreground">View your weekly class schedule.</p>
             </div>
             <div className="flex-1 min-h-[70vh]">
-                <Calendar
+                {isClient && <Calendar
                     localizer={localizer}
                     events={events}
                     startAccessor="start"
@@ -122,7 +128,7 @@ export default function CalendarPage() {
                     views={['month', 'week', 'day', 'agenda']}
                     step={60}
                     showMultiDayTimes
-                />
+                />}
             </div>
         </div>
     )
