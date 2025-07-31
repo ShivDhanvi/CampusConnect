@@ -140,7 +140,7 @@ export default function InsightsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-5">
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 flex flex-col">
                     <CardHeader>
                         <CardTitle>User Demographics</CardTitle>
                         <CardDescription>Distribution of user roles in the system.</CardDescription>
