@@ -190,11 +190,11 @@ export default function UserManagementPage() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="max-w-sm"
+                            className="w-full sm:max-w-sm"
                         />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="ml-auto">
+                                <Button variant="outline" className="w-full sm:w-auto sm:ml-auto">
                                     Filter by Role <ChevronDown className="ml-2 h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -313,3 +313,5 @@ export default function UserManagementPage() {
         </div>
     )
 }
+
+    
