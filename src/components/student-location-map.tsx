@@ -76,7 +76,7 @@ export function StudentLocationMap() {
                             <Geography
                                 key={geo.rsmKey}
                                 geography={geo}
-                                className="fill-muted-foreground/30 stroke-background outline-none"
+                                className="fill-muted stroke-background outline-none"
                             />
                         ))
                     }
@@ -85,7 +85,7 @@ export function StudentLocationMap() {
                     <Tooltip key={name}>
                     <TooltipTrigger asChild>
                         <Marker coordinates={coordinates as [number, number]}>
-                        <circle r={0.2} className="fill-primary/70 stroke-primary-foreground stroke-[0.1]" />
+                        <circle r={0.25} className="fill-primary/70 stroke-primary-foreground stroke-[0.05]" />
                         </Marker>
                     </TooltipTrigger>
                     <TooltipContent>
