@@ -107,9 +107,9 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
 
 const CustomEvent = ({ event }: EventProps<MyEvent>) => {
     return (
-        <div>
-            <div className="text-xs font-semibold">{event.resource.time}</div>
-            <div className="font-bold">{event.title}</div>
+        <div className="h-full flex flex-col justify-center">
+            <div className="text-xs font-semibold text-gray-600">{event.resource.time}</div>
+            <div className="font-bold text-sm truncate">{event.title}</div>
         </div>
     );
 };
