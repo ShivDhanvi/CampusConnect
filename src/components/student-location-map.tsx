@@ -20,11 +20,11 @@ const markers = [
   { position: [12.883, 80.229] as LatLngExpression, name: "OMR", students: 250 },
 ];
 
-export function StudentLocationMap() {
+// Note: This is now a default export.
+export default function StudentLocationMap() {
   const chennaiPosition: LatLngExpression = [13.0, 80.2]; // Centered around Chennai
 
-  const displayMap = React.useMemo(
-    () => (
+  return (
       <MapContainer center={chennaiPosition} zoom={11} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -39,13 +39,5 @@ export function StudentLocationMap() {
           </Marker>
         ))}
       </MapContainer>
-    ),
-    [chennaiPosition]
-  );
-
-  return (
-    <div style={{ height: '100%', width: '100%' }}>
-      {displayMap}
-    </div>
   );
 }

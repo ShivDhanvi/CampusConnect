@@ -48,18 +48,13 @@ const chartConfigs = {
     avgScore: { label: "Avg. Score", color: "hsl(var(--chart-1))" }
 };
 
-const StudentLocationMap = dynamic(() => import('@/components/student-location-map').then(mod => mod.StudentLocationMap), {
+const StudentLocationMap = dynamic(() => import('@/components/student-location-map'), {
     ssr: false,
     loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-lg" />
 });
 
 
 export default function InsightsPage() {
-    const [isClient, setIsClient] = useState(false)
-
-    useEffect(() => {
-        setIsClient(true)
-    }, [])
 
     return (
         <div className="space-y-8">
@@ -196,7 +191,7 @@ export default function InsightsPage() {
                     <CardDescription>A map showing the geographic distribution of students in the Chennai area.</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[450px] w-full p-0">
-                   {isClient && <StudentLocationMap />}
+                   <StudentLocationMap />
                 </CardContent>
             </Card>
 
