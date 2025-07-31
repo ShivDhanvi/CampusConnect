@@ -56,7 +56,7 @@ export default function InsightsPage() {
                 <p className="text-muted-foreground">High-level analytics and reports for school administration.</p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -139,8 +139,8 @@ export default function InsightsPage() {
                 </Card>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-5">
-                <Card className="md:col-span-2 flex flex-col">
+            <div className="grid gap-6 lg:grid-cols-5">
+                <Card className="lg:col-span-2 flex flex-col">
                     <CardHeader>
                         <CardTitle>User Demographics</CardTitle>
                         <CardDescription>Distribution of user roles in the system.</CardDescription>
@@ -159,7 +159,7 @@ export default function InsightsPage() {
                         </ChartContainer>
                     </CardContent>
                 </Card>
-                 <Card className="md:col-span-3">
+                 <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Average Subject Performance</CardTitle>
                         <CardDescription>Average scores across all grades for each subject.</CardDescription>
@@ -180,3 +180,5 @@ export default function InsightsPage() {
         </div>
     )
 }
+
+    
