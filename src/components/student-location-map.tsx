@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -10,6 +10,7 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Skeleton } from "./ui/skeleton";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
@@ -32,6 +33,16 @@ const markers = [
 ];
 
 export function StudentLocationMap() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <Skeleton className="h-full w-full" />;
+  }
+
   return (
     <TooltipProvider>
       <ComposableMap
