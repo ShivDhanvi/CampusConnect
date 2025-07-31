@@ -5,7 +5,12 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, R
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
-import { StudentLocationMap } from "@/components/student-location-map"
+import dynamic from 'next/dynamic'
+
+const StudentLocationMap = dynamic(() => import('@/components/student-location-map').then(mod => mod.StudentLocationMap), {
+    ssr: false,
+    loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-lg" />
+});
 
 const enrollmentData = [
   { year: '2020', students: 850 },
@@ -182,7 +187,7 @@ export default function InsightsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Student Location Insights</CardTitle>
-                    <CardDescription>A world map showing the geographic distribution of students.</CardDescription>
+                    <CardDescription>A map showing the geographic distribution of students in the Chennai area.</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[450px] w-full p-0">
                    <StudentLocationMap />
