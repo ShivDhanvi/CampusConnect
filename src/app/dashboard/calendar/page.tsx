@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Calendar, dateFnsLocalizer, Views, EventProps } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views, EventProps, View } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -69,8 +69,23 @@ interface MyEvent {
     room: string;
     teacher: string;
     time: string;
+    subject: string;
   };
 }
+
+const colorMap: Record<string, string> = {
+    'Mathematics': '#e2f8ff',
+    'History': '#fefce8',
+    'Biology': '#f2f1ff',
+    'Physics': '#fdf2fb',
+    'Chemistry': '#e2f8ff',
+    'English': '#fefce8',
+    'Physical Education': '#f2f1ff',
+    'Art': '#fdf2fb',
+    'Geography': '#e2f8ff',
+    'Computer Science': '#fefce8',
+    'Music': '#f2f1ff',
+};
 
 const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     const events: MyEvent[] = [];
@@ -96,6 +111,7 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
                           room: session.room,
                           teacher: session.teacher,
                           time: session.time,
+                          subject: session.subject,
                         },
                     });
                 });
@@ -105,25 +121,19 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     return events;
 }
 
-const CustomEvent = ({ event }: EventProps<MyEvent>) => {
-    return (
-        <div className="h-full flex flex-col justify-center">
-            <div className="text-xs font-semibold text-gray-600">{event.resource.time}</div>
-            <div className="font-bold text-sm truncate">{event.title}</div>
-        </div>
-    );
-};
-
 export default function CalendarPage() {
     
     const [isClient, setIsClient] = useState(false);
     const [events, setEvents] = useState<MyEvent[]>([]);
+    const [view, setView] = useState<View>(Views.DAY);
+    const [date, setDate] = useState(new Date());
 
     useEffect(() => {
         setIsClient(true);
     }, []);
     
     const onNavigate = useCallback((newDate: Date) => {
+        setDate(newDate);
         const start = startOfWeek(newDate, { weekStartsOn: 1 });
         const end = addDays(start, 6);
         setEvents(generateEventsForDateRange(start, end));
@@ -146,12 +156,12 @@ export default function CalendarPage() {
             min: set(today, { hours: 8, minutes: 0 }),
             max: set(today, { hours: 18, minutes: 0 }),
         }
-    }, [])
+    }, []);
 
-    const components = useMemo(() => ({
-        event: CustomEvent,
-    }), []);
-
+    const eventPropGetter = useCallback((event: MyEvent) => {
+        const backgroundColor = colorMap[event.resource.subject] || '#e0e0e0';
+        return { style: { backgroundColor } };
+    }, []);
 
     return (
         <div className="space-y-8 h-full flex flex-col">
@@ -164,7 +174,11 @@ export default function CalendarPage() {
                     localizer={localizer}
                     events={events}
                     defaultView={Views.DAY}
-                    views={['week', 'day']}
+                    views={{ week: true, day: true }}
+                    view={view}
+                    date={date}
+                    onView={(view) => setView(view)}
+                    onNavigate={onNavigate}
                     startAccessor="start"
                     endAccessor="end"
                     style={{ flex: 1 }}
@@ -172,11 +186,10 @@ export default function CalendarPage() {
                     timeslots={1}
                     defaultDate={defaultDate}
                     scrollToTime={scrollToTime}
-                    onNavigate={onNavigate}
                     min={min}
                     max={max}
                     className="[&_.rbc-off-range-bg]:bg-background"
-                    components={components}
+                    eventPropGetter={eventPropGetter}
                 />}
             </div>
         </div>
