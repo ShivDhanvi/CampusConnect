@@ -105,6 +105,14 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     return events;
 }
 
+const CustomEvent = ({ event }: EventProps<MyEvent>) => {
+    return (
+        <div>
+            <div className="text-xs font-semibold">{event.resource.time}</div>
+            <div className="font-bold">{event.title}</div>
+        </div>
+    );
+};
 
 export default function CalendarPage() {
     
@@ -140,6 +148,11 @@ export default function CalendarPage() {
         }
     }, [])
 
+    const components = useMemo(() => ({
+        event: CustomEvent,
+    }), []);
+
+
     return (
         <div className="space-y-8 h-full flex flex-col">
             <div>
@@ -150,7 +163,7 @@ export default function CalendarPage() {
                 {isClient && <Calendar<MyEvent>
                     localizer={localizer}
                     events={events}
-                    defaultView={Views.WEEK}
+                    defaultView={Views.DAY}
                     views={['week', 'day']}
                     startAccessor="start"
                     endAccessor="end"
@@ -163,6 +176,7 @@ export default function CalendarPage() {
                     min={min}
                     max={max}
                     className="[&_.rbc-off-range-bg]:bg-background"
+                    components={components}
                 />}
             </div>
         </div>
