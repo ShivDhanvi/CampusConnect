@@ -5,7 +5,6 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, R
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
-import dynamic from 'next/dynamic'
 
 const enrollmentData = [
   { year: '2020', students: 850 },
@@ -47,12 +46,6 @@ const chartConfigs = {
     expenses: { label: "Expenses", color: "hsl(var(--chart-2))" },
     avgScore: { label: "Avg. Score", color: "hsl(var(--chart-1))" }
 };
-
-const StudentLocationMap = dynamic(() => import('@/components/student-location-map'), {
-    ssr: false,
-    loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-lg" />
-});
-
 
 export default function InsightsPage() {
 
@@ -184,16 +177,6 @@ export default function InsightsPage() {
                     </CardContent>
                 </Card>
             </div>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>Student Location Insights</CardTitle>
-                    <CardDescription>A map showing the geographic distribution of students in the Chennai area.</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[450px] w-full p-0">
-                   <StudentLocationMap />
-                </CardContent>
-            </Card>
 
         </div>
     )
