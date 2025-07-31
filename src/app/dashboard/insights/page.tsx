@@ -48,7 +48,7 @@ const chartConfigs = {
     avgScore: { label: "Avg. Score", color: "hsl(var(--chart-1))" }
 };
 
-const StudentLocationMap = dynamic(() => import('@/components/student-location-map'), {
+const StudentLocationMap = dynamic(() => import('@/components/student-location-map').then(mod => mod.StudentLocationMap), {
     ssr: false,
     loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-lg" />
 });
@@ -68,7 +68,7 @@ export default function InsightsPage() {
                 <p className="text-muted-foreground">High-level analytics and reports for school administration.</p>
             </div>
 
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Students</CardTitle>
