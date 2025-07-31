@@ -61,20 +61,6 @@ const dayMapping: Record<TimetableDay, Day> = {
     'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6,
 };
 
-const subjectColors: Record<string, string> = {
-    'Mathematics': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
-    'History': 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
-    'Biology': 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800',
-    'Physics': 'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-800',
-    'Chemistry': 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/50 dark:text-teal-300 dark:border-teal-800',
-    'English': 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800',
-    'Physical Education': 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
-    'Art': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
-    'Computer Science': 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300 dark:border-gray-600',
-    'Geography': 'bg-lime-100 text-lime-800 border-lime-200 dark:bg-lime-900/50 dark:text-lime-300 dark:border-lime-800',
-    'Music': 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800',
-};
-
 interface MyEvent {
   title: string;
   start: Date;
@@ -83,17 +69,8 @@ interface MyEvent {
     room: string;
     teacher: string;
     time: string;
-    colorClass: string;
   };
 }
-
-const CustomEvent = ({ event }: EventProps<MyEvent>) => (
-  <div className="h-full p-1">
-    <p className="font-semibold text-sm leading-tight">{event.title}</p>
-    <p className="text-xs text-muted-foreground">{event.resource.time}</p>
-  </div>
-);
-
 
 const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     const events: MyEvent[] = [];
@@ -119,7 +96,6 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
                           room: session.room,
                           teacher: session.teacher,
                           time: session.time,
-                          colorClass: subjectColors[session.subject] || 'bg-gray-100 text-gray-800 border-gray-200'
                         },
                     });
                 });
@@ -164,13 +140,6 @@ export default function CalendarPage() {
         }
     }, [])
 
-    const eventStyleGetter = (event: MyEvent) => {
-        const className = `${event.resource.colorClass} rbc-event-default`;
-        return {
-            className: className,
-        };
-    };
-
     return (
         <div className="space-y-8 h-full flex flex-col">
             <div>
@@ -194,10 +163,6 @@ export default function CalendarPage() {
                     min={min}
                     max={max}
                     className="[&_.rbc-off-range-bg]:bg-background"
-                    eventPropGetter={eventStyleGetter}
-                    components={{
-                        event: CustomEvent,
-                    }}
                 />}
             </div>
         </div>
