@@ -9,7 +9,7 @@ import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
+import { set, addDays, eachWeekOfInterval, Day, getMonth } from 'date-fns';
 
 const locales = {
   'en-US': enUS,
@@ -68,24 +68,24 @@ interface MyEvent {
   resource: {
     room: string;
     teacher: string;
-    time: string;
     subject: string;
   };
 }
 
 const colorMap: Record<string, string> = {
-    'Mathematics': '#e2f8ff',
-    'History': '#fefce8',
-    'Biology': '#f2f1ff',
-    'Physics': '#fdf2fb',
-    'Chemistry': '#e2f8ff',
-    'English': '#fefce8',
-    'Physical Education': '#f2f1ff',
-    'Art': '#fdf2fb',
-    'Geography': '#e2f8ff',
-    'Computer Science': '#fefce8',
-    'Music': '#f2f1ff',
+    'Mathematics': 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800',
+    'History': 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
+    'Biology': 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
+    'Physics': 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
+    'Chemistry': 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-800',
+    'English': 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
+    'Physical Education': 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-800',
+    'Art': 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
+    'Geography': 'bg-teal-100 dark:bg-teal-900/30 border-teal-300 dark:border-teal-800',
+    'Computer Science': 'bg-gray-200 dark:bg-gray-800/30 border-gray-400 dark:border-gray-700',
+    'Music': 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
 };
+
 
 const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     const events: MyEvent[] = [];
@@ -102,15 +102,18 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
                     const [startTime, endTime] = session.time.split(' - ');
                     const [startHour, startMinute] = startTime.split(':').map(Number);
                     const [endHour, endMinute] = endTime.split(':').map(Number);
+                    
+                    const formatTime = (date: Date) => format(date, 'h:mm a');
+                    const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
+                    const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
 
                     events.push({
-                        title: session.subject,
-                        start: set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 }),
-                        end: set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 }),
+                        title: `${formatTime(startDateTime)} - ${formatTime(endDateTime)} ${session.subject}`,
+                        start: startDateTime,
+                        end: endDateTime,
                         resource: { 
                           room: session.room,
                           teacher: session.teacher,
-                          time: session.time,
                           subject: session.subject,
                         },
                     });
@@ -134,19 +137,15 @@ export default function CalendarPage() {
     
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
-        const start = startOfWeek(newDate, { weekStartsOn: 1 });
-        const end = addDays(start, 6);
-        setEvents(generateEventsForDateRange(start, end));
     }, []);
 
     useEffect(() => {
         if(isClient) {
-            const today = new Date();
-            const start = startOfWeek(today, { weekStartsOn: 1 });
+            const start = startOfWeek(date, { weekStartsOn: 1 });
             const end = addDays(start, 6);
             setEvents(generateEventsForDateRange(start, end));
         }
-    }, [isClient]);
+    }, [isClient, date]);
 
     const { defaultDate, scrollToTime, min, max } = useMemo(() => {
         const today = new Date();
@@ -154,13 +153,23 @@ export default function CalendarPage() {
             defaultDate: today,
             scrollToTime: set(today, { hours: 8, minutes: 0 }),
             min: set(today, { hours: 8, minutes: 0 }),
-            max: set(today, { hours: 18, minutes: 0 }),
+            max: set(today, { hours: 17, minutes: 0 }),
         }
     }, []);
 
     const eventPropGetter = useCallback((event: MyEvent) => {
-        const backgroundColor = colorMap[event.resource.subject] || '#e0e0e0';
-        return { style: { backgroundColor } };
+        const className = colorMap[event.resource.subject] || 'bg-gray-100 border-gray-300';
+        return { className };
+    }, []);
+
+    const dayPropGetter = useCallback((date: Date) => {
+        const month = getMonth(new Date());
+        if (getMonth(date) !== month) {
+            return {
+                className: 'rbc-off-range-bg-custom',
+            };
+        }
+        return {};
     }, []);
 
     return (
@@ -188,8 +197,9 @@ export default function CalendarPage() {
                     scrollToTime={scrollToTime}
                     min={min}
                     max={max}
-                    className="[&_.rbc-off-range-bg]:bg-background"
+                    className="[&_.rbc-off-range-bg]:!bg-background"
                     eventPropGetter={eventPropGetter}
+                    dayPropGetter={dayPropGetter}
                 />}
             </div>
         </div>
