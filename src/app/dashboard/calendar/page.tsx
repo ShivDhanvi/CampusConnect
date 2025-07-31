@@ -9,8 +9,7 @@ import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { set, addDays, eachWeekOfInterval, startOfMonth, endOfMonth, Day } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 
 const locales = {
   'en-US': enUS,
@@ -89,9 +88,9 @@ interface MyEvent {
 }
 
 const CustomEvent = ({ event }: EventProps<MyEvent>) => (
-  <div className="h-full p-2">
-    <p className="text-xs text-muted-foreground">{event.resource.time}</p>
-    <p className="font-semibold">{event.title}</p>
+  <div className="h-full p-2 flex flex-col justify-center">
+    <p className="text-xs font-medium text-muted-foreground">{event.resource.time}</p>
+    <p className="font-semibold text-sm leading-tight">{event.title}</p>
   </div>
 );
 
@@ -187,8 +186,8 @@ export default function CalendarPage() {
                     startAccessor="start"
                     endAccessor="end"
                     style={{ flex: 1 }}
-                    step={15}
-                    timeslots={4}
+                    step={30}
+                    timeslots={2}
                     defaultDate={defaultDate}
                     scrollToTime={scrollToTime}
                     onNavigate={onNavigate}
@@ -204,4 +203,3 @@ export default function CalendarPage() {
         </div>
     )
 }
-
