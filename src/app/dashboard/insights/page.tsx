@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, R
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
+import { StudentLocationMap } from "@/components/student-location-map"
 
 const enrollmentData = [
   { year: '2020', students: 850 },
@@ -56,7 +57,7 @@ export default function InsightsPage() {
                 <p className="text-muted-foreground">High-level analytics and reports for school administration.</p>
             </div>
 
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -146,7 +147,7 @@ export default function InsightsPage() {
                         <CardDescription>Distribution of user roles in the system.</CardDescription>
                     </CardHeader>
                      <CardContent className="flex-1 pb-0 flex items-center justify-center">
-                        <ChartContainer config={chartConfigs} className="mx-auto aspect-square h-full max-h-[300px]">
+                        <ChartContainer config={chartConfigs} className="mx-auto aspect-square h-[300px]">
                             <PieChart>
                                 <Tooltip content={<ChartTooltipContent hideLabel />} />
                                 <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} >
@@ -177,6 +178,17 @@ export default function InsightsPage() {
                     </CardContent>
                 </Card>
             </div>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Student Location Insights</CardTitle>
+                    <CardDescription>A world map showing the geographic distribution of students.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[450px] w-full p-0">
+                   <StudentLocationMap />
+                </CardContent>
+            </Card>
+
         </div>
     )
 }
