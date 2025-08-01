@@ -88,7 +88,6 @@ const colorMap: Record<string, string> = {
     'Music': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:border-purple-800',
 };
 
-
 const generateEventsForDateRange = (startDate: Date) => {
     const events: MyEvent[] = [];
     const weeks = eachWeekOfInterval({
@@ -128,8 +127,15 @@ const generateEventsForDateRange = (startDate: Date) => {
 
 const CustomToolbar = (toolbar: ToolbarProps) => {
 	const { onNavigate, label, view, onView } = toolbar;
+
     const goTo = (action: 'PREV' | 'NEXT' | 'TODAY') => {
         onNavigate(action);
+    };
+
+    const handleViewChange = (newView: View) => {
+        if (onView) {
+            onView(newView);
+        }
     };
 
 	return (
@@ -144,14 +150,14 @@ const CustomToolbar = (toolbar: ToolbarProps) => {
                 <button
                     type="button"
                     className={view === 'week' ? 'rbc-active' : ''}
-                    onClick={() => onView('week')}
+                    onClick={() => handleViewChange('week')}
                 >
                     Week
                 </button>
                 <button
                     type="button"
                     className={view === 'day' ? 'rbc-active' : ''}
-                    onClick={() => onView('day')}
+                    onClick={() => handleViewChange('day')}
                 >
                     Day
                 </button>
@@ -160,12 +166,12 @@ const CustomToolbar = (toolbar: ToolbarProps) => {
 	);
 };
 
-
 export default function CalendarPage() {
     
     const [isClient, setIsClient] = useState(false);
     const [events, setEvents] = useState<MyEvent[]>([]);
     const [date, setDate] = useState(new Date());
+    const [view, setView] = useState<View>(Views.DAY);
 
     useEffect(() => {
         setIsClient(true);
@@ -174,6 +180,15 @@ export default function CalendarPage() {
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
     }, [setDate]);
+
+    const onDrillDown = useCallback((newDate: Date) => {
+        setDate(newDate);
+        setView(Views.DAY);
+    }, []);
+
+    const onView = useCallback((newView: View) => {
+        setView(newView);
+    }, []);
     
     useEffect(() => {
         if(isClient) {
@@ -202,7 +217,6 @@ export default function CalendarPage() {
         };
     }, []);
 
-
     return (
         <div className="space-y-8 h-full flex flex-col">
             <div>
@@ -213,8 +227,10 @@ export default function CalendarPage() {
                 {isClient && <Calendar<MyEvent>
                     localizer={localizer}
                     events={events}
-                    defaultView={Views.DAY}
+                    view={view}
                     views={views}
+                    onView={onView}
+                    onDrillDown={onDrillDown}
                     date={date}
                     onNavigate={onNavigate}
                     startAccessor="start"
