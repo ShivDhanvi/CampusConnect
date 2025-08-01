@@ -158,7 +158,8 @@
   }
 
   .rbc-event, .rbc-day-slot .rbc-background-event {
-    @apply p-1 rounded-md text-primary-foreground transition-colors bg-primary cursor-pointer text-center flex items-center justify-center;
+    @apply p-1 rounded-md transition-colors cursor-pointer text-center flex items-center justify-center;
+    background-color: hsl(var(--primary)) !important;
     color: hsl(var(--primary-foreground)) !important;
   }
 
@@ -166,7 +167,7 @@
     @apply text-xs whitespace-pre-wrap;
   }
   .rbc-event:focus {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid hsl(var(--ring)) !important;
   }
 
   .rbc-event-label {
@@ -203,12 +204,12 @@
   }
 
   .rbc-day-slot .rbc-events-container {
-    margin: 1px;
+    margin: 1px !important;
   }
 
   .rbc-day-slot .rbc-event, .rbc-day-slot .rbc-background-event {
-    display: flex;
-    flex-wrap: nowrap;
+    display: flex !important;
+    flex-wrap: nowrap !important;
   }
 
   .rbc-time-view .rbc-time-slot:last-child {
