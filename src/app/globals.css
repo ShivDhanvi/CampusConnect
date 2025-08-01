@@ -204,7 +204,7 @@
   justify-content: center;
   flex-wrap: nowrap !important;
   color: #515151;
-  background-color: transparent;
+  background-color: hsl(var(--primary)) !important;
   border: none !important;
 }
 
