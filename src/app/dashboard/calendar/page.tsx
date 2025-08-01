@@ -12,6 +12,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const locales = {
   'en-US': enUS,
@@ -25,40 +26,72 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const timetable = {
-    'Monday': [
-        { time: '08:00 - 08:45', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
-        { time: '09:00 - 09:45', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
-        { time: '10:00 - 10:45', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
-        { time: '11:00 - 11:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
-        { time: '13:00 - 13:45', subject: 'Chemistry', teacher: 'Mr. Brown', room: 'Lab C' },
-    ],
-    'Tuesday': [
-        { time: '08:00 - 08:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
-        { time: '09:00 - 09:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
-        { time: '11:00 - 11:45', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
-    ],
-    'Wednesday': [
-        { time: '08:00 - 08:45', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
-        { time: '09:00 - 09:45', subject: 'Art', teacher: 'Ms. Green', room: 'Art Room' },
-        { time: '10:00 - 10:45', subject: 'Geography', teacher: 'Mrs. Clark', room: '104' },
-        { time: '14:00 - 14:45', subject: 'Computer Science', teacher: 'Mr. Black', room: 'CS Lab' },
-    ],
-    'Thursday': [
-         { time: '09:00 - 09:45', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
-         { time: '10:00 - 10:45', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
-         { time: '15:00 - 15:45', subject: 'Geography', teacher: 'Mrs. Clark', room: '104' },
-    ],
-    'Friday': [
-        { time: '08:00 - 08:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
-        { time: '09:00 - 09:45', subject: 'Music', teacher: 'Mrs. White', room: 'Music Room' },
-        { time: '13:00 - 13:45', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
-    ],
-    'Saturday': [],
-    'Sunday': [],
-};
+const timetables = {
+    '10-A': {
+        'Monday': [
+            { time: '08:00 - 08:45', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
+            { time: '09:00 - 09:45', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
+            { time: '10:00 - 10:45', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
+        ],
+        'Tuesday': [
+            { time: '08:00 - 08:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
+            { time: '11:00 - 11:45', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
+        ],
+        'Wednesday': [
+            { time: '08:00 - 08:45', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
+            { time: '10:00 - 10:45', subject: 'Geography', teacher: 'Mrs. Clark', room: '104' },
+        ],
+        'Thursday': [
+             { time: '09:00 - 09:45', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
+        ],
+        'Friday': [
+            { time: '08:00 - 08:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
+            { time: '13:00 - 13:45', subject: 'Biology', teacher: 'Mr. Davis', room: 'Lab A' },
+        ],
+    },
+    '10-B': {
+        'Monday': [
+            { time: '09:00 - 09:45', subject: 'Mathematics', teacher: 'Mr. Smith', room: '101' },
+            { time: '10:00 - 10:45', subject: 'History', teacher: 'Mrs. Jones', room: '102' },
+            { time: '11:00 - 11:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
+        ],
+        'Tuesday': [
+            { time: '09:00 - 09:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
+            { time: '10:00 - 10:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
+        ],
+        'Wednesday': [
+            { time: '09:00 - 09:45', subject: 'Art', teacher: 'Ms. Green', room: 'Art Room' },
+            { time: '14:00 - 14:45', subject: 'Computer Science', teacher: 'Mr. Black', room: 'CS Lab' },
+        ],
+        'Thursday': [
+             { time: '10:00 - 10:45', subject: 'Physical Education', teacher: 'Mr. Taylor', room: 'Gym' },
+        ],
+        'Friday': [
+            { time: '09:00 - 09:45', subject: 'Music', teacher: 'Mrs. White', room: 'Music Room' },
+        ],
+    },
+    '11-A': {
+        'Monday': [
+            { time: '11:00 - 11:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
+            { time: '13:00 - 13:45', subject: 'Chemistry', teacher: 'Mr. Brown', room: 'Lab C' },
+        ],
+        'Tuesday': [
+            { time: '09:00 - 09:45', subject: 'Physics', teacher: 'Mr. Brown', room: 'Lab B' },
+        ],
+        'Wednesday': [
+             { time: '14:00 - 14:45', subject: 'Computer Science', teacher: 'Mr. Black', room: 'CS Lab' },
+        ],
+        'Thursday': [
+             { time: '15:00 - 15:45', subject: 'Geography', teacher: 'Mrs. Clark', room: '104' },
+        ],
+        'Friday': [
+            { time: '08:00 - 08:45', subject: 'English', teacher: 'Ms. Williams', room: '103' },
+        ],
+    }
+}
+const CLASS_OPTIONS = Object.keys(timetables);
+type TimetableDay = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-type TimetableDay = keyof typeof timetable;
 const dayMapping: Record<TimetableDay, Day> = {
     'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6,
 };
@@ -88,8 +121,11 @@ const colorMap: Record<string, string> = {
     'Music': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:border-purple-800',
 };
 
-const generateEventsForDateRange = (startDate: Date) => {
+const generateEventsForDateRange = (startDate: Date, selectedClass: keyof typeof timetables) => {
     const events: MyEvent[] = [];
+    const timetable = timetables[selectedClass];
+    if (!timetable) return [];
+    
     const weeks = eachWeekOfInterval({
         start: startDate,
         end: addDays(startDate, 35) 
@@ -100,7 +136,7 @@ const generateEventsForDateRange = (startDate: Date) => {
             const dayOfWeek = dayMapping[day];
             const currentDate = addDays(weekStart, dayOfWeek - 1); 
 
-            timetable[day].forEach(session => {
+            timetable[day as keyof typeof timetable]?.forEach(session => {
                 const [startTime, endTime] = session.time.split(' - ');
                 const [startHour, startMinute] = startTime.split(':').map(Number);
                 const [endHour, endMinute] = endTime.split(':').map(Number);
@@ -158,6 +194,7 @@ const CustomEvent = ({ event }: EventProps<MyEvent>) => {
     return (
         <div className="flex flex-col text-xs leading-tight">
             <span className="font-semibold whitespace-normal">{event.title}</span>
+            <span className="text-xs text-foreground/80">{event.resource.teacher}</span>
         </div>
     );
 };
@@ -168,6 +205,8 @@ export default function CalendarPage() {
     const [events, setEvents] = useState<MyEvent[]>([]);
     const [date, setDate] = useState(new Date());
     const [view, setView] = useState<View>(Views.WEEK);
+    const [selectedClass, setSelectedClass] = useState<keyof typeof timetables>('10-A');
+
 
     useEffect(() => {
         setIsClient(true);
@@ -183,9 +222,9 @@ export default function CalendarPage() {
     
     useEffect(() => {
         if(isClient) {
-            setEvents(generateEventsForDateRange(date));
+            setEvents(generateEventsForDateRange(date, selectedClass));
         }
-    }, [isClient, date]);
+    }, [isClient, date, selectedClass]);
 
     const { defaultDate, scrollToTime, min, max } = useMemo(() => {
         const today = new Date();
@@ -214,9 +253,23 @@ export default function CalendarPage() {
 
     return (
         <div className="space-y-8 h-full flex flex-col">
-            <div>
-                <h1 className="text-3xl font-bold font-headline">Timetable</h1>
-                <p className="text-muted-foreground">View your weekly class schedule.</p>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold font-headline">Timetable</h1>
+                    <p className="text-muted-foreground">View your weekly class schedule.</p>
+                </div>
+                 <div className="w-full md:w-auto md:max-w-xs">
+                    <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value as keyof typeof timetables)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {CLASS_OPTIONS.map(c => (
+                                <SelectItem key={c} value={c}>Class {c}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm">
                 {isClient && <Calendar<MyEvent>
