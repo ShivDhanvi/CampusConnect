@@ -166,9 +166,9 @@ const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
     return (
         <div className="rbc-toolbar">
             <div className="rbc-btn-group">
-                <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
+                <button type="button" onClick={() => onNavigate('PREV')}>&lt;</button>
                 <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
-                <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
+                <button type="button" onClick={() => onNavigate('NEXT')}>&gt;</button>
             </div>
             <span className="rbc-toolbar-label">{label}</span>
             <div className="rbc-btn-group">
@@ -367,5 +367,7 @@ export default function CalendarPage() {
         </div>
     )
 }
+
+    
 
     
