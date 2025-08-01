@@ -219,7 +219,7 @@
 }
 
 .rbc-event-label {
-  font-size: 60%;
+  font-size: 60% !important;
 }
 
 .rbc-day-bg.rbc-today {
@@ -259,3 +259,4 @@
 .rbc-time-view .rbc-time-slot:last-child {
   border-bottom: 1px solid hsl(var(--border));
 }
+
