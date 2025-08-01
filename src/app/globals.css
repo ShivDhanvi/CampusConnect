@@ -149,10 +149,6 @@
   color: hsl(var(--primary-foreground)) !important;
 }
 
-.rbc-toolbar button.rbc-active:hover {
-   background-color: hsl(var(--primary) / 0.9);
-}
-
 .rbc-toolbar button:focus:not(.rbc-active) {
   color: hsl(var(--accent-foreground)) !important;
 }
@@ -223,6 +219,7 @@
 }
 
 .rbc-event-label {
+  font-size: 60%;
 }
 
 .rbc-day-bg.rbc-today {
