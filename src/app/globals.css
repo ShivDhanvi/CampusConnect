@@ -5,34 +5,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 204 10% 95.5%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 191 100% 31%;
+    --primary: 204 88% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 94.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 45 100% 50%;
+    --accent: 122 47% 73%;
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 191 100% 31%;
-    --chart-1: 191 100% 31%;
-    --chart-2: 45 100% 50%;
+    --ring: 204 88% 45%;
+    --chart-1: 204 88% 45%;
+    --chart-2: 122 47% 73%;
     --chart-3: 45 61% 40%;
     --chart-4: 173 58% 39%;
     --chart-5: 197 37% 24%;
     --radius: 0.8rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 224 71.4% 4.1%;
-    --sidebar-primary: 191 100% 31%;
+    --sidebar-primary: 204 88% 45%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 224 71.4% 4.1%;
@@ -46,27 +46,27 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 191 100% 31%;
+    --primary: 204 88% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 45 100% 50%;
-    --accent-foreground: 224 71.4% 4.1%;
+    --accent: 122 47% 73%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 191 100% 31%;
-    --chart-1: 191 100% 31%;
-    --chart-2: 45 100% 50%;
+    --ring: 204 88% 45%;
+    --chart-1: 204 88% 45%;
+    --chart-2: 122 47% 73%;
     --chart-3: 45 61% 40%;
     --chart-4: 173 58% 39%;
     --chart-5: 197 37% 24%;
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 191 100% 31%;
+    --sidebar-primary: 204 88% 45%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
@@ -95,7 +95,7 @@
   }
 
   .rbc-toolbar .rbc-toolbar-label {
-    @apply text-lg font-semibold text-foreground flex-grow text-center md:text-left;
+    @apply text-lg font-semibold text-foreground flex-grow text-center;
   }
 
   .rbc-toolbar .rbc-btn-group {
@@ -105,6 +105,7 @@
   .rbc-toolbar button {
     @apply text-foreground bg-card border border-border transition-colors py-1.5 px-3 rounded-md text-sm font-medium;
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    color: hsl(var(--foreground)) !important;
   }
 
   .rbc-toolbar button:hover:not(:disabled) {
@@ -113,6 +114,7 @@
 
   .rbc-toolbar button.rbc-active {
     @apply bg-primary text-primary-foreground;
+     color: hsl(var(--primary-foreground)) !important;
   }
   
   .rbc-toolbar button.rbc-active:hover {
@@ -156,7 +158,9 @@
   }
 
   .rbc-event {
-    @apply p-2 rounded-md text-primary-foreground transition-colors bg-primary cursor-pointer;
+    @apply p-1 rounded-md text-primary-foreground transition-colors bg-primary cursor-pointer text-center flex items-center justify-center;
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
   }
 
   .rbc-event-content {

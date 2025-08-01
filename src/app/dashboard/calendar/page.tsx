@@ -126,12 +126,6 @@ const generateEventsForDateRange = (startDate: Date) => {
 }
 
 const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
-    const handleViewChange = (newView: View) => {
-        if (onView) {
-            onView(newView);
-        }
-    };
-
     return (
         <div className="rbc-toolbar">
             <div className="rbc-btn-group">
@@ -144,14 +138,14 @@ const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
                 <button
                     type="button"
                     className={cn(view === 'week' && 'rbc-active')}
-                    onClick={() => handleViewChange('week')}
+                    onClick={() => onView && onView('week')}
                 >
                     Week
                 </button>
                 <button
                     type="button"
                     className={cn(view === 'day' && 'rbc-active')}
-                    onClick={() => handleViewChange('day')}
+                    onClick={() => onView && onView('day')}
                 >
                     Day
                 </button>
@@ -161,11 +155,9 @@ const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
 };
 
 const CustomEvent = ({ event }: EventProps<MyEvent>) => {
-    const formatTime = (date: Date) => format(date, 'h:mm a');
     return (
-        <div className="flex flex-col text-xs">
-            <span className="font-semibold">{formatTime(event.start)} - {formatTime(event.end)}</span>
-            <span>{event.title}</span>
+        <div className="flex flex-col text-xs leading-tight">
+            <span className="font-semibold whitespace-normal">{event.title}</span>
         </div>
     );
 };
@@ -184,6 +176,10 @@ export default function CalendarPage() {
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
     }, [setDate]);
+
+    const onView = useCallback((newView: View) => {
+        setView(newView);
+    }, [setView]);
     
     useEffect(() => {
         if(isClient) {
@@ -205,7 +201,7 @@ export default function CalendarPage() {
         const colorClass = colorMap[event.resource.subject] || 'bg-primary text-primary-foreground';
         return {
             className: cn(
-                "p-2 border-0 flex flex-col justify-center",
+                "p-2 border flex flex-col justify-center",
                 colorClass
             ),
         };
@@ -228,7 +224,7 @@ export default function CalendarPage() {
                     events={events}
                     date={date}
                     view={view}
-                    onView={setView}
+                    onView={onView}
                     onNavigate={onNavigate}
                     onDrillDown={handleDrillDown}
                     startAccessor="start"
