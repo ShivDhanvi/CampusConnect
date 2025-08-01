@@ -88,7 +88,7 @@
 /* react-big-calendar custom styling */
 @layer components {
   .rbc-off-range-bg {
-      background-color: transparent !important;
+      @apply bg-background/40;
   }
   
   .rbc-toolbar button {
@@ -99,7 +99,7 @@
   .rbc-toolbar button:hover:not(:disabled) {
       @apply bg-accent text-accent-foreground;
   }
-  .rbc-toolbar button:active, .rbc-toolbar button.rbc-active {
+  .rbc-toolbar button.rbc-active {
     @apply bg-primary text-primary-foreground;
   }
 
@@ -153,7 +153,7 @@
     display: none;
   }
   .rbc-event-content {
-    @apply text-xs;
+    @apply text-xs text-foreground;
   }
   
   .rbc-day-bg.rbc-today {
@@ -188,5 +188,7 @@
   }
   .rbc-event {
     border: 1px solid hsl(var(--border));
+    padding: 2px 5px;
+    color: hsl(var(--foreground));
   }
 }
