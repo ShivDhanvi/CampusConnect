@@ -65,7 +65,7 @@ export function AttendanceChart() {
         <CardDescription>Today's Attendance Rate</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0 flex items-center justify-center">
-        <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-full max-h-[250px]">
+        <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-[250px]">
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5}>
