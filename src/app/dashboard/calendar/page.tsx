@@ -8,7 +8,7 @@ import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -166,8 +166,8 @@ const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
     return (
         <div className="rbc-toolbar">
             <div className="rbc-btn-group">
-                <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
                 <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
+                <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
                 <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
             </div>
             <span className="rbc-toolbar-label">{label}</span>
@@ -195,16 +195,59 @@ const CustomEvent = ({ event }: EventProps<MyEvent>) => {
     return (
         <div className="flex flex-col text-xs leading-tight">
             <span className="font-semibold whitespace-normal">{event.title}</span>
+            <span className="text-xs">{event.resource.teacher}</span>
         </div>
     );
 };
+
+const TimeIndicator = ({ min, max }: { min: Date; max: Date }) => {
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const indicatorRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // Update every minute
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const updatePosition = useCallback(() => {
+        const now = currentTime;
+        const totalMinutes = (max.getTime() - min.getTime()) / 60000;
+        const minutesFromStart = (now.getTime() - min.getTime()) / 60000;
+        let percentage = (minutesFromStart / totalMinutes) * 100;
+
+        if (percentage < 0) percentage = 0;
+        if (percentage > 100) percentage = 100;
+
+        if (indicatorRef.current) {
+            indicatorRef.current.style.top = `${percentage}%`;
+        }
+    }, [currentTime, min, max]);
+
+    useEffect(() => {
+        updatePosition();
+    }, [updatePosition]);
+
+    const isToday = format(currentTime, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+    if (!isToday) return null;
+
+
+    return (
+        <div ref={indicatorRef} className="absolute w-full h-0.5 bg-red-500 z-10">
+             <div className="absolute -left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-red-500" />
+        </div>
+    );
+};
+
 
 export default function CalendarPage() {
     
     const [isClient, setIsClient] = useState(false);
     const [events, setEvents] = useState<MyEvent[]>([]);
     const [date, setDate] = useState(new Date());
-    const [view, setView] = useState<View>(Views.WEEK);
+    const [view, setView] = useState<View>(Views.DAY);
     const [selectedClass, setSelectedClass] = useState<keyof typeof timetables>('10-A');
     const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -232,13 +275,25 @@ export default function CalendarPage() {
         }
     }, [isClient, date, selectedClass]);
 
-    const { defaultDate, scrollToTime, min, max } = useMemo(() => {
+    const { components, defaultDate, scrollToTime, min, max } = useMemo(() => {
         const today = new Date();
+        const minTime = set(today, { hours: 8, minutes: 0, seconds: 0 });
+        const maxTime = set(today, { hours: 17, minutes: 0, seconds: 0 });
         return {
+            components: {
+                timeGutterWrapper: (props: any) => (
+                    <div className="relative">
+                        {props.children}
+                        <TimeIndicator min={minTime} max={maxTime} />
+                    </div>
+                ),
+                 toolbar: CustomToolbar,
+                 event: CustomEvent,
+            },
             defaultDate: today,
             scrollToTime: set(today, { hours: 8, minutes: 0 }),
-            min: set(today, { hours: 8, minutes: 0, seconds: 0 }),
-            max: set(today, { hours: 17, minutes: 0, seconds: 0 }),
+            min: minTime,
+            max: maxTime,
         }
     }, []);
     
@@ -299,10 +354,7 @@ export default function CalendarPage() {
                             min={min}
                             max={max}
                             eventPropGetter={eventPropGetter}
-                            components={{
-                                toolbar: CustomToolbar,
-                                event: CustomEvent,
-                            }}
+                            components={components}
                         />
                         <EventDetailsDialog 
                             isOpen={isDialogOpen}
@@ -315,3 +367,5 @@ export default function CalendarPage() {
         </div>
     )
 }
+
+    
