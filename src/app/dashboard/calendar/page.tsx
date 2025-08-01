@@ -13,6 +13,7 @@ import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EventDetailsDialog } from '@/components/event-details-dialog';
 
 const locales = {
   'en-US': enUS,
@@ -96,7 +97,7 @@ const dayMapping: Record<TimetableDay, Day> = {
     'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6,
 };
 
-interface MyEvent {
+export interface MyEvent {
   title: string;
   start: Date;
   end: Date;
@@ -194,7 +195,6 @@ const CustomEvent = ({ event }: EventProps<MyEvent>) => {
     return (
         <div className="flex flex-col text-xs leading-tight">
             <span className="font-semibold whitespace-normal">{event.title}</span>
-            <span className="text-xs text-foreground/80">{event.resource.teacher}</span>
         </div>
     );
 };
@@ -206,7 +206,8 @@ export default function CalendarPage() {
     const [date, setDate] = useState(new Date());
     const [view, setView] = useState<View>(Views.WEEK);
     const [selectedClass, setSelectedClass] = useState<keyof typeof timetables>('10-A');
-
+    const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -219,6 +220,11 @@ export default function CalendarPage() {
     const onView = useCallback((newView: View) => {
         setView(newView);
     }, [setView]);
+
+    const onSelectEvent = useCallback((event: MyEvent) => {
+        setSelectedEvent(event);
+        setIsDialogOpen(true);
+    }, []);
     
     useEffect(() => {
         if(isClient) {
@@ -272,29 +278,39 @@ export default function CalendarPage() {
                 </div>
             </div>
             <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm">
-                {isClient && <Calendar<MyEvent>
-                    localizer={localizer}
-                    events={events}
-                    date={date}
-                    view={view}
-                    onView={onView}
-                    onNavigate={onNavigate}
-                    onDrillDown={handleDrillDown}
-                    startAccessor="start"
-                    endAccessor="end"
-                    style={{ flex: 1 }}
-                    step={60}
-                    timeslots={1}
-                    defaultDate={defaultDate}
-                    scrollToTime={scrollToTime}
-                    min={min}
-                    max={max}
-                    eventPropGetter={eventPropGetter}
-                    components={{
-                        toolbar: CustomToolbar,
-                        event: CustomEvent,
-                    }}
-                />}
+                {isClient && (
+                    <>
+                        <Calendar<MyEvent>
+                            localizer={localizer}
+                            events={events}
+                            date={date}
+                            view={view}
+                            onView={onView}
+                            onNavigate={onNavigate}
+                            onSelectEvent={onSelectEvent}
+                            onDrillDown={handleDrillDown}
+                            startAccessor="start"
+                            endAccessor="end"
+                            style={{ flex: 1 }}
+                            step={60}
+                            timeslots={1}
+                            defaultDate={defaultDate}
+                            scrollToTime={scrollToTime}
+                            min={min}
+                            max={max}
+                            eventPropGetter={eventPropGetter}
+                            components={{
+                                toolbar: CustomToolbar,
+                                event: CustomEvent,
+                            }}
+                        />
+                        <EventDetailsDialog 
+                            isOpen={isDialogOpen}
+                            onOpenChange={setIsDialogOpen}
+                            event={selectedEvent}
+                        />
+                    </>
+                )}
             </div>
         </div>
     )
