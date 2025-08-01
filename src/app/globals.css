@@ -167,7 +167,7 @@
   }
 
   .rbc-event-label {
-    display: none;
+    display: none !important;
   }
 
   .rbc-day-bg.rbc-today {
