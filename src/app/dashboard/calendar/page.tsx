@@ -316,7 +316,9 @@ export default function CalendarPage() {
         <div className="space-y-8 h-full flex flex-col">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold font-headline">Timetable</h1>
+                    <h1 className="text-3xl font-bold font-headline">
+                        Timetable <span className="text-xl font-medium text-muted-foreground">(Class {selectedClass})</span>
+                    </h1>
                     <p className="text-muted-foreground">View your weekly class schedule.</p>
                 </div>
                  <div className="w-full md:w-auto md:max-w-xs">
@@ -335,9 +337,6 @@ export default function CalendarPage() {
             <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm flex flex-col">
                 {isClient && (
                     <>
-                        <div className="text-center mb-4">
-                            <h2 className="text-xl font-bold">Class {selectedClass} Timetable</h2>
-                        </div>
                         <div className="flex-1 relative">
                             <Calendar<MyEvent>
                                 localizer={localizer}
@@ -372,7 +371,3 @@ export default function CalendarPage() {
         </div>
     )
 }
-
-    
-
-    
