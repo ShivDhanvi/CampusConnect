@@ -195,7 +195,6 @@ const CustomEvent = ({ event }: EventProps<MyEvent>) => {
     return (
         <div className="flex flex-col text-xs leading-tight">
             <span className="font-semibold whitespace-normal">{event.title}</span>
-            <span className="text-xs">{event.resource.teacher}</span>
         </div>
     );
 };
