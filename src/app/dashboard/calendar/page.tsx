@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Calendar, dateFnsLocalizer, Views, EventProps, View } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views, EventProps, View, ToolbarProps } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -9,7 +9,10 @@ import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { set, addDays, eachWeekOfInterval, Day, getMonth } from 'date-fns';
+import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const locales = {
   'en-US': enUS,
@@ -73,61 +76,82 @@ interface MyEvent {
 }
 
 const colorMap: Record<string, string> = {
-    'Mathematics': 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800',
-    'History': 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
-    'Biology': 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
-    'Physics': 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
-    'Chemistry': 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-800',
-    'English': 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
-    'Physical Education': 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-800',
-    'Art': 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
-    'Geography': 'bg-teal-100 dark:bg-teal-900/30 border-teal-300 dark:border-teal-800',
-    'Computer Science': 'bg-gray-200 dark:bg-gray-800/30 border-gray-400 dark:border-gray-700',
-    'Music': 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
+    'Mathematics': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800',
+    'History': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
+    'Biology': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
+    'Physics': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
+    'Chemistry': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-800',
+    'English': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
+    'Physical Education': 'bg-green-100 text-green-800 dark:bg-green-900/30 border-green-300 dark:border-green-800',
+    'Art': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
+    'Geography': 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 border-teal-300 dark:border-teal-800',
+    'Computer Science': 'bg-gray-200 text-gray-800 dark:bg-gray-800/30 border-gray-400 dark:border-gray-700',
+    'Music': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
 };
 
 
 const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     const events: MyEvent[] = [];
-    
-    const weeks = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 1 /* Monday */ });
+    const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
 
-    weeks.forEach(weekStart => {
-        (Object.keys(timetable) as TimetableDay[]).forEach(day => {
-            const dayOfWeek = dayMapping[day];
-            const currentDate = addDays(weekStart, dayOfWeek -1); // Adjust for week start on Monday
+    (Object.keys(timetable) as TimetableDay[]).forEach(day => {
+        const dayOfWeek = dayMapping[day];
+        const currentDate = addDays(weekStart, dayOfWeek - 1); 
 
-            if (currentDate >= startDate && currentDate <= endDate) {
-                timetable[day].forEach(session => {
-                    const [startTime, endTime] = session.time.split(' - ');
-                    const [startHour, startMinute] = startTime.split(':').map(Number);
-                    const [endHour, endMinute] = endTime.split(':').map(Number);
-                    
-                    const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
-                    const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
+        timetable[day].forEach(session => {
+            const [startTime, endTime] = session.time.split(' - ');
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            
+            const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
+            const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
 
-                    events.push({
-                        title: session.subject,
-                        start: startDateTime,
-                        end: endDateTime,
-                        resource: { 
-                          room: session.room,
-                          teacher: session.teacher,
-                          subject: session.subject,
-                        },
-                    });
-                });
-            }
+            events.push({
+                title: `${session.time} ${session.subject}`,
+                start: startDateTime,
+                end: endDateTime,
+                resource: { 
+                  room: session.room,
+                  teacher: session.teacher,
+                  subject: session.subject,
+                },
+            });
         });
     });
     return events;
 }
 
+
+const CustomToolbar = ({ label, onNavigate, onView, view, views }: ToolbarProps) => {
+    return (
+        <div className="rbc-toolbar">
+            <div className="rbc-btn-group">
+                <Button variant="outline" onClick={() => onNavigate('PREV')}><ChevronLeft className="h-4 w-4" /></Button>
+                <Button variant="outline" onClick={() => onNavigate('TODAY')}>Today</Button>
+                <Button variant="outline" onClick={() => onNavigate('NEXT')}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+            <span className="rbc-toolbar-label">{label}</span>
+            <div className="rbc-btn-group">
+                {(views as string[]).map(viewName => (
+                    <Button
+                        key={viewName}
+                        variant={view === viewName ? 'default' : 'outline'}
+                        onClick={() => onView(viewName)}
+                        className="capitalize"
+                    >
+                        {viewName}
+                    </Button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
 export default function CalendarPage() {
     
     const [isClient, setIsClient] = useState(false);
     const [events, setEvents] = useState<MyEvent[]>([]);
-    const [view, setView] = useState<View>(Views.DAY);
     const [date, setDate] = useState(new Date());
 
     useEffect(() => {
@@ -155,20 +179,13 @@ export default function CalendarPage() {
             max: set(today, { hours: 17, minutes: 0 }),
         }
     }, []);
-
+    
     const eventPropGetter = useCallback((event: MyEvent) => {
-        const className = colorMap[event.resource.subject] || 'bg-gray-100 border-gray-300';
-        return { className };
-    }, []);
-
-    const dayPropGetter = useCallback((date: Date) => {
-        const month = getMonth(new Date());
-        if (getMonth(date) !== month) {
-            return {
-                className: 'rbc-off-range-bg',
-            };
-        }
-        return {};
+        const backgroundColor = 'var(--primary)';
+        const style = {
+            backgroundColor,
+        };
+        return { style };
     }, []);
 
     return (
@@ -183,9 +200,7 @@ export default function CalendarPage() {
                     events={events}
                     defaultView={Views.DAY}
                     views={{ week: true, day: true }}
-                    view={view}
                     date={date}
-                    onView={(view) => setView(view)}
                     onNavigate={onNavigate}
                     startAccessor="start"
                     endAccessor="end"
@@ -197,7 +212,9 @@ export default function CalendarPage() {
                     min={min}
                     max={max}
                     eventPropGetter={eventPropGetter}
-                    dayPropGetter={dayPropGetter}
+                    components={{
+                        toolbar: CustomToolbar,
+                    }}
                 />}
             </div>
         </div>

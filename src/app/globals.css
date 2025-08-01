@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 204 20% 98%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 191 100% 31%;
+    --primary: 206 90% 51%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 122 47% 84%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 94.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 45 100% 50%;
+    --accent: 122 47% 84%;
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 191 100% 31%;
+    --ring: 206 90% 51%;
     --chart-1: 191 100% 31%;
     --chart-2: 45 100% 50%;
     --chart-3: 45 61% 40%;
@@ -45,19 +45,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 191 100% 31%;
+    --primary: 206 90% 51%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 122 47% 84%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 45 100% 50%;
+    --accent: 122 47% 84%;
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 191 100% 31%;
+    --ring: 206 90% 51%;
     --chart-1: 191 100% 31%;
     --chart-2: 45 100% 50%;
     --chart-3: 45 61% 40%;
@@ -89,6 +89,25 @@
       @apply bg-muted/10;
   }
   
+  .rbc-toolbar {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-4;
+  }
+  
+  .rbc-toolbar .rbc-toolbar-label {
+    @apply text-lg font-semibold text-foreground order-2 text-center grow;
+  }
+  
+  .rbc-toolbar .rbc-btn-group {
+    @apply flex items-center gap-2;
+  }
+
+  .rbc-toolbar .rbc-btn-group:first-child {
+      @apply order-1;
+  }
+   .rbc-toolbar .rbc-btn-group:last-child {
+      @apply order-3;
+  }
+  
   .rbc-toolbar button {
     @apply text-foreground transition-colors;
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
@@ -101,30 +120,20 @@
     @apply bg-primary text-primary-foreground;
   }
 
-  .rbc-toolbar {
-    @apply mb-4 flex flex-col sm:flex-row gap-4 items-center;
-  }
-  .rbc-toolbar .rbc-toolbar-label {
-    @apply text-lg font-semibold text-foreground flex-grow text-center sm:text-left;
-  }
-  .rbc-btn-group {
-    @apply inline-flex gap-2;
-  }
-  .rbc-btn-group button {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-    @apply bg-card text-card-foreground border border-input;
-  }
-
   .rbc-header {
       @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
   }
 
   .rbc-time-view, .rbc-month-view, .rbc-agenda-view {
-      @apply border rounded-md;
+      @apply border-none;
+  }
+
+  .rbc-time-content {
+      border-top: 1px solid hsl(var(--border));
   }
   
   .rbc-time-header-content {
-      @apply border-b;
+      @apply border-b-0;
   }
 
   .rbc-time-content > * + * > * {
@@ -140,7 +149,8 @@
   }
   
   .rbc-event, .rbc-day-slot .rbc-background-event {
-    @apply p-1.5 rounded-md text-foreground transition-colors;
+    @apply p-1 rounded-md text-primary-foreground transition-colors;
+    @apply bg-primary text-center justify-center;
   }
 
   .rbc-event:focus {
@@ -151,7 +161,7 @@
     display: none;
   }
   .rbc-event-content {
-    @apply text-xs text-foreground;
+    @apply text-xs;
   }
   
   .rbc-day-bg.rbc-today {
@@ -175,9 +185,7 @@
   .rbc-timeslot-group {
     border-bottom: 1px solid hsl(var(--border));
   }
-  .rbc-time-content {
-    border-top: none;
-  }
+
   .rbc-time-header.rbc-overflowing {
     border-right: none;
   }
@@ -185,8 +193,6 @@
     border-top: none;
   }
   .rbc-event {
-    border: 1px solid hsl(var(--border));
-    padding: 2px 5px;
-    color: hsl(var(--foreground));
+    border: none;
   }
 }
