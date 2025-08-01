@@ -125,45 +125,49 @@ const generateEventsForDateRange = (startDate: Date) => {
     return events;
 }
 
-const CustomToolbar = (toolbar: ToolbarProps) => {
-	const { onNavigate, label, view, onView } = toolbar;
-
-    const goTo = (action: 'PREV' | 'NEXT' | 'TODAY') => {
-        onNavigate(action);
-    };
-
+const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
     const handleViewChange = (newView: View) => {
         if (onView) {
             onView(newView);
         }
     };
 
-	return (
-		<div className="rbc-toolbar">
+    return (
+        <div className="rbc-toolbar">
             <div className="rbc-btn-group">
-                <button type="button" onClick={() => goTo('TODAY')}>Today</button>
-                <button type="button" onClick={() => goTo('PREV')}>Back</button>
-                <button type="button" onClick={() => goTo('NEXT')}>Next</button>
+                <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
+                <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
+                <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
             </div>
-			<span className="rbc-toolbar-label">{label}</span>
+            <span className="rbc-toolbar-label">{label}</span>
             <div className="rbc-btn-group">
                 <button
                     type="button"
-                    className={view === 'week' ? 'rbc-active' : ''}
+                    className={cn(view === 'week' && 'rbc-active')}
                     onClick={() => handleViewChange('week')}
                 >
                     Week
                 </button>
                 <button
                     type="button"
-                    className={view === 'day' ? 'rbc-active' : ''}
+                    className={cn(view === 'day' && 'rbc-active')}
                     onClick={() => handleViewChange('day')}
                 >
                     Day
                 </button>
             </div>
-		</div>
-	);
+        </div>
+    );
+};
+
+const CustomEvent = ({ event }: EventProps<MyEvent>) => {
+    const formatTime = (date: Date) => format(date, 'h:mm a');
+    return (
+        <div className="flex flex-col text-xs">
+            <span className="font-semibold">{formatTime(event.start)} - {formatTime(event.end)}</span>
+            <span>{event.title}</span>
+        </div>
+    );
 };
 
 export default function CalendarPage() {
@@ -180,15 +184,6 @@ export default function CalendarPage() {
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
     }, [setDate]);
-
-    const onDrillDown = useCallback((newDate: Date) => {
-        setDate(newDate);
-        setView(Views.DAY);
-    }, []);
-
-    const onView = useCallback((newView: View) => {
-        setView(newView);
-    }, []);
     
     useEffect(() => {
         if(isClient) {
@@ -196,14 +191,13 @@ export default function CalendarPage() {
         }
     }, [isClient, date]);
 
-    const { defaultDate, scrollToTime, min, max, views } = useMemo(() => {
+    const { defaultDate, scrollToTime, min, max } = useMemo(() => {
         const today = new Date();
         return {
             defaultDate: today,
             scrollToTime: set(today, { hours: 8, minutes: 0 }),
             min: set(today, { hours: 8, minutes: 0, seconds: 0 }),
             max: set(today, { hours: 17, minutes: 0, seconds: 0 }),
-            views: { week: true, day: true }
         }
     }, []);
     
@@ -211,11 +205,16 @@ export default function CalendarPage() {
         const colorClass = colorMap[event.resource.subject] || 'bg-primary text-primary-foreground';
         return {
             className: cn(
-                "p-2 border-0 flex flex-col justify-center text-center",
+                "p-2 border-0 flex flex-col justify-center",
                 colorClass
             ),
         };
     }, []);
+
+    const handleDrillDown = useCallback((newDate: Date) => {
+        setDate(newDate);
+        setView('day');
+      }, []);
 
     return (
         <div className="space-y-8 h-full flex flex-col">
@@ -227,12 +226,11 @@ export default function CalendarPage() {
                 {isClient && <Calendar<MyEvent>
                     localizer={localizer}
                     events={events}
-                    view={view}
-                    views={views}
-                    onView={onView}
-                    onDrillDown={onDrillDown}
                     date={date}
+                    view={view}
+                    onView={setView}
                     onNavigate={onNavigate}
+                    onDrillDown={handleDrillDown}
                     startAccessor="start"
                     endAccessor="end"
                     style={{ flex: 1 }}
@@ -244,7 +242,8 @@ export default function CalendarPage() {
                     max={max}
                     eventPropGetter={eventPropGetter}
                     components={{
-                        toolbar: CustomToolbar
+                        toolbar: CustomToolbar,
+                        event: CustomEvent,
                     }}
                 />}
             </div>

@@ -114,6 +114,11 @@
     @apply bg-primary text-primary-foreground;
   }
 
+  .rbc-toolbar button:not(.rbc-active) {
+    @apply text-foreground;
+  }
+
+
   .rbc-header {
       @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
   }
