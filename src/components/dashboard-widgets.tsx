@@ -1,6 +1,7 @@
+
 "use client"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Sector } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -45,9 +46,9 @@ export function FinancialChart() {
 
 // AttendanceChart Component
 const attendanceChartData = [
-  { category: "Students", value: 92.5, fill: "var(--color-students)" },
-  { category: "Teachers", value: 98.2, fill: "var(--color-teachers)" },
-  { category: "Staff", value: 96.8, fill: "var(--color-staff)" },
+  { category: "Students", value: 92.5, fill: "hsl(var(--chart-1))" },
+  { category: "Teachers", value: 98.2, fill: "hsl(var(--chart-2))" },
+  { category: "Staff", value: 96.8, fill: "hsl(var(--chart-3))" },
 ]
 const attendanceChartConfig = {
   value: { label: "Attendance" },
@@ -69,7 +70,7 @@ export function AttendanceChart() {
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5}>
                 {attendanceChartData.map((entry, index) => (
-                    <Sector key={`cell-${index}`} fill={entry.fill} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
             </Pie>
           </PieChart>
