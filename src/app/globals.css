@@ -87,88 +87,95 @@
 /* react-big-calendar custom styling */
 @layer components {
   .rbc-off-range-bg {
-    @apply bg-transparent;
+    @apply bg-muted/50;
   }
-  
+
   .rbc-toolbar {
-    @apply mb-4 flex flex-wrap items-center justify-between gap-4;
+    @apply mb-4 flex flex-col md:flex-row items-center justify-between gap-4;
   }
-  
+
   .rbc-toolbar .rbc-toolbar-label {
-    @apply text-lg font-semibold text-foreground;
+    @apply text-lg font-semibold text-foreground flex-grow text-center md:text-left;
   }
-  
+
   .rbc-toolbar .rbc-btn-group {
     @apply flex items-center gap-2;
   }
-  
+
   .rbc-toolbar button {
-    @apply text-foreground transition-colors py-1 px-3 rounded-md text-sm;
+    @apply text-foreground bg-card border border-border transition-colors py-1.5 px-3 rounded-md text-sm font-medium;
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
-  
+
   .rbc-toolbar button:hover:not(:disabled) {
-      @apply bg-accent text-accent-foreground;
+    @apply bg-accent text-accent-foreground;
   }
+
   .rbc-toolbar button.rbc-active {
     @apply bg-primary text-primary-foreground;
   }
+  
+  .rbc-toolbar button.rbc-active:hover {
+     @apply bg-primary/90;
+  }
 
-  .rbc-toolbar button:not(.rbc-active) {
-    @apply text-foreground;
+  .rbc-toolbar button:focus:not(.rbc-active) {
+    @apply text-accent-foreground;
   }
 
 
   .rbc-header {
-      @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
-  }
-  
-  .rbc-time-view .rbc-header {
-      @apply border-b-0;
+    @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
   }
 
-  .rbc-time-view, .rbc-month-view, .rbc-agenda-view {
-      @apply border rounded-md;
+  .rbc-time-view .rbc-header {
+    @apply border-b-0;
+  }
+
+  .rbc-time-view,
+  .rbc-month-view,
+  .rbc-agenda-view {
+    @apply border rounded-md;
   }
 
   .rbc-time-content {
-      border-top: 1px solid hsl(var(--border));
+    border-top: 1px solid hsl(var(--border));
   }
-  
+
   .rbc-time-header-content {
-      @apply border-b-0;
+    @apply border-b-0;
   }
 
   .rbc-time-content > * + * > * {
-      @apply border-l;
+    @apply border-l;
   }
-  
-  .rbc-time-slot, .rbc-time-gutter {
-      @apply text-foreground;
+
+  .rbc-time-slot,
+  .rbc-time-gutter {
+    @apply text-foreground;
   }
-  
+
   .rbc-event {
-    @apply p-2 rounded-md text-primary-foreground transition-colors bg-primary;
+    @apply p-2 rounded-md text-primary-foreground transition-colors bg-primary cursor-pointer;
   }
 
   .rbc-event-content {
-    @apply text-xs whitespace-pre-wrap text-center;
+    @apply text-xs whitespace-pre-wrap;
   }
-
   .rbc-event:focus {
-      outline: 2px solid hsl(var(--ring));
-  }
-  
-  .rbc-event-label {
-    /* Hide the default time label inside the event */
-    @apply hidden;
-  }
-  
-  .rbc-day-bg.rbc-today {
-      @apply bg-primary/10;
+    outline: 2px solid hsl(var(--ring));
   }
 
-  .rbc-time-view, .rbc-month-view {
+  .rbc-event-label {
+    display: none;
+  }
+
+  .rbc-day-bg.rbc-today {
+    @apply bg-primary/10;
+  }
+
+  .rbc-time-view,
+  .rbc-month-view {
     @apply border-separate border-spacing-0;
   }
 
@@ -188,10 +195,10 @@
   .rbc-time-header.rbc-overflowing {
     border-right: none;
   }
-   .rbc-day-slot .rbc-time-slot {
+  .rbc-day-slot .rbc-time-slot {
     border-top: 1px solid hsl(var(--border));
   }
   .rbc-time-view .rbc-time-slot:last-child {
-      border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
   }
 }
