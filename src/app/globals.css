@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 204 20% 98%;
+    --background: 0 0% 100%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 206 90% 51%;
+    --primary: 191 100% 31%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 122 47% 84%;
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 94.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 122 47% 84%;
+    --accent: 45 100% 50%;
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 206 90% 51%;
+    --ring: 191 100% 31%;
     --chart-1: 191 100% 31%;
     --chart-2: 45 100% 50%;
     --chart-3: 45 61% 40%;
@@ -45,19 +45,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 206 90% 51%;
+    --primary: 191 100% 31%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 122 47% 84%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 122 47% 84%;
+    --accent: 45 100% 50%;
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 206 90% 51%;
+    --ring: 191 100% 31%;
     --chart-1: 191 100% 31%;
     --chart-2: 45 100% 50%;
     --chart-3: 45 61% 40%;
@@ -86,7 +86,7 @@
 /* react-big-calendar custom styling */
 @layer components {
   .rbc-off-range-bg {
-      @apply bg-muted/10;
+      @apply bg-transparent;
   }
   
   .rbc-toolbar {
@@ -94,18 +94,11 @@
   }
   
   .rbc-toolbar .rbc-toolbar-label {
-    @apply text-lg font-semibold text-foreground order-2 text-center grow;
+    @apply text-lg font-semibold text-foreground;
   }
   
   .rbc-toolbar .rbc-btn-group {
     @apply flex items-center gap-2;
-  }
-
-  .rbc-toolbar .rbc-btn-group:first-child {
-      @apply order-1;
-  }
-   .rbc-toolbar .rbc-btn-group:last-child {
-      @apply order-3;
   }
   
   .rbc-toolbar button {
@@ -123,9 +116,13 @@
   .rbc-header {
       @apply p-2 text-center font-semibold border-b text-muted-foreground capitalize;
   }
+  
+  .rbc-time-view .rbc-header {
+      @apply border-b-0;
+  }
 
   .rbc-time-view, .rbc-month-view, .rbc-agenda-view {
-      @apply border-none;
+      @apply border rounded-md;
   }
 
   .rbc-time-content {
@@ -143,14 +140,13 @@
   .rbc-time-slot, .rbc-time-gutter {
       @apply text-foreground;
   }
-
-  .rbc-day-slot .rbc-time-slot {
-      @apply border-t;
-  }
   
   .rbc-event, .rbc-day-slot .rbc-background-event {
-    @apply p-1 rounded-md text-primary-foreground transition-colors;
-    @apply bg-primary text-center justify-center;
+    @apply p-0 rounded-md text-primary-foreground transition-colors;
+  }
+
+  .rbc-event-content {
+    @apply text-xs whitespace-pre-wrap;
   }
 
   .rbc-event:focus {
@@ -160,16 +156,13 @@
   .rbc-event-label {
     display: none;
   }
-  .rbc-event-content {
-    @apply text-xs;
-  }
   
   .rbc-day-bg.rbc-today {
       @apply bg-primary/10;
   }
 
   .rbc-time-view, .rbc-month-view {
-    @apply border-none;
+    @apply border-separate border-spacing-0;
   }
 
   .rbc-time-content > * + * > * {
@@ -190,7 +183,10 @@
     border-right: none;
   }
    .rbc-day-slot .rbc-time-slot {
-    border-top: none;
+    border-top: 1px solid hsl(var(--border));
+  }
+  .rbc-time-view .rbc-time-slot:last-child {
+      border-bottom: 1px solid hsl(var(--border));
   }
   .rbc-event {
     border: none;

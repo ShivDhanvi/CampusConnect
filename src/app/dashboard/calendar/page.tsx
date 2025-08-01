@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Calendar, dateFnsLocalizer, Views, EventProps, View, ToolbarProps } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views, EventProps, View } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -11,8 +11,6 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const locales = {
   'en-US': enUS,
@@ -76,17 +74,17 @@ interface MyEvent {
 }
 
 const colorMap: Record<string, string> = {
-    'Mathematics': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800',
-    'History': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
-    'Biology': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
-    'Physics': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
-    'Chemistry': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-800',
-    'English': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800',
-    'Physical Education': 'bg-green-100 text-green-800 dark:bg-green-900/30 border-green-300 dark:border-green-800',
-    'Art': 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 border-pink-300 dark:border-pink-800',
-    'Geography': 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 border-teal-300 dark:border-teal-800',
-    'Computer Science': 'bg-gray-200 text-gray-800 dark:bg-gray-800/30 border-gray-400 dark:border-gray-700',
-    'Music': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 border-purple-300 dark:border-purple-800',
+    'Mathematics': 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:border-blue-800',
+    'History': 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-800',
+    'Biology': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:border-purple-800',
+    'Physics': 'bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-900/30 dark:border-pink-800',
+    'Chemistry': 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-900/30 dark:border-indigo-800',
+    'English': 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-800',
+    'Physical Education': 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:border-green-800',
+    'Art': 'bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-900/30 dark:border-pink-800',
+    'Geography': 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-900/30 dark:border-teal-800',
+    'Computer Science': 'bg-gray-200 text-gray-800 border-gray-400 dark:bg-gray-800/30 dark:border-gray-700',
+    'Music': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:border-purple-800',
 };
 
 
@@ -107,7 +105,7 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
             const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
 
             events.push({
-                title: `${session.time} ${session.subject}`,
+                title: `${session.time}\n${session.subject}`,
                 start: startDateTime,
                 end: endDateTime,
                 resource: { 
@@ -120,33 +118,6 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
     });
     return events;
 }
-
-
-const CustomToolbar = ({ label, onNavigate, onView, view, views }: ToolbarProps) => {
-    return (
-        <div className="rbc-toolbar">
-            <div className="rbc-btn-group">
-                <Button variant="outline" onClick={() => onNavigate('PREV')}><ChevronLeft className="h-4 w-4" /></Button>
-                <Button variant="outline" onClick={() => onNavigate('TODAY')}>Today</Button>
-                <Button variant="outline" onClick={() => onNavigate('NEXT')}><ChevronRight className="h-4 w-4" /></Button>
-            </div>
-            <span className="rbc-toolbar-label">{label}</span>
-            <div className="rbc-btn-group">
-                {(views as string[]).map(viewName => (
-                    <Button
-                        key={viewName}
-                        variant={view === viewName ? 'default' : 'outline'}
-                        onClick={() => onView(viewName)}
-                        className="capitalize"
-                    >
-                        {viewName}
-                    </Button>
-                ))}
-            </div>
-        </div>
-    );
-};
-
 
 export default function CalendarPage() {
     
@@ -181,11 +152,13 @@ export default function CalendarPage() {
     }, []);
     
     const eventPropGetter = useCallback((event: MyEvent) => {
-        const backgroundColor = 'var(--primary)';
-        const style = {
-            backgroundColor,
+        const colorClass = colorMap[event.resource.subject] || 'bg-gray-100 text-gray-800 border-gray-300';
+        return {
+            className: cn(
+                "p-2 border rounded-lg flex flex-col justify-center",
+                colorClass,
+            ),
         };
-        return { style };
     }, []);
 
     return (
@@ -212,9 +185,6 @@ export default function CalendarPage() {
                     min={min}
                     max={max}
                     eventPropGetter={eventPropGetter}
-                    components={{
-                        toolbar: CustomToolbar,
-                    }}
                 />}
             </div>
         </div>
