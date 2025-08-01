@@ -87,8 +87,8 @@
 
 /* react-big-calendar custom styling */
 @layer components {
-  .rbc-off-range-bg-custom {
-      background-color: hsl(var(--muted) / 0.5) !important;
+  .rbc-off-range-bg {
+      background-color: transparent !important;
   }
   
   .rbc-toolbar button {
@@ -142,8 +142,7 @@
   }
   
   .rbc-event, .rbc-day-slot .rbc-background-event {
-    @apply !p-1.5 rounded-md !text-foreground transition-colors;
-    border-width: 1px !important;
+    @apply p-1.5 rounded-md text-foreground transition-colors;
   }
 
   .rbc-event:focus {
@@ -172,5 +171,22 @@
   .rbc-rtl .rbc-time-content > * + * > * {
     border-left-width: 0;
     border-right-width: 1px;
+  }
+
+  /* Custom styles for cleaner look */
+  .rbc-timeslot-group {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .rbc-time-content {
+    border-top: none;
+  }
+  .rbc-time-header.rbc-overflowing {
+    border-right: none;
+  }
+   .rbc-day-slot .rbc-time-slot {
+    border-top: none;
+  }
+  .rbc-event {
+    border: 1px solid hsl(var(--border));
   }
 }

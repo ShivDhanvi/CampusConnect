@@ -103,12 +103,11 @@ const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
                     const [startHour, startMinute] = startTime.split(':').map(Number);
                     const [endHour, endMinute] = endTime.split(':').map(Number);
                     
-                    const formatTime = (date: Date) => format(date, 'h:mm a');
                     const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
                     const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
 
                     events.push({
-                        title: `${formatTime(startDateTime)} - ${formatTime(endDateTime)} ${session.subject}`,
+                        title: session.subject,
                         start: startDateTime,
                         end: endDateTime,
                         resource: { 
@@ -166,7 +165,7 @@ export default function CalendarPage() {
         const month = getMonth(new Date());
         if (getMonth(date) !== month) {
             return {
-                className: 'rbc-off-range-bg-custom',
+                className: 'rbc-off-range-bg',
             };
         }
         return {};
@@ -197,7 +196,6 @@ export default function CalendarPage() {
                     scrollToTime={scrollToTime}
                     min={min}
                     max={max}
-                    className="[&_.rbc-off-range-bg]:!bg-background"
                     eventPropGetter={eventPropGetter}
                     dayPropGetter={dayPropGetter}
                 />}
