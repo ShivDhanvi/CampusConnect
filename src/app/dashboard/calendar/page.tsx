@@ -332,30 +332,35 @@ export default function CalendarPage() {
                     </Select>
                 </div>
             </div>
-            <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm">
+            <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm flex flex-col">
                 {isClient && (
                     <>
-                        <Calendar<MyEvent>
-                            localizer={localizer}
-                            events={events}
-                            date={date}
-                            view={view}
-                            onView={onView}
-                            onNavigate={onNavigate}
-                            onSelectEvent={onSelectEvent}
-                            onDrillDown={handleDrillDown}
-                            startAccessor="start"
-                            endAccessor="end"
-                            style={{ flex: 1 }}
-                            step={60}
-                            timeslots={1}
-                            defaultDate={defaultDate}
-                            scrollToTime={scrollToTime}
-                            min={min}
-                            max={max}
-                            eventPropGetter={eventPropGetter}
-                            components={components}
-                        />
+                        <div className="text-center mb-4">
+                            <h2 className="text-xl font-bold">Class {selectedClass} Timetable</h2>
+                        </div>
+                        <div className="flex-1 relative">
+                            <Calendar<MyEvent>
+                                localizer={localizer}
+                                events={events}
+                                date={date}
+                                view={view}
+                                onView={onView}
+                                onNavigate={onNavigate}
+                                onSelectEvent={onSelectEvent}
+                                onDrillDown={handleDrillDown}
+                                startAccessor="start"
+                                endAccessor="end"
+                                style={{ flex: 1 }}
+                                step={60}
+                                timeslots={1}
+                                defaultDate={defaultDate}
+                                scrollToTime={scrollToTime}
+                                min={min}
+                                max={max}
+                                eventPropGetter={eventPropGetter}
+                                components={components}
+                            />
+                        </div>
                         <EventDetailsDialog 
                             isOpen={isDialogOpen}
                             onOpenChange={setIsDialogOpen}
