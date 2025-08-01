@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Calendar, dateFnsLocalizer, Views, EventProps, View } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views, EventProps, View, ToolbarProps } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -11,6 +11,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { set, addDays, eachWeekOfInterval, Day } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const locales = {
   'en-US': enUS,
@@ -88,36 +89,77 @@ const colorMap: Record<string, string> = {
 };
 
 
-const generateEventsForDateRange = (startDate: Date, endDate: Date) => {
+const generateEventsForDateRange = (startDate: Date) => {
     const events: MyEvent[] = [];
-    const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+    const weeks = eachWeekOfInterval({
+        start: startDate,
+        end: addDays(startDate, 35) 
+    }, { weekStartsOn: 1 });
 
-    (Object.keys(timetable) as TimetableDay[]).forEach(day => {
-        const dayOfWeek = dayMapping[day];
-        const currentDate = addDays(weekStart, dayOfWeek - 1); 
+    weeks.forEach(weekStart => {
+        (Object.keys(timetable) as TimetableDay[]).forEach(day => {
+            const dayOfWeek = dayMapping[day];
+            const currentDate = addDays(weekStart, dayOfWeek - 1); 
 
-        timetable[day].forEach(session => {
-            const [startTime, endTime] = session.time.split(' - ');
-            const [startHour, startMinute] = startTime.split(':').map(Number);
-            const [endHour, endMinute] = endTime.split(':').map(Number);
-            
-            const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
-            const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
+            timetable[day].forEach(session => {
+                const [startTime, endTime] = session.time.split(' - ');
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                const [endHour, endMinute] = endTime.split(':').map(Number);
+                
+                const startDateTime = set(currentDate, { hours: startHour, minutes: startMinute, seconds: 0, milliseconds: 0 });
+                const endDateTime = set(currentDate, { hours: endHour, minutes: endMinute, seconds: 0, milliseconds: 0 });
 
-            events.push({
-                title: `${session.time}\n${session.subject}`,
-                start: startDateTime,
-                end: endDateTime,
-                resource: { 
-                  room: session.room,
-                  teacher: session.teacher,
-                  subject: session.subject,
-                },
+                events.push({
+                    title: session.subject,
+                    start: startDateTime,
+                    end: endDateTime,
+                    resource: { 
+                      room: session.room,
+                      teacher: session.teacher,
+                      subject: session.subject,
+                    },
+                });
             });
         });
     });
+
     return events;
 }
+
+const CustomToolbar = (toolbar: ToolbarProps) => {
+	const { onNavigate, label, view, onView } = toolbar;
+    const goTo = (action: 'PREV' | 'NEXT' | 'TODAY') => {
+        onNavigate(action);
+    };
+
+	return (
+		<div className="rbc-toolbar">
+            <div className="rbc-btn-group">
+                <button type="button" onClick={() => goTo('TODAY')}>Today</button>
+                <button type="button" onClick={() => goTo('PREV')}>Back</button>
+                <button type="button" onClick={() => goTo('NEXT')}>Next</button>
+            </div>
+			<span className="rbc-toolbar-label">{label}</span>
+            <div className="rbc-btn-group">
+                <button
+                    type="button"
+                    className={view === 'week' ? 'rbc-active' : ''}
+                    onClick={() => onView('week')}
+                >
+                    Week
+                </button>
+                <button
+                    type="button"
+                    className={view === 'day' ? 'rbc-active' : ''}
+                    onClick={() => onView('day')}
+                >
+                    Day
+                </button>
+            </div>
+		</div>
+	);
+};
+
 
 export default function CalendarPage() {
     
@@ -131,35 +173,35 @@ export default function CalendarPage() {
     
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
-    }, []);
-
+    }, [setDate]);
+    
     useEffect(() => {
         if(isClient) {
-            const start = startOfWeek(date, { weekStartsOn: 1 });
-            const end = addDays(start, 6);
-            setEvents(generateEventsForDateRange(start, end));
+            setEvents(generateEventsForDateRange(date));
         }
     }, [isClient, date]);
 
-    const { defaultDate, scrollToTime, min, max } = useMemo(() => {
+    const { defaultDate, scrollToTime, min, max, views } = useMemo(() => {
         const today = new Date();
         return {
             defaultDate: today,
             scrollToTime: set(today, { hours: 8, minutes: 0 }),
-            min: set(today, { hours: 8, minutes: 0 }),
-            max: set(today, { hours: 17, minutes: 0 }),
+            min: set(today, { hours: 8, minutes: 0, seconds: 0 }),
+            max: set(today, { hours: 17, minutes: 0, seconds: 0 }),
+            views: { week: true, day: true }
         }
     }, []);
     
     const eventPropGetter = useCallback((event: MyEvent) => {
-        const colorClass = colorMap[event.resource.subject] || 'bg-gray-100 text-gray-800 border-gray-300';
+        const colorClass = colorMap[event.resource.subject] || 'bg-primary text-primary-foreground';
         return {
             className: cn(
-                "p-2 border rounded-lg flex flex-col justify-center",
-                colorClass,
+                "p-2 border-0 flex flex-col justify-center text-center",
+                colorClass
             ),
         };
     }, []);
+
 
     return (
         <div className="space-y-8 h-full flex flex-col">
@@ -172,7 +214,7 @@ export default function CalendarPage() {
                     localizer={localizer}
                     events={events}
                     defaultView={Views.DAY}
-                    views={{ week: true, day: true }}
+                    views={views}
                     date={date}
                     onNavigate={onNavigate}
                     startAccessor="start"
@@ -185,6 +227,9 @@ export default function CalendarPage() {
                     min={min}
                     max={max}
                     eventPropGetter={eventPropGetter}
+                    components={{
+                        toolbar: CustomToolbar
+                    }}
                 />}
             </div>
         </div>
