@@ -167,7 +167,7 @@ export default function CalendarPage() {
     const [isClient, setIsClient] = useState(false);
     const [events, setEvents] = useState<MyEvent[]>([]);
     const [date, setDate] = useState(new Date());
-    const [view, setView] = useState<View>(Views.DAY);
+    const [view, setView] = useState<View>(Views.WEEK);
 
     useEffect(() => {
         setIsClient(true);
