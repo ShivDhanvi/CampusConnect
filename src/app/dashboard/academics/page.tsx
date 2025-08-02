@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +64,8 @@ const tagColors = [
 export default function AcademicsPage() {
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadingAssignment, setUploadingAssignment] = useState<{ id: string, dueDate: string } | null>(null);
 
     // State for Assignments
     const [assignments, setAssignments] = useState(initialAssignments);
@@ -216,36 +218,55 @@ export default function AcademicsPage() {
             action: <CheckCircle className="text-green-500" />,
         })
     };
-    
-    const handleUploadAssignment = (assignmentId: string, dueDate: string) => {
-        setAssignments(prev => prev.map(item =>
-            item.id === assignmentId ? { ...item, status: 'Submitted' } : item
-        ));
-        
-        const isSubmittedOnTime = differenceInDays(parseISO(dueDate), new Date()) >= 0;
 
-        if (isSubmittedOnTime) {
-            toast({
-                title: "Streak Point Earned!",
-                description: "Great job submitting on time. Keep it up!",
-                action: <Sparkles className="text-yellow-500" />,
-            });
-             // In a real app, you would update the streak points in the backend
-            const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
-            localStorage.setItem('streakPoints', (currentPoints + 1).toString());
-            // This is a bit of a hack to force the header to re-render
-            window.dispatchEvent(new Event('storage'));
-        } else {
-            toast({
-                title: "Assignment Submitted",
-                description: "Your assignment has been submitted.",
-                action: <CheckCircle className="text-green-500" />,
-            });
+    const handleUploadClick = (assignmentId: string, dueDate: string) => {
+        setUploadingAssignment({ id: assignmentId, dueDate });
+        fileInputRef.current?.click();
+    };
+    
+    const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0 && uploadingAssignment) {
+            const { id, dueDate } = uploadingAssignment;
+
+            setAssignments(prev => prev.map(item =>
+                item.id === id ? { ...item, status: 'Submitted' } : item
+            ));
+            
+            const isSubmittedOnTime = differenceInDays(parseISO(dueDate), new Date()) >= 0;
+
+            if (isSubmittedOnTime) {
+                toast({
+                    title: "Streak Point Earned!",
+                    description: "Great job submitting on time. Keep it up!",
+                    action: <Sparkles className="text-yellow-500" />,
+                });
+                const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
+                localStorage.setItem('streakPoints', (currentPoints + 1).toString());
+                window.dispatchEvent(new Event('storage'));
+            } else {
+                toast({
+                    title: "Assignment Submitted",
+                    description: "Your assignment has been submitted.",
+                    action: <CheckCircle className="text-green-500" />,
+                });
+            }
+        }
+        // Reset state and file input
+        setUploadingAssignment(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
         }
     };
     
     return (
         <div className="space-y-8">
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileSelected} 
+                className="hidden" 
+                accept=".docx,.pdf,.png,.jpeg,.jpg"
+            />
             <div>
                 <h1 className="text-3xl font-bold font-headline">Academics</h1>
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
@@ -312,7 +333,7 @@ export default function AcademicsPage() {
                                                     <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
                                                     <TableCell className="text-right">
                                                          {userRole === 'student' && item.status === 'Pending' && (
-                                                            <Button variant="ghost" size="icon" onClick={() => handleUploadAssignment(item.id, item.dueDate)}>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.id, item.dueDate)}>
                                                                 <Upload className="h-4 w-4" />
                                                             </Button>
                                                         )}
