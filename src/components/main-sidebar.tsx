@@ -1,3 +1,4 @@
+
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,7 +35,7 @@ const adminNavItems = [
   { href: '/dashboard/insights', label: 'Insights', icon: BarChart3 },
   { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
   { href: '/dashboard/announcements', label: 'Announcements', icon: Megaphone },
-  { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare, badge: 2 },
   { href: '/dashboard/intelligent-alerts', label: 'Intelligent Alerts', icon: ShieldAlert, badge: 5 },
 ];
 
@@ -60,7 +61,7 @@ export function MainSidebar() {
                     <SidebarMenuItem key={href+label}>
                         <SidebarMenuButton
                             asChild
-                            isActive={pathname === href}
+                            isActive={pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard')}
                             tooltip={{
                                 children: label,
                                 side: "right",

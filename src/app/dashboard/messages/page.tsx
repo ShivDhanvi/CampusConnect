@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign } from "lucide-react";
+import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign, Paperclip, Pin, X } from "lucide-react";
 import { NewMessageDialog } from "@/components/new-message-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { useToast } from "@/hooks/use-toast";
 
 
 const users = {
@@ -45,6 +47,7 @@ const getInitialConversations = () => [
     lastMessage: 'Thank you for the update, Mr. Smith. It has been noted.',
     lastMessageTime: '10:32 AM',
     unreadCount: 0,
+    pinned: false,
   },
   {
     id: 'conv2',
@@ -58,6 +61,7 @@ const getInitialConversations = () => [
     lastMessage: 'Perfect, thank you!',
     lastMessageTime: 'Yesterday',
     unreadCount: 1,
+    pinned: true,
   },
   {
     id: 'conv3',
@@ -72,6 +76,7 @@ const getInitialConversations = () => [
     lastMessage: 'Noted. I should have mine in by 3pm.',
     lastMessageTime: '10:45 AM',
     unreadCount: 0,
+    pinned: false,
   },
 ];
 
@@ -80,26 +85,31 @@ const getInitialConversations = () => [
 const CURRENT_USER_ID = 'admin';
 
 export default function MessagesPage() {
+    const { toast } = useToast();
     const [conversations, setConversations] = useState<any[]>([]);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
+    const [attachment, setAttachment] = useState<File | null>(null);
     const isMobile = useIsMobile();
     const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
     const [editingMessage, setEditingMessage] = useState<{ id: string, text: string } | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const [isClient, setIsClient] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setIsClient(true);
         const initialData = getInitialConversations();
         setConversations(initialData);
-        setSelectedConversationId(initialData[0].id);
+        if(initialData.length > 0) {
+            setSelectedConversationId(initialData[0].id);
+        }
     }, []);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight });
+            scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
         }
     }, [selectedConversationId, conversations]);
 
@@ -108,31 +118,47 @@ export default function MessagesPage() {
         setSelectedConversationId(newConversation.id);
         if(isMobile) setIsSidebarOpen(false);
     }
+    
+    const handleAttachmentClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setAttachment(file);
+        }
+    };
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !selectedConversationId) return;
+        if ((!newMessage.trim() && !attachment) || !selectedConversationId) return;
 
         setConversations(prev => prev.map(conv => {
             if (conv.id === selectedConversationId) {
                 if (editingMessage) {
                     // Edit existing message
-                    const updatedMessages = conv.messages.map(msg =>
+                    const updatedMessages = conv.messages.map((msg: any) =>
                         msg.id === editingMessage.id ? { ...msg, text: newMessage.trim() } : msg
                     );
                     return { ...conv, messages: updatedMessages, lastMessage: updatedMessages[updatedMessages.length - 1].text };
                 } else {
                     // Add new message
+                    let text = newMessage.trim();
+                    if(attachment) {
+                        text += `\n📎 ${attachment.name}`;
+                    }
+
                     const newMessageObj = {
                         id: `msg${Date.now()}`,
                         sender: CURRENT_USER_ID,
-                        text: newMessage.trim(),
+                        text: text,
                         timestamp: new Date()
                     };
                     return {
                         ...conv,
                         messages: [...conv.messages, newMessageObj],
-                        lastMessage: newMessage.trim(),
+                        lastMessage: text,
                         lastMessageTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     };
                 }
@@ -140,6 +166,8 @@ export default function MessagesPage() {
             return conv;
         }));
         setNewMessage("");
+        setAttachment(null);
+        if(fileInputRef.current) fileInputRef.current.value = "";
         setEditingMessage(null);
     };
     
@@ -154,14 +182,15 @@ export default function MessagesPage() {
     const handleDeleteConversation = (convId: string) => {
         setConversations(prev => prev.filter(conv => conv.id !== convId));
         if (selectedConversationId === convId) {
-            setSelectedConversationId(filteredConversations[0]?.id || null);
+            const remainingConversations = conversations.filter(conv => conv.id !== convId);
+            setSelectedConversationId(remainingConversations[0]?.id || null);
         }
     };
     
     const handleDeleteMessage = (messageId: string) => {
         setConversations(prev => prev.map(conv => {
             if (conv.id === selectedConversationId) {
-                return { ...conv, messages: conv.messages.filter(msg => msg.id !== messageId) };
+                return { ...conv, messages: conv.messages.filter((msg: any) => msg.id !== messageId) };
             }
             return conv;
         }));
@@ -175,12 +204,27 @@ export default function MessagesPage() {
     const handleMention = (username: string) => {
         setNewMessage(prev => `${prev}@${username} `);
     };
+    
+    const handlePinToggle = (convId: string) => {
+        setConversations(prev => prev.map(c => c.id === convId ? {...c, pinned: !c.pinned} : c));
+        toast({
+            title: `Conversation ${conversations.find(c=>c.id === convId)?.pinned ? 'unpinned' : 'pinned'}.`,
+        });
+    }
 
-    const filteredConversations = conversations.filter(conv => {
+    const sortedConversations = useMemo(() => {
+        return [...conversations].sort((a, b) => {
+            if(a.pinned && !b.pinned) return -1;
+            if(!a.pinned && b.pinned) return 1;
+            return new Date(b.messages[b.messages.length - 1].timestamp).getTime() - new Date(a.messages[a.messages.length - 1].timestamp).getTime();
+        });
+    }, [conversations])
+
+    const filteredConversations = sortedConversations.filter(conv => {
         if (conv.type === 'group') {
             return conv.name?.toLowerCase().includes(searchTerm.toLowerCase());
         }
-        const otherParticipantId = conv.participants.find(p => p !== CURRENT_USER_ID);
+        const otherParticipantId = conv.participants.find((p: string) => p !== CURRENT_USER_ID);
         if(!otherParticipantId) return false;
         const otherParticipant = users[otherParticipantId as keyof typeof users];
         return otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -188,7 +232,7 @@ export default function MessagesPage() {
 
     const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
     
-    const otherParticipantId = selectedConversation?.type === 'dm' ? selectedConversation?.participants.find(p => p !== CURRENT_USER_ID) : null;
+    const otherParticipantId = selectedConversation?.type === 'dm' ? selectedConversation?.participants.find((p: string) => p !== CURRENT_USER_ID) : null;
     const otherParticipant = otherParticipantId ? users[otherParticipantId as keyof typeof users] : null;
 
     const getConversationDisplay = (conv: typeof conversations[0]) => {
@@ -200,12 +244,14 @@ export default function MessagesPage() {
                 online: false,
             }
         }
-        const otherId = conv.participants.find(p => p !== CURRENT_USER_ID) as keyof typeof users;
+        const otherId = conv.participants.find((p: string) => p !== CURRENT_USER_ID) as keyof typeof users;
         return users[otherId];
     }
 
     const showChatView = (!isMobile || (isMobile && !isSidebarOpen));
     const showSidebar = (!isMobile || (isMobile && isSidebarOpen));
+    const totalUnreadCount = useMemo(() => conversations.reduce((sum, conv) => sum + conv.unreadCount, 0), [conversations]);
+
 
     if (!isClient) {
         return null; // or a loading skeleton
@@ -213,9 +259,20 @@ export default function MessagesPage() {
     
     return (
         <div className="h-[calc(100vh-10rem)] flex flex-col">
-            <div>
-                <h1 className="text-3xl font-bold font-headline">Messages</h1>
-                <p className="text-muted-foreground">Communicate with students, teachers, and parents.</p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold font-headline">Messages</h1>
+                    <p className="text-muted-foreground">Communicate with students, teachers, and parents.</p>
+                </div>
+                { totalUnreadCount > 0 && 
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                        </span>
+                        <span className="text-sm text-muted-foreground">{totalUnreadCount} unread message{totalUnreadCount > 1 ? 's' : ''}</span>
+                    </div>
+                }
             </div>
             <div className="flex-1 mt-6 border rounded-lg flex overflow-hidden">
                 {showSidebar && (
@@ -239,65 +296,58 @@ export default function MessagesPage() {
                                     const displayInfo = getConversationDisplay(conv);
                                     if(!displayInfo) return null;
                                     return (
-                                        <div key={conv.id} className="group relative">
-                                        <button
-                                            className={cn(
-                                                "w-full text-left p-3 rounded-lg flex items-center gap-4 transition-colors",
-                                                selectedConversationId === conv.id ? "bg-muted" : "hover:bg-muted/50"
-                                            )}
-                                            onClick={() => handleSelectConversation(conv.id)}
-                                        >
-                                            <div className="relative">
-                                                <Avatar>
-                                                    {conv.type === 'group' ? (
-                                                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                                                            <Users className="h-5 w-5 text-muted-foreground"/>
+                                        <ContextMenu key={conv.id}>
+                                            <ContextMenuTrigger>
+                                                <div className="group relative">
+                                                <button
+                                                    className={cn(
+                                                        "w-full text-left p-3 rounded-lg flex items-center gap-4 transition-colors",
+                                                        selectedConversationId === conv.id ? "bg-muted" : "hover:bg-muted/50"
+                                                    )}
+                                                    onClick={() => handleSelectConversation(conv.id)}
+                                                >
+                                                    {conv.pinned && <Pin className="absolute top-1 right-1 h-3 w-3 text-muted-foreground" />}
+                                                    <div className="relative">
+                                                        <Avatar>
+                                                            {conv.type === 'group' ? (
+                                                                <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                                    <Users className="h-5 w-5 text-muted-foreground"/>
+                                                                </div>
+                                                            ) : (
+                                                                <AvatarImage src={displayInfo.avatar} alt={displayInfo.name} data-ai-hint="user avatar" />
+                                                            )}
+                                                            <AvatarFallback>{displayInfo.initials}</AvatarFallback>
+                                                        </Avatar>
+                                                        {displayInfo.online && (
+                                                            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 truncate">
+                                                        <div className="flex justify-between items-center">
+                                                            <h3 className="font-semibold truncate">{displayInfo.name}</h3>
+                                                            <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">{conv.lastMessageTime}</p>
                                                         </div>
-                                                    ) : (
-                                                        <AvatarImage src={displayInfo.avatar} alt={displayInfo.name} data-ai-hint="user avatar" />
-                                                    )}
-                                                    <AvatarFallback>{displayInfo.initials}</AvatarFallback>
-                                                </Avatar>
-                                                {displayInfo.online && (
-                                                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 truncate">
-                                                <div className="flex justify-between items-center">
-                                                    <h3 className="font-semibold">{displayInfo.name}</h3>
-                                                    <p className="text-xs text-muted-foreground">{conv.lastMessageTime}</p>
+                                                        <div className="flex justify-between items-center">
+                                                            <p className={cn("text-sm text-muted-foreground truncate", conv.unreadCount > 0 && "font-bold text-foreground")}>{conv.lastMessage}</p>
+                                                            {conv.unreadCount > 0 && (
+                                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                                                                    {conv.unreadCount}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </button>
                                                 </div>
-                                                <div className="flex justify-between items-center">
-                                                    <p className={cn("text-sm text-muted-foreground truncate", conv.unreadCount > 0 && "font-bold text-foreground")}>{conv.lastMessage}</p>
-                                                    {conv.unreadCount > 0 && (
-                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                                                            {conv.unreadCount}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </button>
-                                         <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Trash2 className="h-4 w-4 text-muted-foreground"/>
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This will permanently delete the chat history for "{displayInfo.name}". This action cannot be undone.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteConversation(conv.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-
-                                        </div>
+                                            </ContextMenuTrigger>
+                                             <ContextMenuContent>
+                                                <ContextMenuItem onClick={() => handlePinToggle(conv.id)}>
+                                                    <Pin className="mr-2 h-4 w-4" /> {conv.pinned ? 'Unpin' : 'Pin'}
+                                                </ContextMenuItem>
+                                                <ContextMenuItem className="text-destructive" onClick={() => handleDeleteConversation(conv.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                </ContextMenuItem>
+                                            </ContextMenuContent>
+                                        </ContextMenu>
                                     )
                                 })}
                             </div>
@@ -308,37 +358,59 @@ export default function MessagesPage() {
                     <main className="flex-1 flex flex-col">
                         {selectedConversation ? (
                              <>
-                                <header className="p-4 border-b flex items-center gap-4">
-                                     {isMobile && (
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)}>
-                                            <ArrowLeft className="h-5 w-5" />
-                                        </Button>
-                                    )}
-                                     <div className="relative">
-                                        <Avatar>
-                                            {selectedConversation.type === 'group' ? (
-                                                 <div className="w-full h-full flex items-center justify-center bg-muted">
-                                                    <Users className="h-5 w-5 text-muted-foreground"/>
-                                                </div>
-                                            ) : (
-                                                <AvatarImage src={otherParticipant?.avatar} alt={otherParticipant?.name} data-ai-hint="user avatar" />
-                                            )}
-                                            <AvatarFallback>{getConversationDisplay(selectedConversation)?.initials}</AvatarFallback>
-                                        </Avatar>
-                                        {otherParticipant?.online && (
-                                             <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+                                <header className="p-4 border-b flex items-center justify-between gap-4">
+                                     <div className="flex items-center gap-4">
+                                        {isMobile && (
+                                            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)}>
+                                                <ArrowLeft className="h-5 w-5" />
+                                            </Button>
                                         )}
-                                    </div>
-                                    <div>
-                                        <h2 className="font-bold text-lg">{getConversationDisplay(selectedConversation)?.name}</h2>
-                                        <p className="text-sm text-muted-foreground">
-                                            {selectedConversation.type === 'group' ? `${selectedConversation.participants.length} members` : otherParticipant?.role}
-                                        </p>
-                                    </div>
+                                        <div className="relative">
+                                            <Avatar>
+                                                {selectedConversation.type === 'group' ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                        <Users className="h-5 w-5 text-muted-foreground"/>
+                                                    </div>
+                                                ) : (
+                                                    <AvatarImage src={otherParticipant?.avatar} alt={otherParticipant?.name} data-ai-hint="user avatar" />
+                                                )}
+                                                <AvatarFallback>{getConversationDisplay(selectedConversation)?.initials}</AvatarFallback>
+                                            </Avatar>
+                                            {otherParticipant?.online && (
+                                                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h2 className="font-bold text-lg">{getConversationDisplay(selectedConversation)?.name}</h2>
+                                            <p className="text-sm text-muted-foreground">
+                                                {selectedConversation.type === 'group' ? `${selectedConversation.participants.length} members` : otherParticipant?.role}
+                                            </p>
+                                        </div>
+                                     </div>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will permanently delete the entire chat history for "{getConversationDisplay(selectedConversation)?.name}". This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteConversation(selectedConversation.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
                                 </header>
                                 <ScrollArea className="flex-1 p-4 bg-muted/20" ref={scrollAreaRef}>
                                     <div className="space-y-6">
-                                        {selectedConversation.messages.map((msg, index) => {
+                                        {selectedConversation.messages.map((msg: any) => {
                                             const sender = users[msg.sender as keyof typeof users];
                                             const isCurrentUser = msg.sender === CURRENT_USER_ID;
                                             const canEdit = (new Date().getTime() - new Date(msg.timestamp).getTime()) < 60000;
@@ -350,7 +422,7 @@ export default function MessagesPage() {
                                                         <p className="text-xs text-muted-foreground ml-3">{sender.name}</p>
                                                     )}
                                                     <div className={cn("max-w-xs md:max-w-md p-3 rounded-2xl relative", isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-card shadow-sm rounded-bl-none")}>
-                                                        <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/@(\w+)/g, '<strong class="font-bold">@$1</strong>') }}></p>
+                                                        <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/@(\w+)/g, '<strong class="font-bold">@$1</strong>').replace(/📎\s(.*)/g, '<a href="#" class="flex items-center gap-2 underline"><Paperclip class="h-4 w-4" />$1</a>') }}></p>
                                                         <p className={cn("text-xs mt-1 text-right", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground")}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                          {isCurrentUser && (
                                                             <Popover>
@@ -378,11 +450,23 @@ export default function MessagesPage() {
                                         )})}
                                     </div>
                                 </ScrollArea>
-                                <footer className="p-4 border-t">
+                                <footer className="p-4 border-t space-y-2">
+                                    {attachment && (
+                                        <div className="flex items-center justify-between bg-muted/50 p-2 rounded-md text-sm">
+                                            <span className="truncate">📎 {attachment.name}</span>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ""}}>
+                                                <X className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                    )}
                                      <form onSubmit={handleSendMessage}>
                                         <div className="relative">
-                                            <Input placeholder="Type a message..." className="pr-20" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
+                                            <Input placeholder="Type a message..." className="pr-28" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
                                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                <Input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={handleAttachmentClick}>
+                                                    <Paperclip className="h-4 w-4" />
+                                                </Button>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
@@ -391,8 +475,9 @@ export default function MessagesPage() {
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-56 p-1">
                                                         <ScrollArea className="h-40">
-                                                            {selectedConversation.participants.map(pId => {
+                                                            {selectedConversation.participants.map((pId: string) => {
                                                                 const user = users[pId as keyof typeof users];
+                                                                if(!user) return null;
                                                                 return (
                                                                      <Button key={user.id} variant="ghost" className="w-full justify-start" onClick={() => handleMention(user.name)}>
                                                                         <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatar}/><AvatarFallback>{user.initials}</AvatarFallback></Avatar>
@@ -418,8 +503,10 @@ export default function MessagesPage() {
                                 </footer>
                             </>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                                Select a conversation to start chatting.
+                            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+                                <MessageSquare size={48} className="mb-4" />
+                                <p className="text-lg">Select a conversation</p>
+                                <p>or start a new one to begin chatting.</p>
                             </div>
                         )}
                     </main>
