@@ -100,36 +100,24 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
           New Message
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[600px]">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>New Message</DialogTitle>
           <DialogDescription>
             Select one or more recipients to start a conversation.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-2">
+        
+        <div className="flex-1 flex flex-col min-h-0 px-6 space-y-4">
             <Command className="rounded-lg border">
                  <CommandInput 
                     placeholder="Type a name to search..." 
                     value={searchTerm}
                     onValueChange={setSearchTerm}
                  />
-                 {selectedUsers.length > 0 && (
-                     <div className="p-2 flex flex-wrap gap-1 border-b">
-                         {selectedUsers.map(user => (
-                             <Badge key={user.id} variant="secondary" className="gap-1.5">
-                                 {user.name}
-                                 <button onClick={() => handleSelectUser(user)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                                    <X className="h-3 w-3" />
-                                    <span className="sr-only">Remove {user.name}</span>
-                                 </button>
-                             </Badge>
-                         ))}
-                     </div>
-                 )}
                  <CommandList>
                     <ScrollArea className="h-[200px]">
-                        <CommandEmpty>{availableUsers.length === 0 && searchTerm ? "No users found." : "Type to search for users."}</CommandEmpty>
+                        <CommandEmpty>{availableUsers.length === 0 && searchTerm ? "No users found." : ""}</CommandEmpty>
                         <CommandGroup>
                             {availableUsers.filter(u => !selectedUsers.some(su => su.id === u.id)).map((user) => (
                             <CommandItem
@@ -152,6 +140,20 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                  </CommandList>
             </Command>
 
+            {selectedUsers.length > 0 && (
+                <div className="flex flex-wrap gap-1 p-2 border rounded-md">
+                    {selectedUsers.map(user => (
+                        <Badge key={user.id} variant="secondary" className="gap-1.5">
+                            {user.name}
+                            <button onClick={() => handleSelectUser(user)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                <X className="h-3 w-3" />
+                                <span className="sr-only">Remove {user.name}</span>
+                            </button>
+                        </Badge>
+                    ))}
+                </div>
+            )}
+
             {selectedUsers.length > 1 && (
                 <div>
                      <Input
@@ -163,25 +165,27 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                     />
                 </div>
             )}
-          
-          <div>
-            <Textarea
-              placeholder="Type your message here..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={5}
-            />
-          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={selectedUsers.length === 0 || !message.trim()}>
-            {selectedUsers.length > 1 ? <Users className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-            {selectedUsers.length > 1 ? 'Create Group & Send' : 'Send'}
-          </Button>
-        </DialogFooter>
+        
+        <div className="mt-auto px-6 pb-6 space-y-4">
+            <div>
+                <Textarea
+                placeholder="Type your message here..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                />
+            </div>
+            <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={selectedUsers.length === 0 || !message.trim()}>
+                {selectedUsers.length > 1 ? <Users className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                {selectedUsers.length > 1 ? 'Create Group & Send' : 'Send'}
+            </Button>
+            </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
