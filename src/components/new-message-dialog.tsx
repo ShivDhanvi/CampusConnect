@@ -91,8 +91,8 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
       if (!isOpen) handleReset();
+      setOpen(isOpen);
     }}>
       <DialogTrigger asChild>
         <Button size="sm">
@@ -108,7 +108,7 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 flex flex-col min-h-0 px-6 space-y-4">
+        <div className="flex-1 flex flex-col min-h-0 px-6 pt-4 space-y-4">
             <Command className="rounded-lg border">
                  <CommandInput 
                     placeholder="Type a name to search..." 
@@ -123,7 +123,7 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                             <CommandItem
                                 key={user.id}
                                 onSelect={() => handleSelectUser(user)}
-                                className="flex items-center justify-between"
+                                className="flex items-center justify-between cursor-pointer"
                             >
                                 <div className="flex items-center gap-2">
                                     <Avatar className="h-6 w-6">
@@ -168,7 +168,7 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
         </div>
         
         <div className="mt-auto px-6 pb-6 space-y-4">
-            <div>
+            <div className="mt-4">
                 <Textarea
                 placeholder="Type your message here..."
                 value={message}
