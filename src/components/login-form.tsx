@@ -16,8 +16,11 @@ export function LoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email === 'student@example.com') {
+      // In a real app, you'd get this from your auth provider
+      localStorage.setItem('userRole', 'student');
       router.push('/dashboard/student');
     } else {
+      localStorage.setItem('userRole', 'admin');
       router.push('/dashboard');
     }
   };
