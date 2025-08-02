@@ -337,7 +337,7 @@ export default function AcademicsPage() {
                                                                 <Upload className="h-4 w-4" />
                                                             </Button>
                                                         )}
-                                                        {userRole === 'student' && (item.status === 'Submitted' || item.status === 'Graded') && (
+                                                        {userRole === 'student' && item.status === 'Submitted' && (
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
                                                                     <Button variant="ghost" size="icon">
@@ -520,5 +520,3 @@ export default function AcademicsPage() {
         </div>
     )
 }
-
-    
