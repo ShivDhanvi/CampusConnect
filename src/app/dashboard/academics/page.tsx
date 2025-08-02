@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
@@ -337,6 +337,20 @@ export default function AcademicsPage() {
                                                                 <Upload className="h-4 w-4" />
                                                             </Button>
                                                         )}
+                                                        {userRole === 'student' && (item.status === 'Submitted' || item.status === 'Graded') && (
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon">
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem onClick={() => handleUploadClick(item.id, item.dueDate)}>
+                                                                        Re-upload
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        )}
                                                          {userRole === 'admin' && (
                                                             <Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button>
                                                         )}
@@ -506,3 +520,5 @@ export default function AcademicsPage() {
         </div>
     )
 }
+
+    
