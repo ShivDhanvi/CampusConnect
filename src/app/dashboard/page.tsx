@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function AdminDashboardPage() {
     const router = useRouter();
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // In a real app, you'd get this from a context or session
@@ -18,10 +19,12 @@ export default function AdminDashboardPage() {
 
         if (role === 'student') {
             router.replace('/dashboard/student');
+        } else {
+            setLoading(false);
         }
     }, [router]);
 
-    if (!userRole || userRole === 'student') {
+    if (loading) {
         return (
             <div className="space-y-8">
                 <div className="space-y-2">
