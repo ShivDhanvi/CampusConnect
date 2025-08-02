@@ -15,9 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Send, Users, X } from "lucide-react";
+import { PlusCircle, Send, X } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface User {
@@ -36,38 +35,31 @@ interface NewMessageDialogProps {
 
 export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMessageDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
-  const [groupName, setGroupName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSelectUser = (user: User) => {
-    setSelectedUsers(prev => 
-        prev.find(u => u.id === user.id) 
-        ? prev.filter(u => u.id !== user.id) 
-        : [...prev, user]
-    );
+  const handleSelectUser = (userName: string) => {
+    const user = allUsers.find(u => u.name === userName);
+    if(user) {
+        setSelectedUser(user);
+    }
     setSearchTerm("");
   };
-
+  
   const handleReset = () => {
-    setSelectedUsers([]);
+    setSelectedUser(null);
     setMessage("");
-    setGroupName("");
     setSearchTerm("");
   }
   
   const handleSubmit = () => {
-    if (selectedUsers.length === 0 || !message.trim()) return;
+    if (!selectedUser || !message.trim()) return;
 
-    const isGroup = selectedUsers.length > 1;
-    const participantIds = [currentUser.id, ...selectedUsers.map(u => u.id)];
-    
     const newConversation = {
       id: `conv${Date.now()}`,
-      type: isGroup ? 'group' : 'dm',
-      name: isGroup ? (groupName.trim() || `Group with ${selectedUsers.map(u => u.name).join(', ')}`) : undefined,
-      participants: participantIds,
+      type: 'dm',
+      participants: [currentUser.id, selectedUser.id],
       messages: [
         { 
             id: `msg${Date.now()}`,
@@ -87,7 +79,7 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
     handleReset();
   };
   
-  const unselectedUsers = allUsers.filter(u => u.id !== currentUser.id && !selectedUsers.some(su => su.id === u.id));
+  const unselectedUsers = allUsers.filter(u => u.id !== currentUser.id && u.id !== selectedUser?.id);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -104,67 +96,54 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>New Message</DialogTitle>
           <DialogDescription>
-            Select one or more recipients to start a conversation.
+            Select a recipient to start a conversation.
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 flex flex-col min-h-0 px-6 pt-4 space-y-4">
-            <Command className="rounded-lg border">
-                 <CommandInput 
-                    placeholder="Type a name to search..." 
-                    value={searchTerm}
-                    onValueChange={setSearchTerm}
-                 />
-                 <CommandList>
-                    <ScrollArea className="h-[200px]">
-                        <CommandEmpty>{unselectedUsers.length === 0 && searchTerm ? "No users found." : "No users found."}</CommandEmpty>
-                        <CommandGroup>
-                            {unselectedUsers
-                              .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                              .map((user) => (
-                              <CommandItem
-                                  key={user.id}
-                                  onSelect={() => handleSelectUser(user)}
-                                  className="flex items-center justify-between cursor-pointer"
-                              >
-                                  <div className="flex items-center gap-2">
-                                      <Avatar className="h-6 w-6">
-                                          <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                                          <AvatarFallback>{user.initials}</AvatarFallback>
-                                      </Avatar>
-                                      <span>{user.name}</span>
-                                      <span className="text-xs text-muted-foreground">({user.role})</span>
-                                  </div>
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </ScrollArea>
-                 </CommandList>
-            </Command>
-
-            {selectedUsers.length > 0 && (
-                <div className="flex flex-wrap gap-1 p-2 border rounded-md">
-                    {selectedUsers.map(user => (
-                        <Badge key={user.id} variant="secondary" className="gap-1.5">
-                            {user.name}
-                            <button onClick={() => handleSelectUser(user)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                                <X className="h-3 w-3" />
-                                <span className="sr-only">Remove {user.name}</span>
-                            </button>
-                        </Badge>
-                    ))}
-                </div>
-            )}
-
-            {selectedUsers.length > 1 && (
-                <div>
-                     <Input
-                        type="text"
-                        placeholder="Group Name (optional)"
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        className="w-full"
+            {!selectedUser ? (
+                <Command className="rounded-lg border">
+                    <CommandInput 
+                        placeholder="Type a name to search..." 
+                        value={searchTerm}
+                        onValueChange={setSearchTerm}
                     />
+                    <CommandList>
+                        <ScrollArea className="h-[350px]">
+                            <CommandEmpty>No users found.</CommandEmpty>
+                            <CommandGroup>
+                                {unselectedUsers
+                                .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                .map((user) => (
+                                <CommandItem
+                                    key={user.id}
+                                    value={user.name}
+                                    onSelect={handleSelectUser}
+                                    className="flex items-center justify-between cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-6 w-6">
+                                            <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{user.initials}</AvatarFallback>
+                                        </Avatar>
+                                        <span>{user.name}</span>
+                                        <span className="text-xs text-muted-foreground">({user.role})</span>
+                                    </div>
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </ScrollArea>
+                    </CommandList>
+                </Command>
+            ) : (
+                 <div className="flex flex-wrap gap-1 p-2 border rounded-md">
+                     <Badge variant="secondary" className="gap-1.5">
+                         {selectedUser.name}
+                         <button onClick={() => setSelectedUser(null)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                             <X className="h-3 w-3" />
+                             <span className="sr-only">Remove {selectedUser.name}</span>
+                         </button>
+                     </Badge>
                 </div>
             )}
         </div>
@@ -175,16 +154,16 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                 placeholder="Type your message here..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                rows={3}
+                rows={4}
                 />
             </div>
             <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={selectedUsers.length === 0 || !message.trim()}>
-                {selectedUsers.length > 1 ? <Users className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                {selectedUsers.length > 1 ? 'Create Group & Send' : 'Send'}
+            <Button onClick={handleSubmit} disabled={!selectedUser || !message.trim()}>
+                <Send className="mr-2 h-4 w-4" />
+                Send
             </Button>
             </DialogFooter>
         </div>
