@@ -31,6 +31,7 @@ const studentNavItems = [
   { href: '/dashboard/student', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/academics', label: 'Academics', icon: GraduationCap },
   { href: '/dashboard/attendance', label: 'Attendance', icon: ClipboardList },
+  { href: '/dashboard/student-insights', label: 'Insights', icon: BarChart3 },
   { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
   { href: '/dashboard/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare, badge: 1 },
