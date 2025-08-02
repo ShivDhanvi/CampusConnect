@@ -20,11 +20,13 @@ export default function AdminDashboardPage() {
         if (role === 'student') {
             router.replace('/dashboard/student');
         } else {
+            // Only stop loading if the user is an admin
             setLoading(false);
         }
     }, [router]);
 
-    if (loading) {
+    // If loading, or if the user is a student (and will be redirected), show skeleton.
+    if (loading || userRole === 'student') {
         return (
             <div className="space-y-8">
                 <div className="space-y-2">
