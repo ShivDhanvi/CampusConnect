@@ -1,3 +1,4 @@
+
 "use client";
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -5,13 +6,20 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import { useState } from 'react';
 
 export function LoginForm() {
   const router = useRouter();
+  const [email, setEmail] = useState('admin@example.com');
+  const [password, setPassword] = useState('password');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/dashboard');
+    if (email === 'student@example.com') {
+      router.push('/dashboard/student');
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   return (
@@ -24,14 +32,14 @@ export function LoginForm() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="admin@example.com" required defaultValue="admin@example.com" />
+            <Input id="email" type="email" placeholder="admin@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Button variant="link" type="button" className="p-0 h-auto text-sm text-primary">Forgot password?</Button>
             </div>
-            <Input id="password" type="password" required defaultValue="password" />
+            <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <Button type="submit" className="w-full font-bold">Sign In</Button>
         </form>
@@ -46,7 +54,7 @@ export function LoginForm() {
         </Button>
       </CardContent>
       <CardFooter className="flex justify-center text-center text-sm">
-        <p className="text-muted-foreground">Don't have an account? Contact your administrator.</p>
+        <p className="text-muted-foreground">Try logging in with student@example.com and password</p>
       </CardFooter>
     </Card>
   );
