@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign, Paperclip, Pin, X, MessageSquare } from "lucide-react";
 import { NewMessageDialog } from "@/components/new-message-dialog";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
@@ -240,9 +240,16 @@ export default function MessagesPage() {
 
     const sortedConversations = useMemo(() => {
         return [...conversations].sort((a, b) => {
-            if(a.pinned && !b.pinned) return -1;
-            if(!a.pinned && b.pinned) return 1;
-            return new Date(b.messages[b.messages.length - 1].timestamp).getTime() - new Date(a.messages[a.messages.length - 1].timestamp).getTime();
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            const aLastMessage = a.messages[a.messages.length - 1];
+            const bLastMessage = b.messages[b.messages.length - 1];
+
+            if (!aLastMessage) return 1; // a is older
+            if (!bLastMessage) return -1; // b is older
+
+            return new Date(bLastMessage.timestamp).getTime() - new Date(aLastMessage.timestamp).getTime();
         });
     }, [conversations])
 
@@ -415,41 +422,41 @@ export default function MessagesPage() {
                                         </div>
                                      </div>
                                       
-                                    {selectedConversation.type === 'group' ? (
-                                        <GroupInfoDialog
-                                            isOpen={isGroupInfoOpen}
-                                            onOpenChange={setIsGroupInfoOpen}
-                                            conversation={selectedConversation}
-                                            allUsers={Object.values(users)}
-                                            currentUser={users[CURRENT_USER_ID]}
-                                            onLeaveGroup={handleLeaveGroup}
-                                            onAddMembers={handleAddMembers}
-                                        >
+                                    <GroupInfoDialog
+                                        isOpen={isGroupInfoOpen}
+                                        onOpenChange={setIsGroupInfoOpen}
+                                        conversation={selectedConversation}
+                                        allUsers={Object.values(users)}
+                                        currentUser={users[CURRENT_USER_ID]}
+                                        onLeaveGroup={handleLeaveGroup}
+                                        onAddMembers={handleAddMembers}
+                                    >
+                                        {selectedConversation.type === 'group' ? (
                                             <Button variant="ghost" size="icon" className="h-8 w-8">
                                                 <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
                                             </Button>
-                                        </GroupInfoDialog>
-                                    ) : (
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Delete Chat?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This will permanently delete the chat history for "{getConversationDisplay(selectedConversation)?.name}". This action cannot be undone.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteConversation(selectedConversation.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    )}
+                                        ) : (
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete Chat?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will permanently delete the chat history for "{getConversationDisplay(selectedConversation)?.name}". This action cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteConversation(selectedConversation.id)}>Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        )}
+                                    </GroupInfoDialog>
 
                                 </header>
                                 <ScrollArea className="flex-1 p-4 bg-muted/20" ref={scrollAreaRef}>
