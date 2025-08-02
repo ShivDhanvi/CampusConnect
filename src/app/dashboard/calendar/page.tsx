@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EventDetailsDialog } from '@/components/event-details-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const locales = {
   'en-US': enUS,
@@ -163,6 +164,7 @@ const generateEventsForDateRange = (startDate: Date, selectedClass: keyof typeof
 }
 
 const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
+    const isMobile = useIsMobile();
     return (
         <div className="rbc-toolbar">
             <div className="rbc-btn-group">
@@ -172,13 +174,15 @@ const CustomToolbar = ({ onNavigate, label, view, onView }: ToolbarProps) => {
             </div>
             <span className="rbc-toolbar-label">{label}</span>
             <div className="rbc-btn-group">
-                <button
-                    type="button"
-                    className={cn(view === 'week' && 'rbc-active')}
-                    onClick={() => onView && onView('week')}
-                >
-                    Week
-                </button>
+                {!isMobile && (
+                    <button
+                        type="button"
+                        className={cn(view === 'week' && 'rbc-active')}
+                        onClick={() => onView && onView('week')}
+                    >
+                        Week
+                    </button>
+                )}
                 <button
                     type="button"
                     className={cn(view === 'day' && 'rbc-active')}
@@ -250,10 +254,17 @@ export default function CalendarPage() {
     const [selectedClass, setSelectedClass] = useState<keyof typeof timetables>('10-A');
     const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    useEffect(() => {
+        if(isMobile) {
+            setView(Views.DAY);
+        }
+    }, [isMobile])
     
     const onNavigate = useCallback((newDate: Date) => {
         setDate(newDate);
