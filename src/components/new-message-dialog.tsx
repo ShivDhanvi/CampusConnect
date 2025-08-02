@@ -113,7 +113,10 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
   
   const filteredUsers = allUsers.filter(u => 
     u.id !== currentUser.id && 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (
+        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.role.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   return (
