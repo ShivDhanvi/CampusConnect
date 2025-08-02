@@ -11,7 +11,7 @@ import {
     SheetTitle,
     SheetTrigger
 } from '@/components/ui/sheet';
-import { Menu, LogOut, Bell, GraduationCap, Users } from 'lucide-react';
+import { Menu, LogOut, Bell, GraduationCap, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -26,6 +26,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 import { StudentSidebar } from '@/components/student-sidebar';
+import { Badge } from '@/components/ui/badge';
 
 const userRoles = {
     admin: {
@@ -43,12 +44,26 @@ const userRoles = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const [userRole, setUserRole] = useState<keyof typeof userRoles>('admin');
+    const [streakPoints, setStreakPoints] = useState(0);
+
+    const updateStreakPoints = () => {
+        const points = parseInt(localStorage.getItem('streakPoints') || '0', 10);
+        setStreakPoints(points);
+    };
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
         if (role === 'student' || role === 'admin') {
             setUserRole(role);
         }
+        updateStreakPoints();
+
+        // Listen for changes in localStorage from other tabs/windows
+        window.addEventListener('storage', updateStreakPoints);
+
+        return () => {
+            window.removeEventListener('storage', updateStreakPoints);
+        };
     }, []);
 
     const currentUser = userRoles[userRole];
@@ -68,6 +83,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </Link>
                         </div>
                         <div className="flex items-center gap-4">
+                             {userRole === 'student' && (
+                                <Badge variant="secondary" className="gap-2 text-base font-bold py-1 px-3">
+                                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                                    {streakPoints}
+                                </Badge>
+                            )}
                             <ThemeToggle />
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -151,7 +172,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => router.push('/')}>
+                                    <DropdownMenuItem onClick={() => {
+                                         localStorage.removeItem('userRole');
+                                         localStorage.removeItem('streakPoints');
+                                         router.push('/');
+                                    }}>
                                         <LogOut className="mr-2 h-4 w-4" />
                                         <span>Log out</span>
                                     </DropdownMenuItem>
