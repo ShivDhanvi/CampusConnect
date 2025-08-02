@@ -349,7 +349,7 @@ export default function MessagesPage() {
                                                      {selectedConversation.type === 'group' && !isCurrentUser && (
                                                         <p className="text-xs text-muted-foreground ml-3">{sender.name}</p>
                                                     )}
-                                                    <div className={cn("max-w-xs md:max-w-md p-3 rounded-2xl relative", isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background rounded-bl-none")}>
+                                                    <div className={cn("max-w-xs md:max-w-md p-3 rounded-2xl relative", isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-card shadow-sm rounded-bl-none")}>
                                                         <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/@(\w+)/g, '<strong class="font-bold">@$1</strong>') }}></p>
                                                         <p className={cn("text-xs mt-1 text-right", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground")}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                          {isCurrentUser && (
@@ -428,4 +428,3 @@ export default function MessagesPage() {
         </div>
     );
 }
-
