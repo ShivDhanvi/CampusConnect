@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 import { StudentSidebar } from '@/components/student-sidebar';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const userRoles = {
     admin: {
@@ -43,7 +44,7 @@ const userRoles = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const [userRole, setUserRole] = useState<keyof typeof userRoles>('admin');
+    const [userRole, setUserRole] = useState<keyof typeof userRoles | null>(null);
     const [streakPoints, setStreakPoints] = useState(0);
 
     const updateStreakPoints = () => {
@@ -55,6 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const role = localStorage.getItem('userRole');
         if (role === 'student' || role === 'admin') {
             setUserRole(role);
+        } else {
+            // If no role, redirect to login
+            router.push('/');
         }
         updateStreakPoints();
 
@@ -64,7 +68,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => {
             window.removeEventListener('storage', updateStreakPoints);
         };
-    }, []);
+    }, [router]);
+
+    if (!userRole) {
+        return (
+            <div className="flex min-h-screen w-full">
+                <div className="hidden md:block border-r p-2">
+                    <div className="flex flex-col gap-2 w-56">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                    </div>
+                </div>
+                 <div className="flex flex-1 flex-col">
+                    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-card px-4 sm:px-6">
+                        <Skeleton className="h-8 w-32" />
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                    </header>
+                    <main className="flex-1 p-4 md:p-6 lg:p-8">
+                         <Skeleton className="h-[50vh] w-full" />
+                    </main>
+                </div>
+            </div>
+        )
+    }
 
     const currentUser = userRoles[userRole];
 
@@ -194,3 +227,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarProvider>
     );
 }
+
+    
