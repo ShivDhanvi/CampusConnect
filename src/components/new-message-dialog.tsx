@@ -17,7 +17,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, Send, X } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
 
 interface User {
   id: string;
@@ -41,7 +40,7 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
 
   const handleSelectUser = (userName: string) => {
     const user = allUsers.find(u => u.name === userName);
-    if(user) {
+    if (user) {
         setSelectedUser(user);
     }
     setSearchTerm("");
@@ -109,30 +108,28 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                         onValueChange={setSearchTerm}
                     />
                     <CommandList>
-                        <ScrollArea className="h-[350px]">
-                            <CommandEmpty>No users found.</CommandEmpty>
-                            <CommandGroup>
-                                {unselectedUsers
-                                .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                                .map((user) => (
-                                <CommandItem
-                                    key={user.id}
-                                    value={user.name}
-                                    onSelect={handleSelectUser}
-                                    className="flex items-center justify-between cursor-pointer"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="h-6 w-6">
-                                            <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                                            <AvatarFallback>{user.initials}</AvatarFallback>
-                                        </Avatar>
-                                        <span>{user.name}</span>
-                                        <span className="text-xs text-muted-foreground">({user.role})</span>
-                                    </div>
-                                </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </ScrollArea>
+                        <CommandEmpty>No users found.</CommandEmpty>
+                        <CommandGroup>
+                            {unselectedUsers
+                            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                            .map((user) => (
+                            <CommandItem
+                                key={user.id}
+                                value={user.name}
+                                onSelect={handleSelectUser}
+                                className="flex items-center justify-between cursor-pointer"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                        <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.initials}</AvatarFallback>
+                                    </Avatar>
+                                    <span>{user.name}</span>
+                                    <span className="text-xs text-muted-foreground">({user.role})</span>
+                                </div>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
                     </CommandList>
                 </Command>
             ) : (
