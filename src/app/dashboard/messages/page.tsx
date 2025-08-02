@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign, Paperclip, Pin, X, MessageSquare } from "lucide-react";
 import { NewMessageDialog } from "@/components/new-message-dialog";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
@@ -432,9 +432,11 @@ export default function MessagesPage() {
                                         onAddMembers={handleAddMembers}
                                     >
                                         {selectedConversation.type === 'group' ? (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
-                                            </Button>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
+                                                </Button>
+                                            </DialogTrigger>
                                         ) : (
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
@@ -568,5 +570,9 @@ export default function MessagesPage() {
 }
 
     
+
+    
+
+
 
     
