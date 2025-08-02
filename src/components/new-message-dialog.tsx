@@ -41,8 +41,6 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
   const [groupName, setGroupName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const availableUsers = allUsers.filter(u => u.id !== currentUser.id && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
   const handleSelectUser = (user: User) => {
     setSelectedUsers(prev => 
         prev.find(u => u.id === user.id) 
@@ -88,6 +86,8 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
     setOpen(false);
     handleReset();
   };
+  
+  const unselectedUsers = allUsers.filter(u => u.id !== currentUser.id && !selectedUsers.some(su => su.id === u.id));
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -117,23 +117,25 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                  />
                  <CommandList>
                     <ScrollArea className="h-[200px]">
-                        <CommandEmpty>{availableUsers.length === 0 && searchTerm ? "No users found." : ""}</CommandEmpty>
+                        <CommandEmpty>{unselectedUsers.length === 0 && searchTerm ? "No users found." : "No users found."}</CommandEmpty>
                         <CommandGroup>
-                            {availableUsers.filter(u => !selectedUsers.some(su => su.id === u.id)).map((user) => (
-                            <CommandItem
-                                key={user.id}
-                                onSelect={() => handleSelectUser(user)}
-                                className="flex items-center justify-between cursor-pointer"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="h-6 w-6">
-                                        <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{user.initials}</AvatarFallback>
-                                    </Avatar>
-                                    <span>{user.name}</span>
-                                    <span className="text-xs text-muted-foreground">({user.role})</span>
-                                </div>
-                            </CommandItem>
+                            {unselectedUsers
+                              .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                              .map((user) => (
+                              <CommandItem
+                                  key={user.id}
+                                  onSelect={() => handleSelectUser(user)}
+                                  className="flex items-center justify-between cursor-pointer"
+                              >
+                                  <div className="flex items-center gap-2">
+                                      <Avatar className="h-6 w-6">
+                                          <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                                          <AvatarFallback>{user.initials}</AvatarFallback>
+                                      </Avatar>
+                                      <span>{user.name}</span>
+                                      <span className="text-xs text-muted-foreground">({user.role})</span>
+                                  </div>
+                              </CommandItem>
                             ))}
                         </CommandGroup>
                     </ScrollArea>
