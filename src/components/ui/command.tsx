@@ -43,8 +43,8 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
 
 const CommandInput = React.forwardRef<
   HTMLInputElement,
-  React.HTMLProps<HTMLInputElement>
->(({ className, ...props }, ref) => (
+  React.HTMLProps<HTMLInputElement> & { onValueChange?: (value: string) => void }
+>(({ className, onValueChange, ...props }, ref) => (
   <div className="flex items-center border-b px-3">
     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
     <input
@@ -53,6 +53,7 @@ const CommandInput = React.forwardRef<
         "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      onChange={(e) => onValueChange?.(e.target.value)}
       {...props}
     />
   </div>
@@ -116,14 +117,15 @@ CommandSeparator.displayName = "CommandSeparator"
 
 const CommandItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & { onSelect?: () => void }
+>(({ className, onSelect, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
+    onClick={onSelect}
     {...props}
   />
 ))
