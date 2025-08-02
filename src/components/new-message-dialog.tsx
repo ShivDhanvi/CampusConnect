@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, Send, Users, X } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
 
 interface User {
   id: string;
@@ -28,7 +29,7 @@ interface User {
 
 interface NewMessageDialogProps {
   currentUser: User;
-  allUsers: Record<string, User>;
+  allUsers: User[];
   onNewMessage: (conversation: any) => void;
 }
 
@@ -37,8 +38,9 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [message, setMessage] = useState("");
   const [groupName, setGroupName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const availableUsers = Object.values(allUsers).filter(u => u.id !== currentUser.id);
+  const availableUsers = allUsers.filter(u => u.id !== currentUser.id && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const handleSelectUser = (user: User) => {
     setSelectedUsers(prev => 
@@ -46,7 +48,15 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
         ? prev.filter(u => u.id !== user.id) 
         : [...prev, user]
     );
+    setSearchTerm("");
   };
+
+  const handleReset = () => {
+    setSelectedUsers([]);
+    setMessage("");
+    setGroupName("");
+    setSearchTerm("");
+  }
   
   const handleSubmit = () => {
     if (selectedUsers.length === 0 || !message.trim()) return;
@@ -75,13 +85,14 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
     
     onNewMessage(newConversation);
     setOpen(false);
-    setSelectedUsers([]);
-    setMessage("");
-    setGroupName("");
+    handleReset();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) handleReset();
+    }}>
       <DialogTrigger asChild>
         <Button size="sm">
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -92,28 +103,33 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
         <DialogHeader>
           <DialogTitle>New Message</DialogTitle>
           <DialogDescription>
-            Select recipients and compose your message.
+            Select one or more recipients to start a conversation.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
             <Command className="rounded-lg border">
-                 <CommandInput placeholder="Type a name to search..." />
+                 <CommandInput 
+                    placeholder="Type a name to search..." 
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
+                 />
                  {selectedUsers.length > 0 && (
-                     <div className="p-2 flex flex-wrap gap-1">
+                     <div className="p-2 flex flex-wrap gap-1 border-b">
                          {selectedUsers.map(user => (
-                             <Badge key={user.id} variant="secondary" className="gap-1">
+                             <Badge key={user.id} variant="secondary" className="gap-1.5">
                                  {user.name}
-                                 <button onClick={() => handleSelectUser(user)}>
+                                 <button onClick={() => handleSelectUser(user)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                                     <X className="h-3 w-3" />
+                                    <span className="sr-only">Remove {user.name}</span>
                                  </button>
                              </Badge>
                          ))}
                      </div>
                  )}
                  <CommandList>
-                    <CommandEmpty>No users found.</CommandEmpty>
+                    <CommandEmpty>{searchTerm && availableUsers.length === 0 ? "No users found." : "Start typing to see available users."}</CommandEmpty>
                     <CommandGroup>
-                        {availableUsers.map((user) => (
+                        {availableUsers.filter(u => !selectedUsers.some(su => su.id === u.id)).map((user) => (
                         <CommandItem
                             key={user.id}
                             onSelect={() => handleSelectUser(user)}
@@ -127,7 +143,6 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                                 <span>{user.name}</span>
                                 <span className="text-xs text-muted-foreground">({user.role})</span>
                             </div>
-                            {selectedUsers.find(u => u.id === user.id) && <span className="text-primary">✓</span>}
                         </CommandItem>
                         ))}
                     </CommandGroup>
@@ -136,12 +151,12 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
 
             {selectedUsers.length > 1 && (
                 <div>
-                     <input
+                     <Input
                         type="text"
                         placeholder="Group Name (optional)"
                         value={groupName}
                         onChange={(e) => setGroupName(e.target.value)}
-                        className="w-full p-2 border rounded-md"
+                        className="w-full"
                     />
                 </div>
             )}

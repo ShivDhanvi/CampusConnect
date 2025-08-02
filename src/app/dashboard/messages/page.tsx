@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign, Paperclip, Pin, X } from "lucide-react";
+import { Search, Send, Menu, ArrowLeft, MoreHorizontal, Trash2, Pencil, Users, AtSign, Paperclip, Pin, X, MessageSquare } from "lucide-react";
 import { NewMessageDialog } from "@/components/new-message-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,10 +20,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useToast } from "@/hooks/use-toast";
+import { GroupInfoDialog } from "@/components/group-info-dialog";
 
 
 const users = {
@@ -97,15 +97,17 @@ export default function MessagesPage() {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const [isClient, setIsClient] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
+
 
     useEffect(() => {
         setIsClient(true);
         const initialData = getInitialConversations();
         setConversations(initialData);
-        if(initialData.length > 0) {
+        if(!isMobile && initialData.length > 0) {
             setSelectedConversationId(initialData[0].id);
         }
-    }, []);
+    }, [isMobile]);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
@@ -212,6 +214,29 @@ export default function MessagesPage() {
         });
     }
 
+    const handleLeaveGroup = (convId: string) => {
+        setConversations(prev => prev.map(c => {
+            if (c.id === convId) {
+                return {...c, participants: c.participants.filter((p: string) => p !== CURRENT_USER_ID)}
+            }
+            return c;
+        }));
+        setSelectedConversationId(null);
+        toast({ title: "You have left the group." });
+    };
+
+    const handleAddMembers = (convId: string, newUserIds: string[]) => {
+        setConversations(prev => prev.map(c => {
+            if (c.id === convId) {
+                const newParticipants = [...new Set([...c.participants, ...newUserIds])];
+                return {...c, participants: newParticipants}
+            }
+            return c;
+        }));
+        toast({ title: "Members added successfully." });
+    };
+
+
     const sortedConversations = useMemo(() => {
         return [...conversations].sort((a, b) => {
             if(a.pinned && !b.pinned) return -1;
@@ -236,6 +261,7 @@ export default function MessagesPage() {
     const otherParticipant = otherParticipantId ? users[otherParticipantId as keyof typeof users] : null;
 
     const getConversationDisplay = (conv: typeof conversations[0]) => {
+        if (!conv) return null;
         if (conv.type === 'group') {
             return {
                 name: conv.name,
@@ -250,7 +276,7 @@ export default function MessagesPage() {
 
     const showChatView = (!isMobile || (isMobile && !isSidebarOpen));
     const showSidebar = (!isMobile || (isMobile && isSidebarOpen));
-    const totalUnreadCount = useMemo(() => conversations.reduce((sum, conv) => sum + conv.unreadCount, 0), [conversations]);
+    const totalUnreadCount = useMemo(() => conversations.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0), [conversations]);
 
 
     if (!isClient) {
@@ -283,7 +309,7 @@ export default function MessagesPage() {
                         <div className="p-4 border-b">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold">Chats</h2>
-                                <NewMessageDialog onNewMessage={handleNewMessage} currentUser={users[CURRENT_USER_ID]} allUsers={users} />
+                                <NewMessageDialog onNewMessage={handleNewMessage} currentUser={users[CURRENT_USER_ID]} allUsers={Object.values(users)} />
                             </div>
                             <div className="relative">
                                 <Input placeholder="Search chats..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
@@ -328,8 +354,8 @@ export default function MessagesPage() {
                                                             <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">{conv.lastMessageTime}</p>
                                                         </div>
                                                         <div className="flex justify-between items-center">
-                                                            <p className={cn("text-sm text-muted-foreground truncate", conv.unreadCount > 0 && "font-bold text-foreground")}>{conv.lastMessage}</p>
-                                                            {conv.unreadCount > 0 && (
+                                                            <p className={cn("text-sm text-muted-foreground truncate", (conv.unreadCount || 0) > 0 && "font-bold text-foreground")}>{conv.lastMessage}</p>
+                                                            {(conv.unreadCount || 0) > 0 && (
                                                                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                                                                     {conv.unreadCount}
                                                                 </span>
@@ -382,30 +408,47 @@ export default function MessagesPage() {
                                         </div>
                                         <div>
                                             <h2 className="font-bold text-lg">{getConversationDisplay(selectedConversation)?.name}</h2>
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="text-sm text-muted-foreground cursor-pointer" onClick={() => selectedConversation.type === 'group' && setIsGroupInfoOpen(true)}>
                                                 {selectedConversation.type === 'group' ? `${selectedConversation.participants.length} members` : otherParticipant?.role}
                                             </p>
                                         </div>
                                      </div>
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
+                                      
+                                    {selectedConversation.type === 'group' ? (
+                                        <GroupInfoDialog
+                                            isOpen={isGroupInfoOpen}
+                                            onOpenChange={setIsGroupInfoOpen}
+                                            conversation={selectedConversation}
+                                            allUsers={Object.values(users)}
+                                            currentUser={users[CURRENT_USER_ID]}
+                                            onLeaveGroup={handleLeaveGroup}
+                                            onAddMembers={handleAddMembers}
+                                        >
                                             <Button variant="ghost" size="icon" className="h-8 w-8">
                                                 <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
                                             </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will permanently delete the entire chat history for "{getConversationDisplay(selectedConversation)?.name}". This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDeleteConversation(selectedConversation.id)}>Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                        </GroupInfoDialog>
+                                    ) : (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <MoreHorizontal className="h-4 w-4 text-muted-foreground"/>
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Delete Chat?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This will permanently delete the chat history for "{getConversationDisplay(selectedConversation)?.name}". This action cannot be undone.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteConversation(selectedConversation.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
 
                                 </header>
                                 <ScrollArea className="flex-1 p-4 bg-muted/20" ref={scrollAreaRef}>
