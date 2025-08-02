@@ -12,11 +12,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Send, X } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { PlusCircle, Send } from "lucide-react";
 
 interface User {
   id: string;
@@ -38,12 +38,8 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSelectUser = (userName: string) => {
-    const user = allUsers.find(u => u.name === userName);
-    if (user) {
-        setSelectedUser(user);
-    }
-    setSearchTerm("");
+  const handleSelectUser = (user: User) => {
+    setSelectedUser(user);
   };
   
   const handleReset = () => {
@@ -78,7 +74,10 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
     handleReset();
   };
   
-  const unselectedUsers = allUsers.filter(u => u.id !== currentUser.id && u.id !== selectedUser?.id);
+  const filteredUsers = allUsers.filter(u => 
+    u.id !== currentUser.id && 
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -91,79 +90,64 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
           New Message
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[600px]">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
           <DialogTitle>New Message</DialogTitle>
           <DialogDescription>
-            Select a recipient to start a conversation.
+            {selectedUser ? `Message to ${selectedUser.name}` : "Select a recipient to start a conversation."}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 flex flex-col min-h-0 px-6 pt-4 space-y-4">
-            {!selectedUser ? (
-                <Command className="rounded-lg border">
-                    <CommandInput 
-                        placeholder="Type a name to search..." 
-                        value={searchTerm}
-                        onValueChange={setSearchTerm}
-                    />
-                    <CommandList>
-                        <CommandEmpty>No users found.</CommandEmpty>
-                        <CommandGroup>
-                            {unselectedUsers
-                            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                            .map((user) => (
-                            <CommandItem
+        {!selectedUser ? (
+            <div className="space-y-4">
+                <Input 
+                    placeholder="Search for a user..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <ScrollArea className="h-64">
+                    <div className="space-y-2">
+                        {filteredUsers.map((user) => (
+                             <button
                                 key={user.id}
-                                value={user.name}
-                                onSelect={handleSelectUser}
-                                className="flex items-center justify-between cursor-pointer"
+                                className="w-full text-left p-2 rounded-lg flex items-center gap-3 transition-colors hover:bg-muted"
+                                onClick={() => handleSelectUser(user)}
                             >
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="h-6 w-6">
-                                        <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{user.initials}</AvatarFallback>
-                                    </Avatar>
-                                    <span>{user.name}</span>
-                                    <span className="text-xs text-muted-foreground">({user.role})</span>
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                                    <AvatarFallback>{user.initials}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-semibold">{user.name}</p>
+                                    <p className="text-xs text-muted-foreground">{user.role}</p>
                                 </div>
-                            </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            ) : (
-                 <div className="flex flex-wrap gap-1 p-2 border rounded-md">
-                     <Badge variant="secondary" className="gap-1.5">
-                         {selectedUser.name}
-                         <button onClick={() => setSelectedUser(null)} className="ring-offset-background rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                             <X className="h-3 w-3" />
-                             <span className="sr-only">Remove {selectedUser.name}</span>
-                         </button>
-                     </Badge>
-                </div>
-            )}
-        </div>
-        
-        <div className="mt-auto px-6 pb-6 space-y-4">
-            <div className="mt-4">
+                            </button>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+        ) : (
+             <div className="space-y-4">
                 <Textarea
-                placeholder="Type your message here..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={4}
+                    placeholder="Type your message here..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={8}
                 />
             </div>
-            <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+        )}
+        
+        <DialogFooter>
+          {selectedUser && (
+            <Button variant="outline" onClick={() => setSelectedUser(null)}>
+                Back
             </Button>
-            <Button onClick={handleSubmit} disabled={!selectedUser || !message.trim()}>
-                <Send className="mr-2 h-4 w-4" />
-                Send
-            </Button>
-            </DialogFooter>
-        </div>
+          )}
+          <Button onClick={handleSubmit} disabled={!selectedUser || !message.trim()}>
+            <Send className="mr-2 h-4 w-4" />
+            Send
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
