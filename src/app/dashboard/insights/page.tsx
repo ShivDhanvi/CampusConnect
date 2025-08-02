@@ -5,6 +5,8 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, R
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
+import { useRoleRedirect } from "@/hooks/use-role-redirect"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const enrollmentData = [
   { year: '2020', students: 850 },
@@ -48,6 +50,32 @@ const chartConfigs = {
 };
 
 export default function InsightsPage() {
+    const loading = useRoleRedirect(['admin']);
+
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div>
+                    <Skeleton className="h-8 w-64 mb-2" />
+                    <Skeleton className="h-4 w-96" />
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                </div>
+                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                    <Skeleton className="h-80" />
+                    <Skeleton className="h-80" />
+                 </div>
+                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+                    <Skeleton className="lg:col-span-2 h-80" />
+                    <Skeleton className="lg:col-span-3 h-80" />
+                 </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-8">

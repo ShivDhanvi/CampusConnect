@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { ShieldAlert, RefreshCw, Bot } from 'lucide-react'
 import type { AnalyzeStudentDataOutput } from "@/ai/flows/intelligent-notifications"
 import { Button } from '@/components/ui/button';
+import { useRoleRedirect } from '@/hooks/use-role-redirect';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Mock data, in a real app this would be fetched from the AI flow
 const mockData: AnalyzeStudentDataOutput = {
@@ -29,7 +31,24 @@ const severityVariantMap: Record<AnalyzeStudentDataOutput['anomalies'][0]['sever
 }
 
 export default function IntelligentAlertsPage() {
+    const loading = useRoleRedirect(['admin']);
     const data = mockData;
+    
+    if(loading) {
+        return (
+             <div className="space-y-8">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <Skeleton className="h-8 w-64 mb-2" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+                    <Skeleton className="h-10 w-40" />
+                </div>
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-96 w-full" />
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-8">
