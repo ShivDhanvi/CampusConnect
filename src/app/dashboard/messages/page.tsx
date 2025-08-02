@@ -25,6 +25,7 @@ import {
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useToast } from "@/hooks/use-toast";
 import { GroupInfoDialog } from "@/components/group-info-dialog";
+import { DialogTrigger } from "@/components/ui/dialog";
 
 
 const users = {
@@ -246,8 +247,8 @@ export default function MessagesPage() {
             const aLastMessage = a.messages[a.messages.length - 1];
             const bLastMessage = b.messages[b.messages.length - 1];
 
-            if (!aLastMessage) return 1; // a is older
-            if (!bLastMessage) return -1; // b is older
+            if (!aLastMessage) return 1;
+            if (!bLastMessage) return -1;
 
             return new Date(bLastMessage.timestamp).getTime() - new Date(aLastMessage.timestamp).getTime();
         });
@@ -574,5 +575,7 @@ export default function MessagesPage() {
     
 
 
+
+    
 
     
