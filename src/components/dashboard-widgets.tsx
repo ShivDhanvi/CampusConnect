@@ -1,6 +1,7 @@
+
 "use client"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Sector } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -45,9 +46,9 @@ export function FinancialChart() {
 
 // AttendanceChart Component
 const attendanceChartData = [
-  { category: "Students", value: 92.5, fill: "var(--color-students)" },
-  { category: "Teachers", value: 98.2, fill: "var(--color-teachers)" },
-  { category: "Staff", value: 96.8, fill: "var(--color-staff)" },
+  { category: "Students", value: 92.5, fill: "hsl(var(--chart-1))" },
+  { category: "Teachers", value: 98.2, fill: "hsl(var(--chart-2))" },
+  { category: "Staff", value: 96.8, fill: "hsl(var(--chart-3))" },
 ]
 const attendanceChartConfig = {
   value: { label: "Attendance" },
@@ -64,12 +65,12 @@ export function AttendanceChart() {
         <CardDescription>Today's Attendance Rate</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0 flex items-center justify-center">
-        <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-full max-h-[250px]">
+        <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-[250px]">
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5}>
                 {attendanceChartData.map((entry, index) => (
-                    <Sector key={`cell-${index}`} fill={entry.fill} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
             </Pie>
           </PieChart>
@@ -90,11 +91,11 @@ export function AttendanceChart() {
 // IntelligentNotifications Component
 const mockData: AnalyzeStudentDataOutput = {
     anomalies: [
-        // { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
-        // { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
-        // { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
+        { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
+        { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
+        { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
     ],
-    summary: 'AI analysis is currently disabled to conserve quota.'
+    summary: '3 critical anomalies were found after analyzing recent school data.'
 }
 
 const severityVariantMap: Record<AnalyzeStudentDataOutput['anomalies'][0]['severity'], 'destructive' | 'secondary' | 'outline'> = {

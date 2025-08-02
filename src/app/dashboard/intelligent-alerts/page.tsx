@@ -1,3 +1,4 @@
+
 "use client"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,16 +10,16 @@ import { Button } from '@/components/ui/button';
 // Mock data, in a real app this would be fetched from the AI flow
 const mockData: AnalyzeStudentDataOutput = {
     anomalies: [
-        // { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
-        // { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
-        // { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
-        // { studentId: 'T-004', anomalyType: 'Leave Plan', description: 'Teacher scheduled a 3-day leave next week. Substitute needed.', severity: 'medium' },
-        // { studentId: 'ALL-PARENTS', anomalyType: 'Fee Reminder', description: 'Term fee payment is due in 7 days.', severity: 'low' },
-        // { studentId: 'S-1056', anomalyType: 'Unusual Login Times', description: 'Student logging in consistently between 1 AM and 3 AM.', severity: 'medium' },
-        // { studentId: 'S-1101', anomalyType: 'Assignment Overdue', description: 'History essay is 5 days overdue.', severity: 'low' },
+        { studentId: 'S-1024', anomalyType: 'Declining Grades', description: 'Grades dropped by 15% in Mathematics this term.', severity: 'high' },
+        { studentId: 'S-0987', anomalyType: 'Attendance Issue', description: 'Missed 5 days of school in the last 2 weeks without prior notice.', severity: 'high' },
+        { studentId: 'S-1152', anomalyType: 'Low Participation', description: 'Activity logs show minimal interaction in online class forums.', severity: 'medium' },
+        { studentId: 'T-004', anomalyType: 'Leave Plan', description: 'Teacher scheduled a 3-day leave next week. Substitute needed.', severity: 'medium' },
+        { studentId: 'ALL-PARENTS', anomalyType: 'Fee Reminder', description: 'Term fee payment is due in 7 days.', severity: 'low' },
+        { studentId: 'S-1056', anomalyType: 'Unusual Login Times', description: 'Student logging in consistently between 1 AM and 3 AM.', severity: 'medium' },
+        { studentId: 'S-1101', anomalyType: 'Assignment Overdue', description: 'History essay is 5 days overdue.', severity: 'low' },
 
     ],
-    summary: 'AI analysis is currently disabled to conserve quota. Click "Re-analyze Data" to run.'
+    summary: '7 anomalies were found after analyzing recent school data.'
 }
 
 const severityVariantMap: Record<AnalyzeStudentDataOutput['anomalies'][0]['severity'], 'destructive' | 'secondary' | 'outline'> = {
