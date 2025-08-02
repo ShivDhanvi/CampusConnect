@@ -33,7 +33,7 @@ const users = {
   student2: { id: 'student2', name: 'Sarah Miller', avatar: 'https://placehold.co/40x40.png', initials: 'SM', role: 'Student', online: true },
 };
 
-const conversationsData = [
+const getInitialConversations = () => [
   {
     id: 'conv1',
     type: 'dm',
@@ -80,14 +80,22 @@ const conversationsData = [
 const CURRENT_USER_ID = 'admin';
 
 export default function MessagesPage() {
-    const [conversations, setConversations] = useState(conversationsData);
-    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(conversationsData[0].id);
+    const [conversations, setConversations] = useState<any[]>([]);
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
     const isMobile = useIsMobile();
     const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
     const [editingMessage, setEditingMessage] = useState<{ id: string, text: string } | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+        const initialData = getInitialConversations();
+        setConversations(initialData);
+        setSelectedConversationId(initialData[0].id);
+    }, []);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
@@ -198,6 +206,10 @@ export default function MessagesPage() {
 
     const showChatView = (!isMobile || (isMobile && !isSidebarOpen));
     const showSidebar = (!isMobile || (isMobile && isSidebarOpen));
+
+    if (!isClient) {
+        return null; // or a loading skeleton
+    }
     
     return (
         <div className="h-[calc(100vh-10rem)] flex flex-col">
