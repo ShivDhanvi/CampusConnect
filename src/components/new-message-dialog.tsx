@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, Send, Users, X } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface User {
   id: string;
@@ -127,25 +128,27 @@ export function NewMessageDialog({ currentUser, allUsers, onNewMessage }: NewMes
                      </div>
                  )}
                  <CommandList>
-                    <CommandEmpty>{searchTerm && availableUsers.length === 0 ? "No users found." : "Start typing to see available users."}</CommandEmpty>
-                    <CommandGroup>
-                        {availableUsers.filter(u => !selectedUsers.some(su => su.id === u.id)).map((user) => (
-                        <CommandItem
-                            key={user.id}
-                            onSelect={() => handleSelectUser(user)}
-                            className="flex items-center justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                    <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                                    <AvatarFallback>{user.initials}</AvatarFallback>
-                                </Avatar>
-                                <span>{user.name}</span>
-                                <span className="text-xs text-muted-foreground">({user.role})</span>
-                            </div>
-                        </CommandItem>
-                        ))}
-                    </CommandGroup>
+                    <ScrollArea className="h-[200px]">
+                        <CommandEmpty>{availableUsers.length === 0 && searchTerm ? "No users found." : "Type to search for users."}</CommandEmpty>
+                        <CommandGroup>
+                            {availableUsers.filter(u => !selectedUsers.some(su => su.id === u.id)).map((user) => (
+                            <CommandItem
+                                key={user.id}
+                                onSelect={() => handleSelectUser(user)}
+                                className="flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                        <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.initials}</AvatarFallback>
+                                    </Avatar>
+                                    <span>{user.name}</span>
+                                    <span className="text-xs text-muted-foreground">({user.role})</span>
+                                </div>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </ScrollArea>
                  </CommandList>
             </Command>
 
