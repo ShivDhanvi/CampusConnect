@@ -29,7 +29,6 @@ interface User {
 }
 
 interface GroupInfoDialogProps {
-  children: React.ReactNode;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   conversation: any;
@@ -37,17 +36,18 @@ interface GroupInfoDialogProps {
   currentUser: User;
   onLeaveGroup: (convId: string) => void;
   onAddMembers: (convId: string, newUserIds: string[]) => void;
+  children: React.ReactNode;
 }
 
 export function GroupInfoDialog({
-  children,
   isOpen,
   onOpenChange,
   conversation,
   allUsers,
   currentUser,
   onLeaveGroup,
-  onAddMembers
+  onAddMembers,
+  children
 }: GroupInfoDialogProps) {
   const [isAddingMembers, setIsAddingMembers] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
@@ -103,24 +103,21 @@ export function GroupInfoDialog({
                 onValueChange={setSearchTerm}
               />
               <CommandList>
-                {availableUsers.length > 0 ? (
-                    <CommandGroup>
-                      {availableUsers.map(user => (
-                        <CommandItem key={user.id} onSelect={() => handleSelectUser(user)}>
-                          <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                  <AvatarImage src={user.avatar} />
-                                  <AvatarFallback>{user.initials}</AvatarFallback>
-                              </Avatar>
-                              <span>{user.name}</span>
-                              {selectedUsers.find(u => u.id === user.id) && <span className="text-primary ml-auto">✓</span>}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                ) : (
-                  <CommandEmpty>No users found.</CommandEmpty>
-                )}
+                <CommandEmpty>No users found.</CommandEmpty>
+                <CommandGroup>
+                  {availableUsers.map(user => (
+                    <CommandItem key={user.id} onSelect={() => handleSelectUser(user)}>
+                      <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                              <AvatarImage src={user.avatar} />
+                              <AvatarFallback>{user.initials}</AvatarFallback>
+                          </Avatar>
+                          <span>{user.name}</span>
+                          {selectedUsers.find(u => u.id === user.id) && <span className="text-primary ml-auto">✓</span>}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
               </CommandList>
             </Command>
           </div>
@@ -209,3 +206,5 @@ export function GroupInfoDialog({
     </Dialog>
   );
 }
+
+    
