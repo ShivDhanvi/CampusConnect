@@ -103,21 +103,24 @@ export function GroupInfoDialog({
                 onValueChange={setSearchTerm}
               />
               <CommandList>
-                <CommandEmpty>No users found.</CommandEmpty>
-                <CommandGroup>
-                  {availableUsers.map(user => (
-                    <CommandItem key={user.id} onSelect={() => handleSelectUser(user)}>
-                      <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                              <AvatarImage src={user.avatar} />
-                              <AvatarFallback>{user.initials}</AvatarFallback>
-                          </Avatar>
-                          <span>{user.name}</span>
-                          {selectedUsers.find(u => u.id === user.id) && <span className="text-primary ml-auto">✓</span>}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {availableUsers.length === 0 ? (
+                    <CommandEmpty>No users found.</CommandEmpty>
+                ) : (
+                    <CommandGroup>
+                      {availableUsers.map(user => (
+                        <CommandItem key={user.id} onSelect={() => handleSelectUser(user)}>
+                          <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                  <AvatarImage src={user.avatar} />
+                                  <AvatarFallback>{user.initials}</AvatarFallback>
+                              </Avatar>
+                              <span>{user.name}</span>
+                              {selectedUsers.find(u => u.id === user.id) && <span className="text-primary ml-auto">✓</span>}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                )}
               </CommandList>
             </Command>
              {selectedUsers.length > 0 && (
