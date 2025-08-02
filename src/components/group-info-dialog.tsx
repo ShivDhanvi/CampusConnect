@@ -103,9 +103,7 @@ export function GroupInfoDialog({
                 onValueChange={setSearchTerm}
               />
               <CommandList>
-                {availableUsers.length === 0 ? (
-                    <CommandEmpty>No users found.</CommandEmpty>
-                ) : (
+                {availableUsers.length > 0 ? (
                     <CommandGroup>
                       {availableUsers.map(user => (
                         <CommandItem key={user.id} onSelect={() => handleSelectUser(user)}>
@@ -120,21 +118,11 @@ export function GroupInfoDialog({
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                ) : (
+                  <CommandEmpty>No users found.</CommandEmpty>
                 )}
               </CommandList>
             </Command>
-             {selectedUsers.length > 0 && (
-                 <div className="p-2 flex flex-wrap gap-1 border rounded-md">
-                     {selectedUsers.map(user => (
-                         <Badge key={user.id} variant="secondary" className="gap-1.5">
-                             {user.name}
-                             <button onClick={() => handleSelectUser(user)}>
-                                <X className="h-3 w-3" />
-                             </button>
-                         </Badge>
-                     ))}
-                 </div>
-             )}
           </div>
         ) : (
           <>
@@ -165,16 +153,30 @@ export function GroupInfoDialog({
           </>
         )}
         
-        <DialogFooter className="sm:justify-between gap-2">
+        <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-4">
           {isAddingMembers ? (
             <>
+               {selectedUsers.length > 0 && (
+                 <div className="p-2 flex flex-wrap gap-1 border rounded-md">
+                     {selectedUsers.map(user => (
+                         <Badge key={user.id} variant="secondary" className="gap-1.5">
+                             {user.name}
+                             <button onClick={() => handleSelectUser(user)}>
+                                <X className="h-3 w-3" />
+                             </button>
+                         </Badge>
+                     ))}
+                 </div>
+              )}
+              <div className="flex sm:justify-between gap-2 w-full">
                 <Button variant="ghost" onClick={() => setIsAddingMembers(false)}>Back</Button>
                 <Button onClick={handleAddMembers} disabled={selectedUsers.length === 0}>
                     Add {selectedUsers.length > 0 ? `(${selectedUsers.length})` : ''}
                 </Button>
+              </div>
             </>
           ) : (
-            <>
+            <div className="flex w-full sm:justify-between gap-2">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" className="w-full sm:w-auto">
@@ -200,7 +202,7 @@ export function GroupInfoDialog({
                     <UserPlus className="mr-2 h-4 w-4" />
                     Add Members
                 </Button>
-            </>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>
