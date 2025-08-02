@@ -18,6 +18,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { Separator } from "./ui/separator";
+import { Badge } from "./ui/badge";
 
 interface User {
   id: string;
