@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, PlusCircle, ArrowUpDown, ChevronDown } from "lucide-react"
 import { AddUserDialog } from "@/components/add-user-dialog";
+import { useRoleRedirect } from "@/hooks/use-role-redirect";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const initialUsers = [
   {
@@ -93,6 +95,7 @@ const ITEMS_PER_PAGE = 5;
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function UserManagementPage() {
+    const loading = useRoleRedirect(['admin']);
     const [users, setUsers] = useState(initialUsers);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilters, setRoleFilters] = useState<Record<string, boolean>>({
@@ -160,6 +163,33 @@ export default function UserManagementPage() {
         };
         setUsers(prev => [...prev, userToAdd]);
     };
+    
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <Skeleton className="h-8 w-64 mb-2" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+                    <Skeleton className="h-10 w-32" />
+                </div>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-24 mb-2" />
+                        <Skeleton className="h-4 w-48" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                            <Skeleton className="h-10 w-full sm:max-w-sm" />
+                            <Skeleton className="h-10 w-full sm:w-auto sm:ml-auto" />
+                        </div>
+                        <Skeleton className="h-96 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
     
     return (
         <div className="space-y-8">
@@ -313,5 +343,3 @@ export default function UserManagementPage() {
         </div>
     )
 }
-
-    

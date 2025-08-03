@@ -11,7 +11,7 @@ import {
     SheetTitle,
     SheetTrigger
 } from '@/components/ui/sheet';
-import { Menu, LogOut, Bell, GraduationCap, Users } from 'lucide-react';
+import { Menu, LogOut, Bell, GraduationCap, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -24,15 +24,88 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
+import { useEffect, useState } from 'react';
+import { StudentSidebar } from '@/components/student-sidebar';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const userRoles = {
+    admin: {
+        name: "Admin",
+        email: "admin@example.com",
+        avatarFallback: "A"
+    },
+    student: {
+        name: "Student",
+        email: "student@example.com",
+        avatarFallback: "S"
+    }
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const [userRole, setUserRole] = useState<keyof typeof userRoles | null>(null);
+    const [streakPoints, setStreakPoints] = useState(0);
+
+    const updateStreakPoints = () => {
+        const points = parseInt(localStorage.getItem('streakPoints') || '0', 10);
+        setStreakPoints(points);
+    };
+
+    useEffect(() => {
+        const role = localStorage.getItem('userRole');
+        if (role === 'student' || role === 'admin') {
+            setUserRole(role);
+        } else {
+            // If no role, redirect to login
+            router.push('/');
+        }
+        updateStreakPoints();
+
+        // Listen for changes in localStorage from other tabs/windows
+        window.addEventListener('storage', updateStreakPoints);
+
+        return () => {
+            window.removeEventListener('storage', updateStreakPoints);
+        };
+    }, [router]);
+
+    if (!userRole) {
+        return (
+            <div className="flex min-h-screen w-full">
+                <div className="hidden md:block border-r p-2">
+                    <div className="flex flex-col gap-2 w-56">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                    </div>
+                </div>
+                 <div className="flex flex-1 flex-col">
+                    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-card px-4 sm:px-6">
+                        <Skeleton className="h-8 w-32" />
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                    </header>
+                    <main className="flex-1 p-4 md:p-6 lg:p-8">
+                         <Skeleton className="h-[50vh] w-full" />
+                    </main>
+                </div>
+            </div>
+        )
+    }
+
+    const currentUser = userRoles[userRole];
 
     return (
         <SidebarProvider>
             <div className="flex min-h-screen w-full">
                  <Sidebar>
-                    <MainSidebar />
+                    {userRole === 'admin' ? <MainSidebar /> : <StudentSidebar />}
                 </Sidebar>
                 <div className="flex flex-1 flex-col">
                      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-card px-4 sm:px-6">
@@ -43,6 +116,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </Link>
                         </div>
                         <div className="flex items-center gap-4">
+                             {userRole === 'student' && (
+                                <Badge variant="secondary" className="gap-2 text-base font-bold py-1 px-3">
+                                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                                    {streakPoints}
+                                </Badge>
+                            )}
                             <ThemeToggle />
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -111,22 +190,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src="https://placehold.co/32x32.png" alt="Admin" data-ai-hint="user avatar" />
-                                            <AvatarFallback>A</AvatarFallback>
+                                            <AvatarImage src="https://placehold.co/32x32.png" alt={currentUser.name} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{currentUser.avatarFallback}</AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56" align="end" forceMount>
                                     <DropdownMenuLabel className="font-normal">
                                         <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-medium leading-none">Admin</p>
+                                            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
                                             <p className="text-xs leading-none text-muted-foreground">
-                                                admin@example.com
+                                                {currentUser.email}
                                             </p>
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => router.push('/')}>
+                                    <DropdownMenuItem onClick={() => {
+                                         localStorage.removeItem('userRole');
+                                         localStorage.removeItem('streakPoints');
+                                         router.push('/');
+                                    }}>
                                         <LogOut className="mr-2 h-4 w-4" />
                                         <span>Log out</span>
                                     </DropdownMenuItem>
@@ -144,3 +227,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarProvider>
     );
 }
+
+    

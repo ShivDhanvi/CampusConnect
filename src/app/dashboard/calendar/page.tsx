@@ -255,9 +255,16 @@ export default function CalendarPage() {
     const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const isMobile = useIsMobile();
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
         setIsClient(true);
+        const role = localStorage.getItem('userRole');
+        setUserRole(role);
+        if (role === 'student') {
+            const studentClass = '10-A'; // In a real app, get this from user data
+            setSelectedClass(studentClass);
+        }
     }, []);
 
     useEffect(() => {
@@ -331,18 +338,20 @@ export default function CalendarPage() {
                     </h1>
                     <p className="text-muted-foreground">View your weekly class schedule.</p>
                 </div>
-                 <div className="w-full md:w-auto md:max-w-xs">
-                    <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value as keyof typeof timetables)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a class" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {CLASS_OPTIONS.map(c => (
-                                <SelectItem key={c} value={c}>Class {c}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+                 {userRole !== 'student' && (
+                    <div className="w-full md:w-auto md:max-w-xs">
+                        <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value as keyof typeof timetables)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a class" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CLASS_OPTIONS.map(c => (
+                                    <SelectItem key={c} value={c}>Class {c}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                 )}
             </div>
             <div className="flex-1 min-h-[70vh] bg-card p-4 rounded-lg shadow-sm flex flex-col">
                 {isClient && (

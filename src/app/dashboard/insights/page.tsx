@@ -5,6 +5,8 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, Pie, PieChart, R
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Users, Ratio, DollarSign, BookOpen } from "lucide-react"
+import { useRoleRedirect } from "@/hooks/use-role-redirect"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const enrollmentData = [
   { year: '2020', students: 850 },
@@ -48,6 +50,32 @@ const chartConfigs = {
 };
 
 export default function InsightsPage() {
+    const loading = useRoleRedirect(['admin']);
+
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div>
+                    <Skeleton className="h-8 w-64 mb-2" />
+                    <Skeleton className="h-4 w-96" />
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                    <Skeleton className="h-32" />
+                </div>
+                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                    <Skeleton className="h-80" />
+                    <Skeleton className="h-80" />
+                 </div>
+                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+                    <Skeleton className="lg:col-span-2 h-80" />
+                    <Skeleton className="lg:col-span-3 h-80" />
+                 </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-8">
@@ -149,7 +177,7 @@ export default function InsightsPage() {
                         <ChartContainer config={chartConfigs} className="mx-auto aspect-square h-[300px]">
                             <PieChart>
                                 <Tooltip content={<ChartTooltipContent hideLabel />} />
-                                <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} >
+                                <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} stroke="hsl(var(--card))" >
                                      {userDemographicsData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}
