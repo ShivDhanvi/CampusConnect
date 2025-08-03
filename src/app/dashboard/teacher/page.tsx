@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend, CartesianGrid, Tooltip } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { UserCheck, ClipboardCheck, Users, Award, Star } from "lucide-react";
+import { UserCheck, ClipboardCheck, Users, Award, Star, CheckCircle2, XCircle } from "lucide-react";
 
 const teacherData = {
     name: "Mr. Smith",
@@ -116,11 +116,11 @@ export default function TeacherDashboardPage() {
                         <CardDescription>Overview of all active assignments.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col justify-center items-center">
-                        <ChartContainer config={{}} className="mx-auto aspect-square w-full max-w-[200px]">
+                        <ChartContainer config={{}} className="mx-auto aspect-square w-full max-w-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="dot" />} />
-                                    <Pie data={assignmentChartData} dataKey="value" nameKey="name" innerRadius={50} strokeWidth={8} stroke="hsl(var(--card))">
+                                    <Pie data={assignmentChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={8} stroke="hsl(var(--card))">
                                         {assignmentChartData.map((entry) => (
                                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                         ))}
@@ -128,6 +128,16 @@ export default function TeacherDashboardPage() {
                                 </PieChart>
                             </ResponsiveContainer>
                         </ChartContainer>
+                    </CardContent>
+                    <CardContent className="flex justify-center gap-4 text-sm mt-4 pb-4">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                            <span>Submitted ({teacherData.assignments.submitted})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-chart-2" />
+                            <span>Pending ({teacherData.assignments.pending})</span>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
