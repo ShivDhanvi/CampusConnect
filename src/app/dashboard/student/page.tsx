@@ -90,7 +90,7 @@ export default function StudentDashboardPage() {
                     <CardContent className="flex-1 flex flex-col justify-center items-center">
                         <ChartContainer
                             config={{}}
-                            className="mx-auto aspect-square h-[200px]"
+                            className="mx-auto aspect-square max-h-[250px]"
                         >
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
