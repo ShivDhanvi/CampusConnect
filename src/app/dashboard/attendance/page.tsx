@@ -47,7 +47,7 @@ const TEACHER_CLASSES = ['10-A', '10-B'];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_NAME = 'John Doe';
 type SortDirection = 'asc' | 'desc' | null;
-const STATUS_OPTIONS = ["Present", "Absent", "Late", "Holiday"];
+const STATUS_OPTIONS = ["Present", "Absent", "Late", "Half-day"];
 
 const exportToCsv = (filename: string, rows: any[]) => {
     if (!rows || rows.length === 0) {
@@ -251,6 +251,16 @@ export default function AttendancePage() {
     
     const paginatedStaff = filteredStaff.slice((staffCurrentPage - 1) * ITEMS_PER_PAGE, staffCurrentPage * ITEMS_PER_PAGE);
     const totalStaffPages = Math.ceil(filteredStaff.length / ITEMS_PER_PAGE);
+    
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case 'Present': return 'default';
+            case 'Absent': return 'destructive';
+            case 'Late': return 'secondary';
+            case 'Half-day': return 'secondary';
+            default: return 'outline';
+        }
+    }
 
     const renderDateLabel = () => {
         if (timeframe !== 'custom' || !dateRange) {
@@ -298,7 +308,7 @@ export default function AttendancePage() {
                                 <TableRow key={r.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{r.date}</TableCell>
                                     <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.class}</TableCell>
-                                    <TableCell className="text-right"><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Holiday' ? 'outline' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                    <TableCell className="text-right"><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -362,7 +372,7 @@ export default function AttendancePage() {
                                     <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.studentId}</TableCell>
                                     <TableCell className="hidden md:table-cell whitespace-nowrap">{r.class}</TableCell>
                                     <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                    <TableCell><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Holiday' ? 'outline' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                    <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                                     {userRole === 'teacher' && (
                                         <TableCell className="text-right">
                                             <DropdownMenu>
@@ -438,7 +448,7 @@ export default function AttendancePage() {
                                             <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.teacherId}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                            <TableCell><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Holiday' ? 'outline' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                            <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -500,7 +510,7 @@ export default function AttendancePage() {
                                             <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.staffId}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                            <TableCell><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Holiday' ? 'outline' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                            <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                                             <TableCell className="text-right">
                                                  <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -599,5 +609,3 @@ export default function AttendancePage() {
         </div>
     );
 }
-
-    
