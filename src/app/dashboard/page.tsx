@@ -13,20 +13,19 @@ export default function AdminDashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, you'd get this from a context or session
         const role = localStorage.getItem('userRole');
         setUserRole(role);
 
         if (role === 'student') {
             router.replace('/dashboard/student');
+        } else if (role === 'teacher') {
+            router.replace('/dashboard/teacher');
         } else {
-            // Only stop loading if the user is an admin
             setLoading(false);
         }
     }, [router]);
 
-    // If loading, or if the user is a student (and will be redirected), show skeleton.
-    if (loading || userRole === 'student') {
+    if (loading || userRole !== 'admin') {
         return (
             <div className="space-y-8">
                 <div className="space-y-2">

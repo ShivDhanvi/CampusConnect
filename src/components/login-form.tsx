@@ -16,9 +16,11 @@ export function LoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email === 'student@example.com') {
-      // In a real app, you'd get this from your auth provider
       localStorage.setItem('userRole', 'student');
       router.push('/dashboard/student');
+    } else if (email === 'teacher@example.com') {
+      localStorage.setItem('userRole', 'teacher');
+      router.push('/dashboard/teacher');
     } else {
       localStorage.setItem('userRole', 'admin');
       router.push('/dashboard');
@@ -56,8 +58,9 @@ export function LoginForm() {
             Google
         </Button>
       </CardContent>
-      <CardFooter className="flex justify-center text-center text-sm">
-        <p className="text-muted-foreground">Try logging in with student@example.com and password</p>
+      <CardFooter className="flex-col justify-center text-center text-sm gap-2">
+        <p className="text-muted-foreground">Try `student@example.com`</p>
+        <p className="text-muted-foreground">Try `teacher@example.com`</p>
       </CardFooter>
     </Card>
   );
