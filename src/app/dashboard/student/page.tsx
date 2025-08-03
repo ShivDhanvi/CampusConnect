@@ -47,7 +47,7 @@ export default function StudentDashboardPage() {
             </div>
             
             {/* Stat Cards */}
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Assignments</CardTitle>
@@ -149,7 +149,7 @@ export default function StudentDashboardPage() {
                                         <TableRow key={index}>
                                             <TableCell className="font-medium">{lesson.subject}</TableCell>
                                             <TableCell className="hidden md:table-cell">{lesson.teacher}</TableCell>
-                                            <TableCell>{lesson.topic}</TableCell>
+                                            <TableCell className="[word-break:break-word]">{lesson.topic}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
