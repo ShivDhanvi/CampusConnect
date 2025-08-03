@@ -24,7 +24,7 @@ const studentData = {
         { subject: "History", teacher: "Mrs. Jones", topic: "The Roman Empire: Rise and Fall" },
         { subject: "Biology", teacher: "Mr. Davis", topic: "Cell Structure and Function" },
         { subject: "English", teacher: "Ms. Williams", topic: "Analyzing Shakespeare's Sonnets" },
-        { subject: "Geography", teacher: "Mrs. Clark", topic: "Climate Zones of the World" },
+        { subject: "Geography", teacher: "Mrs. Clark", topic: "Climate Zones of the World and their significant impact on human settlement patterns" },
     ]
 };
 
@@ -90,15 +90,15 @@ export default function StudentDashboardPage() {
                     <CardContent className="flex-1 flex flex-col justify-center items-center">
                         <ChartContainer
                             config={{}}
-                            className="mx-auto aspect-square w-full max-w-[250px]"
+                            className="mx-auto aspect-square w-full max-w-[200px] sm:max-w-[250px]"
                         >
-                            <ResponsiveContainer width="100%" height={300}>
+                            <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <ChartTooltip
                                         cursor={false}
                                         content={<ChartTooltipContent hideLabel indicator="dot" />}
                                     />
-                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={8} stroke="hsl(var(--card))">
+                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={50} strokeWidth={8} stroke="hsl(var(--card))">
                                         {attendanceChartData.map((entry) => (
                                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                         ))}
