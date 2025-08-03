@@ -33,6 +33,7 @@ const users = {
   admin: { id: 'admin', name: 'Admin', avatar: 'https://placehold.co/40x40.png', initials: 'AD', role: 'Admin', online: true },
   teacher1: { id: 'teacher1', name: 'Mr. Smith', avatar: 'https://placehold.co/40x40.png', initials: 'MS', role: 'Teacher', online: true },
   'S-1024': { id: 'S-1024', name: 'John Doe', avatar: 'https://placehold.co/40x40.png', initials: 'JD', role: 'Student', online: false },
+  'S-1025': { id: 'S-1025', name: 'David Brown', avatar: 'https://placehold.co/40x40.png', initials: 'DB', role: 'Student', online: true },
   parent1: { id: 'parent1', name: 'Jane Doe', avatar: 'https://placehold.co/40x40.png', initials: 'JD', role: 'Parent', online: true },
   teacher2: { id: 'teacher2', name: 'Ms. Jones', avatar: 'https://placehold.co/40x40.png', initials: 'MJ', role: 'Teacher', online: false },
   'S-1152': { id: 'S-1152', name: 'Peter Jones', avatar: 'https://placehold.co/40x40.png', initials: 'PJ', role: 'Student', online: true },
