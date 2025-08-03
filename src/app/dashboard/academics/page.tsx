@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, isPast, parseISO } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getConversations, addConversation } from "@/lib/messages";
+
 
 const initialAssignments = [
     { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A' },
@@ -24,6 +26,8 @@ const initialAssignments = [
     { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', class: '11-A' },
     { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', class: '11-A' },
     { id: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A' },
+    // Add an assignment with a past due date for testing 'Late' status
+    { id: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B' },
 ];
 
 const students = {
@@ -37,14 +41,17 @@ const students = {
 const initialStudentAssignments = [
     // Teacher's subjects: Mathematics, Biology, Physics
     { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted' },
+    // Make this one pending for the teacher to see
     { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending' },
     { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded' },
-    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', class: '11-A', status: 'Pending' },
+    // Make this one have a past due date to test "Late" status
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-08-15', class: '11-A', status: 'Pending' },
     { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted' },
 
     // Other subjects for student view
     { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted' },
     { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B', status: 'Pending' },
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B', status: 'Pending' },
 ];
 
 
@@ -67,15 +74,16 @@ const initialExams = [
 ];
 
 
-const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
+const STATUS_OPTIONS = ["Pending", "Submitted", "Graded", "Late"];
 const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
-const TEACHER_CLASSES = ['10-A', '10-B']; // For teacher role
+const TEACHER_CLASSES = ['10-A', '10-B', '11-A']; // For teacher role
 const TEACHER_SUBJECTS = ['Mathematics', 'Biology', 'Physics']; // For teacher role
 const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_CLASS = '10-A'; // For student role
 const STUDENT_ID = 'S-1024'; // For student role
 const STUDENT_NAME = 'John Doe'; // For student role
+const TEACHER_ID = 'teacher1'; // For messaging
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -97,7 +105,7 @@ export default function AcademicsPage() {
     // State for Assignments
     const [assignments, setAssignments] = useState(initialStudentAssignments);
     const [assignmentSearch, setAssignmentSearch] = useState("");
-    const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true });
+    const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true, Late: true });
     const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
     const [assignmentSortDirection, setAssignmentSortDirection] = useState<SortDirection>(null);
     const [assignmentCurrentPage, setAssignmentCurrentPage] = useState(1);
@@ -125,10 +133,11 @@ export default function AcademicsPage() {
         const role = localStorage.getItem('userRole');
         setUserRole(role);
          if (role === 'teacher') {
-            setExamClassOptions(TEACHER_CLASSES);
-            setResultClassOptions(TEACHER_CLASSES);
-            setExamClassFilters(TEACHER_CLASSES.reduce((acc, c) => ({...acc, [c]: true}), {}));
-            setResultClassFilters(TEACHER_CLASSES.reduce((acc, c) => ({...acc, [c]: true}), {}));
+            const uniqueTeacherClasses = [...new Set(initialStudentAssignments.filter(a => TEACHER_SUBJECTS.includes(a.subject)).map(a => a.class))];
+            setExamClassOptions(uniqueTeacherClasses);
+            setResultClassOptions(uniqueTeacherClasses);
+            setExamClassFilters(uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {}));
+            setResultClassFilters(uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {}));
         } else {
             setExamClassOptions(ALL_CLASS_OPTIONS);
             setResultClassOptions(ALL_CLASS_OPTIONS);
@@ -136,6 +145,13 @@ export default function AcademicsPage() {
             setResultClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
         }
     }, []);
+
+    const getStatus = (status: string, dueDate: string) => {
+        if (status === 'Pending' && isPast(parseISO(dueDate))) {
+            return 'Late';
+        }
+        return status;
+    }
 
     // Generic sort handler
     const handleSort = (column: string, sortColumn: any, setSortColumn: any, sortDirection: any, setSortDirection: any) => {
@@ -173,7 +189,8 @@ export default function AcademicsPage() {
                 item.subject.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
                 (userRole === 'teacher' && item.studentName.toLowerCase().includes(assignmentSearch.toLowerCase()))
             );
-            const statusMatch = assignmentStatusFilters[item.status];
+            const itemStatus = getStatus(item.status, item.dueDate);
+            const statusMatch = assignmentStatusFilters[itemStatus];
             
             if(userRole === 'teacher') {
                 const classMatch = TEACHER_CLASSES.includes(item.class);
@@ -191,6 +208,13 @@ export default function AcademicsPage() {
             filtered.sort((a, b) => {
                 const aValue = a[assignmentSortColumn as keyof typeof a];
                 const bValue = b[assignmentSortColumn as keyof typeof b];
+                if (assignmentSortColumn === 'status') {
+                    const aStatus = getStatus(a.status, a.dueDate);
+                    const bStatus = getStatus(b.status, b.dueDate);
+                     if (aStatus < bStatus) return assignmentSortDirection === 'asc' ? -1 : 1;
+                    if (aStatus > bStatus) return assignmentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                }
                 if (aValue < bValue) return assignmentSortDirection === 'asc' ? -1 : 1;
                 if (aValue > bValue) return assignmentSortDirection === 'asc' ? 1 : -1;
                 return 0;
@@ -312,30 +336,31 @@ export default function AcademicsPage() {
         if (event.target.files && event.target.files.length > 0 && uploadingAssignment) {
             const { studentId, assignmentId, dueDate } = uploadingAssignment;
 
+            const isLate = isPast(parseISO(dueDate));
+
             setAssignments(prev => prev.map(item =>
                 item.studentId === studentId && item.assignmentId === assignmentId 
                 ? { ...item, status: 'Submitted' } 
                 : item
             ));
             
-            const isSubmittedOnTime = differenceInDays(parseISO(dueDate), new Date()) >= 0;
-
-            if (isSubmittedOnTime) {
+            const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
+            if (!isLate) {
                 toast({
                     title: "Streak Point Earned!",
                     description: "Great job submitting on time. Keep it up!",
                     action: <Sparkles className="text-yellow-500" />,
                 });
-                const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
                 localStorage.setItem('streakPoints', (currentPoints + 1).toString());
-                window.dispatchEvent(new Event('storage'));
             } else {
-                toast({
-                    title: "Assignment Submitted",
-                    description: "Your assignment has been submitted.",
-                    action: <CheckCircle className="text-green-500" />,
+                 toast({
+                    title: "Assignment Submitted Late",
+                    description: "Your assignment has been submitted, but 1 streak point was deducted.",
+                    action: <AlertTriangle className="text-destructive" />,
                 });
+                localStorage.setItem('streakPoints', Math.max(0, currentPoints - 1).toString());
             }
+             window.dispatchEvent(new Event('storage'));
         }
         // Reset state and file input
         setUploadingAssignment(null);
@@ -354,6 +379,43 @@ export default function AcademicsPage() {
             title: "Assignment Marked as Graded",
             description: "The assignment status has been updated.",
             action: <CheckCircle className="text-green-500" />,
+        });
+    };
+
+    const handleSendReminder = (student: { id: string, name: string }, assignment: { title: string }) => {
+        const conversations = getConversations();
+        const existingConv = conversations.find(c => 
+            c.type === 'dm' && c.participants.includes(student.id) && c.participants.includes(TEACHER_ID)
+        );
+
+        const reminderMessage = `Hi ${student.name}, this is a reminder that the assignment "${assignment.title}" is due. Please submit it as soon as possible.`;
+
+        if (existingConv) {
+            existingConv.messages.push({
+                id: `msg${Date.now()}`,
+                sender: TEACHER_ID,
+                text: reminderMessage,
+                timestamp: new Date()
+            });
+            addConversation(existingConv, true);
+        } else {
+             const newConversation = {
+                id: `conv${Date.now()}`,
+                type: 'dm',
+                participants: [TEACHER_ID, student.id],
+                messages: [{ id: `msg${Date.now()}`, sender: TEACHER_ID, text: reminderMessage, timestamp: new Date() }],
+                lastMessage: reminderMessage,
+                lastMessageTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                unreadCount: 1,
+                pinned: false,
+            };
+            addConversation(newConversation);
+        }
+
+        toast({
+            title: "Reminder Sent",
+            description: `A message has been sent to ${student.name}.`,
+            action: <MessageSquare className="text-blue-500" />,
         });
     };
     
@@ -433,12 +495,14 @@ export default function AcademicsPage() {
                                                         <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                     </>
                                                 )}
-                                                <TableHead>Status</TableHead>
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('status', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Status {renderSortIcon('status', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                 {userRole !== 'admin' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {paginatedAssignments.map(item => (
+                                            {paginatedAssignments.map(item => {
+                                                const itemStatus = getStatus(item.status, item.dueDate);
+                                                return (
                                                 <TableRow key={item.studentId + item.assignmentId}>
                                                    {userRole === 'teacher' ? (
                                                         <>
@@ -464,15 +528,15 @@ export default function AcademicsPage() {
                                                             <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
                                                         </>
                                                     )}
-                                                    <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
+                                                    <TableCell><Badge variant={itemStatus === 'Graded' ? 'default' : itemStatus === 'Submitted' ? 'secondary' : itemStatus === 'Late' ? 'destructive' : 'outline'}>{itemStatus}</Badge></TableCell>
                                                     {userRole !== 'admin' && (
                                                         <TableCell className="text-right">
-                                                            {userRole === 'student' && item.status === 'Pending' && (
+                                                            {userRole === 'student' && (itemStatus === 'Pending' || itemStatus === 'Late') && (
                                                                 <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.studentId, item.assignmentId, item.dueDate)}>
                                                                     <Upload className="h-4 w-4" />
                                                                 </Button>
                                                             )}
-                                                            {userRole === 'student' && item.status === 'Submitted' && (
+                                                            {userRole === 'student' && itemStatus === 'Submitted' && (
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild>
                                                                         <Button variant="ghost" size="icon">
@@ -486,24 +550,28 @@ export default function AcademicsPage() {
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
-                                                            {userRole === 'teacher' && item.status === 'Submitted' && (
+                                                            {userRole === 'teacher' && (
                                                                 <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button variant="ghost" size="icon">
-                                                                            <MoreHorizontal className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem onClick={() => handleMarkAsGraded(item.studentId, item.assignmentId)}>
-                                                                            Mark as Graded
-                                                                        </DropdownMenuItem>
+                                                                        {(itemStatus === 'Pending' || itemStatus === 'Late') && (
+                                                                            <DropdownMenuItem onClick={() => handleSendReminder({ id: item.studentId, name: item.studentName }, { title: item.title })}>
+                                                                                <MessageSquare className="mr-2 h-4 w-4" /> Send Reminder
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                        {itemStatus === 'Submitted' && (
+                                                                            <DropdownMenuItem onClick={() => handleMarkAsGraded(item.studentId, item.assignmentId)}>
+                                                                                <CheckCircle className="mr-2 h-4 w-4" /> Mark as Graded
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                         {itemStatus !== 'Submitted' && itemStatus !== 'Graded' && <DropdownMenuItem disabled>Mark as Graded</DropdownMenuItem>}
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
                                                         </TableCell>
                                                     )}
                                                 </TableRow>
-                                            ))}
+                                            )})}
                                         </TableBody>
                                     </Table>
                                     {paginatedAssignments.length === 0 && <div className="text-center py-10 text-muted-foreground">No assignments found.</div>}
@@ -656,7 +724,7 @@ export default function AcademicsPage() {
                                     <div className="text-sm text-muted-foreground">Page {resultCurrentPage} of {totalResultPages}</div>
                                     <div className="flex items-center gap-2">
                                         <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
-                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
+                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalPages}>Next</Button>
                                     </div>
                                 </div>
                             </CardContent>
