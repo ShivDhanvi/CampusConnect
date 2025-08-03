@@ -68,7 +68,7 @@ export function AttendanceChart() {
         <ChartContainer config={attendanceChartConfig} className="mx-auto aspect-square h-[250px]">
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5}>
+            <Pie data={attendanceChartData} dataKey="value" nameKey="category" innerRadius={60} strokeWidth={5} stroke="hsl(var(--card))">
                 {attendanceChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}

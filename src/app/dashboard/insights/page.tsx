@@ -177,7 +177,7 @@ export default function InsightsPage() {
                         <ChartContainer config={chartConfigs} className="mx-auto aspect-square h-[300px]">
                             <PieChart>
                                 <Tooltip content={<ChartTooltipContent hideLabel />} />
-                                <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} >
+                                <Pie data={userDemographicsData} dataKey="count" nameKey="role" innerRadius={50} strokeWidth={5} stroke="hsl(var(--card))" >
                                      {userDemographicsData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}

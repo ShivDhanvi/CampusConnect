@@ -98,7 +98,7 @@ export default function StudentDashboardPage() {
                                         cursor={false}
                                         content={<ChartTooltipContent hideLabel indicator="dot" />}
                                     />
-                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
+                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5} stroke="hsl(var(--card))">
                                         {attendanceChartData.map((entry) => (
                                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                         ))}
