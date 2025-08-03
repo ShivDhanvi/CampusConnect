@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle, FileUp } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle, FileUp, Trash2, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
@@ -702,6 +702,7 @@ export default function AcademicsPage() {
                                                 <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
                                                 <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
                                                 <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
+                                                {userRole === 'teacher' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -710,6 +711,23 @@ export default function AcademicsPage() {
                                                     <TableCell className="font-medium">{item.title}</TableCell>
                                                     <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
                                                     <TableCell>{item.date}</TableCell>
+                                                    {userRole === 'teacher' && (
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem>
+                                                                        <Edit className="mr-2 h-4 w-4" /> Update
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem className="text-destructive">
+                                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -795,6 +813,7 @@ export default function AcademicsPage() {
                                                 <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                                 <TableHead>Score</TableHead>
                                                 <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                {userRole === 'teacher' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -806,6 +825,23 @@ export default function AcademicsPage() {
                                                     <TableCell className="hidden md:table-cell">{item.examTitle}</TableCell>
                                                     <TableCell>{item.score}</TableCell>
                                                     <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
+                                                     {userRole === 'teacher' && (
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem>
+                                                                        <Edit className="mr-2 h-4 w-4" /> Update
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem className="text-destructive">
+                                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -827,3 +863,5 @@ export default function AcademicsPage() {
         </div>
     )
 }
+
+    
