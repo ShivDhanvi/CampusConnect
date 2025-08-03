@@ -724,7 +724,7 @@ export default function AcademicsPage() {
                                     <div className="text-sm text-muted-foreground">Page {resultCurrentPage} of {totalResultPages}</div>
                                     <div className="flex items-center gap-2">
                                         <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.max(prev - 1, 1))} disabled={resultCurrentPage === 1}>Previous</Button>
-                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalPages}>Next</Button>
+                                        <Button variant="outline" size="sm" onClick={() => setResultCurrentPage(prev => Math.min(prev + 1, totalResultPages))} disabled={resultCurrentPage === totalResultPages}>Next</Button>
                                     </div>
                                 </div>
                             </CardContent>
