@@ -14,15 +14,39 @@ import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { differenceInDays, parseISO } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const initialAssignments = [
-    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending', class: '10-A' },
-    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', status: 'Submitted', class: '10-A' },
-    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', status: 'Graded', class: '10-B' },
-    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', status: 'Pending', class: '10-B' },
-    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', status: 'Submitted', class: '11-A' },
-    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', status: 'Graded', class: '11-A' },
+    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A' },
+    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A' },
+    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B' },
+    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B' },
+    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', class: '11-A' },
+    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', class: '11-A' },
+    { id: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A' },
 ];
+
+const students = {
+    '10-A': [{ id: 'S-1024', name: 'John Doe', initials: 'JD' }],
+    '10-B': [{ id: 'S-0987', name: 'Jane Smith', initials: 'JS' }],
+    '11-A': [{ id: 'S-1152', name: 'Peter Jones', initials: 'PJ' }],
+    '11-B': [{ id: 'S-1056', name: 'Mary Williams', initials: 'MW' }],
+}
+
+// Create a more realistic set of student submissions
+const initialStudentAssignments = [
+    // Teacher's subjects: Mathematics, Biology, Physics
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending' },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', class: '11-A', status: 'Pending' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted' },
+
+    // Other subjects for student view
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted' },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B', status: 'Pending' },
+];
+
 
 const initialResults = [
     { student: 'John Doe', class: '10-A', subject: 'Mathematics', examTitle: 'Mid-Term Mathematics', score: '95%', date: '2024-08-20' },
@@ -46,9 +70,11 @@ const initialExams = [
 const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
 const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
 const TEACHER_CLASSES = ['10-A', '10-B']; // For teacher role
+const TEACHER_SUBJECTS = ['Mathematics', 'Biology', 'Physics']; // For teacher role
 const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_CLASS = '10-A'; // For student role
+const STUDENT_ID = 'S-1024'; // For student role
 const STUDENT_NAME = 'John Doe'; // For student role
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -66,10 +92,10 @@ export default function AcademicsPage() {
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [uploadingAssignment, setUploadingAssignment] = useState<{ id: string, dueDate: string } | null>(null);
+    const [uploadingAssignment, setUploadingAssignment] = useState<{ studentId: string, assignmentId: string, dueDate: string } | null>(null);
 
     // State for Assignments
-    const [assignments, setAssignments] = useState(initialAssignments);
+    const [assignments, setAssignments] = useState(initialStudentAssignments);
     const [assignmentSearch, setAssignmentSearch] = useState("");
     const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true });
     const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
@@ -142,12 +168,25 @@ export default function AcademicsPage() {
     // Memoized filtered and sorted data
     const filteredAssignments = useMemo(() => {
         let filtered = assignments.filter(item => {
-            const isClassMatch = userRole === 'teacher' ? TEACHER_CLASSES.includes(item.class) : true;
-            return (item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) || 
-             item.subject.toLowerCase().includes(assignmentSearch.toLowerCase())) && 
-             assignmentStatusFilters[item.status] &&
-             isClassMatch;
+            const searchMatch = (
+                item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                item.subject.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                (userRole === 'teacher' && item.studentName.toLowerCase().includes(assignmentSearch.toLowerCase()))
+            );
+            const statusMatch = assignmentStatusFilters[item.status];
+            
+            if(userRole === 'teacher') {
+                const classMatch = TEACHER_CLASSES.includes(item.class);
+                const subjectMatch = TEACHER_SUBJECTS.includes(item.subject);
+                return searchMatch && statusMatch && classMatch && subjectMatch;
+            }
+            if(userRole === 'student') {
+                return item.studentId === STUDENT_ID && searchMatch && statusMatch;
+            }
+            // Admin view
+            return searchMatch && statusMatch;
         });
+
         if (assignmentSortColumn && assignmentSortDirection) {
             filtered.sort((a, b) => {
                 const aValue = a[assignmentSortColumn as keyof typeof a];
@@ -228,15 +267,35 @@ export default function AcademicsPage() {
     const totalExamPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
 
     const handleCreateAssignment = (data: any) => {
-        const newAssignment = {
-            id: `A${(assignments.length + 1).toString().padStart(3, '0')}`,
+        const newAssignmentId = `A${(initialAssignments.length + 1).toString().padStart(3, '0')}`;
+        
+        // This is a simplified logic. In a real app, you'd have a list of all students.
+        // Here, we add the assignment for students in the target classes.
+        const studentsToAssign = Object.entries(students)
+            .filter(([className]) => TEACHER_CLASSES.includes(className))
+            .flatMap(([, studentList]) => studentList);
+        
+        const newSubmissions = studentsToAssign.map(student => ({
+            studentId: student.id,
+            studentName: student.name,
+            initials: student.initials,
+            assignmentId: newAssignmentId,
             title: data.title,
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
             status: 'Pending',
-            class: '10-A' // Default class, can be improved
-        };
-        setAssignments(prev => [newAssignment, ...prev]);
+            class: '10-A' // This should be dynamic based on student class
+        }));
+
+        setAssignments(prev => [...newSubmissions, ...prev]);
+        initialAssignments.push({
+            id: newAssignmentId,
+            title: data.title,
+            subject: data.subject,
+            dueDate: data.dueDate.toISOString().split('T')[0],
+            class: '10-A', // This should be dynamic
+        });
+
         toast({
             title: "Assignment Created",
             description: `"${data.title}" has been successfully created.`,
@@ -244,17 +303,19 @@ export default function AcademicsPage() {
         })
     };
 
-    const handleUploadClick = (assignmentId: string, dueDate: string) => {
-        setUploadingAssignment({ id: assignmentId, dueDate });
+    const handleUploadClick = (studentId: string, assignmentId: string, dueDate: string) => {
+        setUploadingAssignment({ studentId, assignmentId, dueDate });
         fileInputRef.current?.click();
     };
     
     const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0 && uploadingAssignment) {
-            const { id, dueDate } = uploadingAssignment;
+            const { studentId, assignmentId, dueDate } = uploadingAssignment;
 
             setAssignments(prev => prev.map(item =>
-                item.id === id ? { ...item, status: 'Submitted' } : item
+                item.studentId === studentId && item.assignmentId === assignmentId 
+                ? { ...item, status: 'Submitted' } 
+                : item
             ));
             
             const isSubmittedOnTime = differenceInDays(parseISO(dueDate), new Date()) >= 0;
@@ -283,9 +344,11 @@ export default function AcademicsPage() {
         }
     };
     
-     const handleMarkAsGraded = (assignmentId: string) => {
+     const handleMarkAsGraded = (studentId: string, assignmentId: string) => {
         setAssignments(prev => prev.map(item =>
-            item.id === assignmentId ? { ...item, status: 'Graded' } : item
+            item.studentId === studentId && item.assignmentId === assignmentId 
+            ? { ...item, status: 'Graded' } 
+            : item
         ));
         toast({
             title: "Assignment Marked as Graded",
@@ -332,7 +395,11 @@ export default function AcademicsPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                    <Input placeholder="Search by title or subject..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
+                                    <Input 
+                                      placeholder={userRole === 'teacher' ? "Search by title, subject, or student..." : "Search by title or subject..."} 
+                                      value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} 
+                                      className="max-w-sm" 
+                                    />
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="outline" className="ml-auto">
@@ -353,24 +420,55 @@ export default function AcademicsPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                {userRole === 'teacher' ? (
+                                                     <>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('studentName', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Student {renderSortIcon('studentName', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Assignment {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                    </>
+                                                )}
                                                 <TableHead>Status</TableHead>
                                                 {userRole !== 'admin' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {paginatedAssignments.map(item => (
-                                                <TableRow key={item.id}>
-                                                    <TableCell className="font-medium">{item.title}</TableCell>
-                                                    <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
-                                                    <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
+                                                <TableRow key={item.studentId + item.assignmentId}>
+                                                   {userRole === 'teacher' ? (
+                                                        <>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Avatar className="hidden h-9 w-9 sm:flex">
+                                                                        <AvatarImage src={`https://placehold.co/32x32.png`} alt={item.studentName} data-ai-hint="user avatar" />
+                                                                        <AvatarFallback>{item.initials}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <div className="font-medium">{item.studentName}</div>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="hidden md:table-cell">
+                                                                <div>{item.title}</div>
+                                                                <div className="text-xs text-muted-foreground">{item.subject}</div>
+                                                            </TableCell>
+                                                            <TableCell>{item.dueDate}</TableCell>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <TableCell className="font-medium">{item.title}</TableCell>
+                                                            <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                            <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
+                                                        </>
+                                                    )}
                                                     <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
                                                     {userRole !== 'admin' && (
                                                         <TableCell className="text-right">
                                                             {userRole === 'student' && item.status === 'Pending' && (
-                                                                <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.id, item.dueDate)}>
+                                                                <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.studentId, item.assignmentId, item.dueDate)}>
                                                                     <Upload className="h-4 w-4" />
                                                                 </Button>
                                                             )}
@@ -382,7 +480,7 @@ export default function AcademicsPage() {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem onClick={() => handleUploadClick(item.id, item.dueDate)}>
+                                                                        <DropdownMenuItem onClick={() => handleUploadClick(item.studentId, item.assignmentId, item.dueDate)}>
                                                                             Re-upload
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
@@ -396,7 +494,7 @@ export default function AcademicsPage() {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem onClick={() => handleMarkAsGraded(item.id)}>
+                                                                        <DropdownMenuItem onClick={() => handleMarkAsGraded(item.studentId, item.assignmentId)}>
                                                                             Mark as Graded
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
