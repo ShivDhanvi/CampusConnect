@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle, FileUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
@@ -17,6 +17,8 @@ import { differenceInDays, isPast, parseISO } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getConversations, addConversation } from "@/lib/messages";
 import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog";
+import { CreateExamDialog } from "@/components/create-exam-dialog";
+import { UploadResultsDialog } from "@/components/upload-results-dialog";
 
 
 const initialAssignments = [
@@ -79,7 +81,7 @@ const initialExams = [
 
 const STATUS_OPTIONS = ["All", "Pending", "Submitted", "Graded", "Late"];
 const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
-const TEACHER_CLASSES = ['10-A', '10-B', '11-A']; // For teacher role
+const TEACHER_CLASSES = ['10-A', '10-B']; // For teacher role
 const TEACHER_SUBJECTS = ['Mathematics', 'Biology', 'Physics']; // For teacher role
 const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
@@ -138,12 +140,20 @@ export default function AcademicsPage() {
     useEffect(() => {
         const role = localStorage.getItem('userRole');
         setUserRole(role);
-         if (role === 'teacher') {
-            const uniqueTeacherClasses = [...new Set(initialStudentAssignments.filter(a => TEACHER_SUBJECTS.includes(a.subject)).map(a => a.class))];
+        if (role === 'teacher') {
+            const uniqueTeacherClasses = TEACHER_CLASSES;
             setExamClassOptions(uniqueTeacherClasses);
             setResultClassOptions(uniqueTeacherClasses);
-            setExamClassFilters(uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {}));
-            setResultClassFilters(uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {}));
+
+            const initialFilters = uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {});
+            setExamClassFilters(initialFilters);
+            setResultClassFilters(initialFilters);
+
+            if (uniqueTeacherClasses.length === 1) {
+                // If only one class, no need to show filter options for it
+                setExamClassFilters({[uniqueTeacherClasses[0]]: true});
+                setResultClassFilters({[uniqueTeacherClasses[0]]: true});
+            }
         } else {
             setExamClassOptions(ALL_CLASS_OPTIONS);
             setResultClassOptions(ALL_CLASS_OPTIONS);
@@ -151,6 +161,7 @@ export default function AcademicsPage() {
             setResultClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
         }
     }, []);
+
 
     const getStatus = (status: string, dueDate: string) => {
         if (status === 'Pending' && isPast(parseISO(dueDate))) {
@@ -329,6 +340,37 @@ export default function AcademicsPage() {
             action: <CheckCircle className="text-green-500" />,
         })
     };
+    
+    const handleCreateExam = (data: any) => {
+        const newExam = {
+            id: `E${(exams.length + 1).toString().padStart(3, '0')}`,
+            title: data.title,
+            class: data.className,
+            date: data.date.toISOString().split('T')[0],
+        };
+        setExams(prev => [newExam, ...prev]);
+        toast({
+            title: "Exam Scheduled",
+            description: `"${data.title}" has been scheduled for Class ${data.className}.`,
+        });
+    };
+
+    const handleUploadResult = (data: any) => {
+        const newResult = {
+            student: data.studentName,
+            class: data.className,
+            subject: data.subject,
+            examTitle: data.examTitle,
+            score: data.score,
+            date: data.date.toISOString().split('T')[0],
+        };
+        setResults(prev => [newResult, ...prev]);
+        toast({
+            title: "Result Uploaded",
+            description: `Result for ${data.studentName} has been uploaded.`,
+        });
+    };
+
 
     const handleUploadClick = (studentId: string, assignmentId: string, dueDate: string) => {
         setUploadingAssignment({ studentId, assignmentId, dueDate });
@@ -618,9 +660,19 @@ export default function AcademicsPage() {
                     </TabsContent>
                     <TabsContent value="exams">
                          <Card>
-                            <CardHeader>
-                                <CardTitle>Exam Schedule</CardTitle>
-                                <CardDescription>View upcoming exam dates and details.</CardDescription>
+                            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>Exam Schedule</CardTitle>
+                                    <CardDescription>View upcoming exam dates and details.</CardDescription>
+                                </div>
+                                {(userRole === 'admin' || userRole === 'teacher') && (
+                                    <CreateExamDialog onExamCreated={handleCreateExam} teacherClasses={TEACHER_CLASSES}>
+                                        <Button>
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Create Exam
+                                        </Button>
+                                    </CreateExamDialog>
+                                )}
                             </CardHeader>
                             <CardContent>
                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
@@ -676,9 +728,19 @@ export default function AcademicsPage() {
                     </TabsContent>
                     <TabsContent value="results">
                          <Card>
-                            <CardHeader>
-                                <CardTitle>Student Results</CardTitle>
-                                <CardDescription>View and manage student grades.</CardDescription>
+                            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>Student Results</CardTitle>
+                                    <CardDescription>View and manage student grades.</CardDescription>
+                                </div>
+                                {(userRole === 'admin' || userRole === 'teacher') && (
+                                     <UploadResultsDialog onResultUploaded={handleUploadResult} teacherClasses={TEACHER_CLASSES}>
+                                        <Button>
+                                            <FileUp className="mr-2 h-4 w-4" />
+                                            Upload Results
+                                        </Button>
+                                    </UploadResultsDialog>
+                                )}
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4 mb-6">
@@ -765,5 +827,3 @@ export default function AcademicsPage() {
         </div>
     )
 }
-
-    
