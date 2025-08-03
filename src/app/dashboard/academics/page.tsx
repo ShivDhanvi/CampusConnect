@@ -19,6 +19,7 @@ import { getConversations, addConversation } from "@/lib/messages";
 import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog";
 import { CreateExamDialog } from "@/components/create-exam-dialog";
 import { UploadResultsDialog } from "@/components/upload-results-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 const initialAssignments = [
@@ -127,6 +128,8 @@ export default function AcademicsPage() {
     const [resultSortColumn, setResultSortColumn] = useState<string | null>(null);
     const [resultSortDirection, setResultSortDirection] = useState<SortDirection>(null);
     const [resultCurrentPage, setResultCurrentPage] = useState(1);
+    const [selectedResult, setSelectedResult] = useState<any | null>(null);
+    const [isUploadResultOpen, setIsUploadResultOpen] = useState(false);
 
     // State for Exams
     const [exams, setExams] = useState(initialExams);
@@ -136,6 +139,8 @@ export default function AcademicsPage() {
     const [examSortColumn, setExamSortColumn] = useState<string | null>(null);
     const [examSortDirection, setExamSortDirection] = useState<SortDirection>(null);
     const [examCurrentPage, setExamCurrentPage] = useState(1);
+    const [selectedExam, setSelectedExam] = useState<any | null>(null);
+    const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
     
     useEffect(() => {
         const role = localStorage.getItem('userRole');
@@ -341,34 +346,65 @@ export default function AcademicsPage() {
         })
     };
     
-    const handleCreateExam = (data: any) => {
-        const newExam = {
-            id: `E${(exams.length + 1).toString().padStart(3, '0')}`,
-            title: data.title,
-            class: data.className,
-            date: data.date.toISOString().split('T')[0],
-        };
-        setExams(prev => [newExam, ...prev]);
-        toast({
-            title: "Exam Scheduled",
-            description: `"${data.title}" has been scheduled for Class ${data.className}.`,
-        });
+    const handleExamSubmit = (data: any) => {
+        if(selectedExam) {
+            // Update
+            setExams(prev => prev.map(e => e.id === selectedExam.id ? { ...e, ...data, date: data.date.toISOString().split('T')[0] } : e));
+            toast({ title: "Exam Updated", description: `"${data.title}" has been updated.` });
+
+        } else {
+            // Create
+            const newExam = {
+                id: `E${(exams.length + 1).toString().padStart(3, '0')}`,
+                title: data.title,
+                class: data.className,
+                date: data.date.toISOString().split('T')[0],
+            };
+            setExams(prev => [newExam, ...prev]);
+            toast({
+                title: "Exam Scheduled",
+                description: `"${data.title}" has been scheduled for Class ${data.className}.`,
+            });
+        }
+        setSelectedExam(null);
     };
 
-    const handleUploadResult = (data: any) => {
-        const newResult = {
-            student: data.studentName,
-            class: data.className,
-            subject: data.subject,
-            examTitle: data.examTitle,
-            score: data.score,
-            date: data.date.toISOString().split('T')[0],
-        };
-        setResults(prev => [newResult, ...prev]);
-        toast({
-            title: "Result Uploaded",
-            description: `Result for ${data.studentName} has been uploaded.`,
-        });
+    const handleResultSubmit = (data: any) => {
+         if (selectedResult) {
+            // Update
+             setResults(prev => prev.map(r => 
+                r.student === selectedResult.student && r.examTitle === selectedResult.examTitle 
+                ? { ...r, ...data, date: data.date.toISOString().split('T')[0] } 
+                : r
+            ));
+            toast({ title: "Result Updated", description: `Result for ${data.studentName} has been updated.` });
+        } else {
+            // Create
+            const newResult = {
+                student: data.studentName,
+                class: data.className,
+                subject: data.subject,
+                examTitle: data.examTitle,
+                score: data.score,
+                date: data.date.toISOString().split('T')[0],
+            };
+            setResults(prev => [newResult, ...prev]);
+            toast({
+                title: "Result Uploaded",
+                description: `Result for ${data.studentName} has been uploaded.`,
+            });
+        }
+        setSelectedResult(null);
+    };
+
+    const handleDeleteExam = (examId: string) => {
+        setExams(prev => prev.filter(e => e.id !== examId));
+        toast({ title: "Exam Deleted", description: "The exam has been removed from the schedule." });
+    };
+
+    const handleDeleteResult = (studentName: string, examTitle: string) => {
+        setResults(prev => prev.filter(r => !(r.student === studentName && r.examTitle === examTitle)));
+        toast({ title: "Result Deleted", description: `The result for ${studentName} has been deleted.` });
     };
 
 
@@ -486,6 +522,23 @@ export default function AcademicsPage() {
                     assignment={selectedAssignment}
                 />
             )}
+            
+            <CreateExamDialog 
+                isOpen={isCreateExamOpen}
+                onOpenChange={setIsCreateExamOpen}
+                onExamSubmit={handleExamSubmit} 
+                teacherClasses={TEACHER_CLASSES}
+                exam={selectedExam}
+            />
+
+            <UploadResultsDialog
+                isOpen={isUploadResultOpen}
+                onOpenChange={setIsUploadResultOpen}
+                onResultSubmit={handleResultSubmit}
+                teacherClasses={TEACHER_CLASSES}
+                result={selectedResult}
+            />
+
             <div>
                 <h1 className="text-3xl font-bold font-headline">Academics</h1>
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
@@ -556,7 +609,7 @@ export default function AcademicsPage() {
                                                      <>
                                                         <TableHead><Button variant="ghost" onClick={() => handleSort('studentName', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Student {renderSortIcon('studentName', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                         <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Assignment {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</TableHead>
                                                     </>
                                                 ) : (
                                                     <>
@@ -666,12 +719,10 @@ export default function AcademicsPage() {
                                     <CardDescription>View upcoming exam dates and details.</CardDescription>
                                 </div>
                                 {(userRole === 'admin' || userRole === 'teacher') && (
-                                    <CreateExamDialog onExamCreated={handleCreateExam} teacherClasses={TEACHER_CLASSES}>
-                                        <Button>
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Create Exam
-                                        </Button>
-                                    </CreateExamDialog>
+                                    <Button onClick={() => { setSelectedExam(null); setIsCreateExamOpen(true); }}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Create Exam
+                                    </Button>
                                 )}
                             </CardHeader>
                             <CardContent>
@@ -713,19 +764,35 @@ export default function AcademicsPage() {
                                                     <TableCell>{item.date}</TableCell>
                                                     {userRole === 'teacher' && (
                                                         <TableCell className="text-right">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem>
-                                                                        <Edit className="mr-2 h-4 w-4" /> Update
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-destructive">
-                                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                                            <AlertDialog>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => { setSelectedExam(item); setIsCreateExamOpen(true); }}>
+                                                                            <Edit className="mr-2 h-4 w-4" /> Update
+                                                                        </DropdownMenuItem>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <DropdownMenuItem className="text-destructive">
+                                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                            </DropdownMenuItem>
+                                                                        </AlertDialogTrigger>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This action cannot be undone. This will permanently delete the exam "{item.title}".
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDeleteExam(item.id)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
                                                         </TableCell>
                                                     )}
                                                 </TableRow>
@@ -752,12 +819,10 @@ export default function AcademicsPage() {
                                     <CardDescription>View and manage student grades.</CardDescription>
                                 </div>
                                 {(userRole === 'admin' || userRole === 'teacher') && (
-                                     <UploadResultsDialog onResultUploaded={handleUploadResult} teacherClasses={TEACHER_CLASSES}>
-                                        <Button>
-                                            <FileUp className="mr-2 h-4 w-4" />
-                                            Upload Results
-                                        </Button>
-                                    </UploadResultsDialog>
+                                     <Button onClick={() => { setSelectedResult(null); setIsUploadResultOpen(true); }}>
+                                        <FileUp className="mr-2 h-4 w-4" />
+                                        Upload Results
+                                    </Button>
                                 )}
                             </CardHeader>
                             <CardContent>
@@ -827,19 +892,35 @@ export default function AcademicsPage() {
                                                     <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
                                                      {userRole === 'teacher' && (
                                                         <TableCell className="text-right">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem>
-                                                                        <Edit className="mr-2 h-4 w-4" /> Update
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-destructive">
-                                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                                            <AlertDialog>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => { setSelectedResult(item); setIsUploadResultOpen(true); }}>
+                                                                            <Edit className="mr-2 h-4 w-4" /> Update
+                                                                        </DropdownMenuItem>
+                                                                         <AlertDialogTrigger asChild>
+                                                                            <DropdownMenuItem className="text-destructive">
+                                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                            </DropdownMenuItem>
+                                                                        </AlertDialogTrigger>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This will permanently delete the result for {item.student} in {item.examTitle}.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDeleteResult(item.student, item.examTitle)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
                                                         </TableCell>
                                                     )}
                                                 </TableRow>
@@ -863,5 +944,3 @@ export default function AcademicsPage() {
         </div>
     )
 }
-
-    

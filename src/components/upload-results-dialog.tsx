@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
 
@@ -37,38 +36,59 @@ const resultSchema = z.object({
 type ResultFormValues = z.infer<typeof resultSchema>;
 
 interface UploadResultsDialogProps {
-  children: React.ReactNode;
-  onResultUploaded: (data: ResultFormValues) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onResultSubmit: (data: ResultFormValues) => void;
   teacherClasses?: string[];
+  result?: any | null;
 }
 
-export function UploadResultsDialog({ children, onResultUploaded, teacherClasses = [] }: UploadResultsDialogProps) {
-    const [open, setOpen] = useState(false);
+export function UploadResultsDialog({ 
+    isOpen, 
+    onOpenChange, 
+    onResultSubmit, 
+    teacherClasses = [],
+    result = null
+}: UploadResultsDialogProps) {
+    const isEditMode = !!result;
+
     const { register, handleSubmit, control, formState: { errors }, reset } = useForm<ResultFormValues>({
         resolver: zodResolver(resultSchema),
+        defaultValues: isEditMode ? {
+            studentName: result.student,
+            className: result.class,
+            subject: result.subject,
+            examTitle: result.examTitle,
+            score: result.score,
+            date: parseISO(result.date),
+        } : {}
     });
 
+    useEffect(() => {
+        if(isOpen) {
+            reset(isEditMode ? {
+                studentName: result.student,
+                className: result.class,
+                subject: result.subject,
+                examTitle: result.examTitle,
+                score: result.score,
+                date: parseISO(result.date),
+            } : {});
+        }
+    }, [isOpen, isEditMode, result, reset]);
+
     const onSubmit = (data: ResultFormValues) => {
-        onResultUploaded(data);
-        reset();
-        setOpen(false);
+        onResultSubmit(data);
+        onOpenChange(false);
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => {
-            setOpen(isOpen);
-            if (!isOpen) {
-                reset();
-            }
-        }}>
-            <DialogTrigger asChild>
-                {children}
-            </DialogTrigger>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Upload Student Result</DialogTitle>
+                    <DialogTitle>{isEditMode ? "Update Result" : "Upload Student Result"}</DialogTitle>
                     <DialogDescription>
-                        Fill in the details to add a new result.
+                       {isEditMode ? "Edit the details for this result." : "Fill in the details to add a new result."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -84,7 +104,7 @@ export function UploadResultsDialog({ children, onResultUploaded, teacherClasses
                                 control={control}
                                 name="className"
                                 render={({ field }) => (
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select class" />
                                         </SelectTrigger>
@@ -133,23 +153,29 @@ export function UploadResultsDialog({ children, onResultUploaded, teacherClasses
                             {errors.date && <p className="text-destructive text-sm mt-1">{errors.date.message}</p>}
                         </div>
                     </div>
-                     <div className="flex items-center gap-4 pt-2">
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">OR</span>
-                        <Separator className="flex-1" />
-                    </div>
+                     {!isEditMode && (
+                        <>
+                            <div className="flex items-center gap-4 pt-2">
+                                <Separator className="flex-1" />
+                                <span className="text-xs text-muted-foreground">OR</span>
+                                <Separator className="flex-1" />
+                            </div>
+                            <Button variant="outline" className="w-full" disabled>
+                                <FileUp className="mr-2 h-4 w-4" />
+                                Upload Excel File (Coming Soon)
+                            </Button>
+                        </>
+                    )}
 
-                     <Button variant="outline" className="w-full" disabled>
-                        <FileUp className="mr-2 h-4 w-4" />
-                        Upload Excel File (Coming Soon)
-                    </Button>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button type="submit">Upload Result</Button>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                        <Button type="submit">{isEditMode ? "Update Result" : "Upload Result"}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     );
 }
+
+    

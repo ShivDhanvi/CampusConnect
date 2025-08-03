@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
 
@@ -34,38 +33,53 @@ const examSchema = z.object({
 type ExamFormValues = z.infer<typeof examSchema>;
 
 interface CreateExamDialogProps {
-  children: React.ReactNode;
-  onExamCreated: (data: ExamFormValues) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onExamSubmit: (data: ExamFormValues) => void;
   teacherClasses?: string[];
+  exam?: any | null; // For editing
 }
 
-export function CreateExamDialog({ children, onExamCreated, teacherClasses = [] }: CreateExamDialogProps) {
-    const [open, setOpen] = useState(false);
+export function CreateExamDialog({ 
+  isOpen, 
+  onOpenChange, 
+  onExamSubmit, 
+  teacherClasses = [], 
+  exam = null 
+}: CreateExamDialogProps) {
+    const isEditMode = !!exam;
+
     const { register, handleSubmit, control, formState: { errors }, reset } = useForm<ExamFormValues>({
         resolver: zodResolver(examSchema),
+        defaultValues: isEditMode ? {
+            title: exam.title,
+            className: exam.class,
+            date: parseISO(exam.date),
+        } : {}
     });
 
+    useEffect(() => {
+        if (isOpen) {
+            reset(isEditMode ? {
+                title: exam.title,
+                className: exam.class,
+                date: parseISO(exam.date),
+            } : {});
+        }
+    }, [isOpen, isEditMode, exam, reset]);
+
     const onSubmit = (data: ExamFormValues) => {
-        onExamCreated(data);
-        reset();
-        setOpen(false);
+        onExamSubmit(data);
+        onOpenChange(false);
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => {
-            setOpen(isOpen);
-            if (!isOpen) {
-                reset();
-            }
-        }}>
-            <DialogTrigger asChild>
-                {children}
-            </DialogTrigger>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Create New Exam</DialogTitle>
+                    <DialogTitle>{isEditMode ? "Update Exam" : "Create New Exam"}</DialogTitle>
                     <DialogDescription>
-                        Fill in the details to add a new exam to the schedule.
+                        {isEditMode ? "Edit the details of the exam." : "Fill in the details to add a new exam to the schedule."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -80,7 +94,7 @@ export function CreateExamDialog({ children, onExamCreated, teacherClasses = [] 
                             control={control}
                             name="className"
                             render={({ field }) => (
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a class" />
                                     </SelectTrigger>
@@ -125,20 +139,23 @@ export function CreateExamDialog({ children, onExamCreated, teacherClasses = [] 
                         {errors.date && <p className="text-destructive text-sm mt-1">{errors.date.message}</p>}
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">OR</span>
-                        <Separator className="flex-1" />
-                    </div>
-
-                     <Button variant="outline" className="w-full" disabled>
-                        <FileUp className="mr-2 h-4 w-4" />
-                        Upload Excel File (Coming Soon)
-                    </Button>
+                    {!isEditMode && (
+                        <>
+                            <div className="flex items-center gap-4">
+                                <Separator className="flex-1" />
+                                <span className="text-xs text-muted-foreground">OR</span>
+                                <Separator className="flex-1" />
+                            </div>
+                            <Button variant="outline" className="w-full" disabled>
+                                <FileUp className="mr-2 h-4 w-4" />
+                                Upload Excel File (Coming Soon)
+                            </Button>
+                        </>
+                    )}
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button type="submit">Create Exam</Button>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                        <Button type="submit">{isEditMode ? "Update Exam" : "Create Exam"}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -146,3 +163,4 @@ export function CreateExamDialog({ children, onExamCreated, teacherClasses = [] 
     );
 }
 
+    
