@@ -97,6 +97,7 @@ function renderMindMap(rootNode) {
   drawNode(ctx, centerX, centerY, rootNode.name, true);
   
   // Draw child nodes in circle
+  const angleStep = (2 * Math.PI) / rootNode.children.length;
   rootNode.children.forEach((child, i) => {
     const angle = i * angleStep;
     const x = centerX + radius * Math.cos(angle);
