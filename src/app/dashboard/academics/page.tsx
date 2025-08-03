@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,10 @@ const initialAssignments = [
 ];
 
 const students = {
-    '10-A': [{ id: 'S-1024', name: 'John Doe', initials: 'JD' }],
+    '10-A': [
+        { id: 'S-1024', name: 'John Doe', initials: 'JD' },
+        { id: 'S-1025', name: 'David Brown', initials: 'DB' },
+    ],
     '10-B': [{ id: 'S-0987', name: 'Jane Smith', initials: 'JS' }],
     '11-A': [{ id: 'S-1152', name: 'Peter Jones', initials: 'PJ' }],
     '11-B': [{ id: 'S-1056', name: 'Mary Williams', initials: 'MW' }],
@@ -41,12 +44,11 @@ const students = {
 const initialStudentAssignments = [
     // Teacher's subjects: Mathematics, Biology, Physics
     { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted' },
-    // Make this one pending for the teacher to see
-    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '11-A', status: 'Pending' },
     { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded' },
-    // Make this one have a past due date to test "Late" status
     { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-08-15', class: '11-A', status: 'Pending' },
     { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted' },
+    { studentId: 'S-1025', studentName: 'David Brown', initials: 'DB', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending' },
 
     // Other subjects for student view
     { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted' },
@@ -74,7 +76,7 @@ const initialExams = [
 ];
 
 
-const STATUS_OPTIONS = ["Pending", "Submitted", "Graded", "Late"];
+const STATUS_OPTIONS = ["All", "Pending", "Submitted", "Graded", "Late"];
 const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
 const TEACHER_CLASSES = ['10-A', '10-B', '11-A']; // For teacher role
 const TEACHER_SUBJECTS = ['Mathematics', 'Biology', 'Physics']; // For teacher role
@@ -105,7 +107,8 @@ export default function AcademicsPage() {
     // State for Assignments
     const [assignments, setAssignments] = useState(initialStudentAssignments);
     const [assignmentSearch, setAssignmentSearch] = useState("");
-    const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true, Late: true });
+    const [assignmentStatusFilter, setAssignmentStatusFilter] = useState("All");
+    const [assignmentClassFilter, setAssignmentClassFilter] = useState("All");
     const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
     const [assignmentSortDirection, setAssignmentSortDirection] = useState<SortDirection>(null);
     const [assignmentCurrentPage, setAssignmentCurrentPage] = useState(1);
@@ -190,11 +193,11 @@ export default function AcademicsPage() {
                 (userRole === 'teacher' && item.studentName.toLowerCase().includes(assignmentSearch.toLowerCase()))
             );
             const itemStatus = getStatus(item.status, item.dueDate);
-            const statusMatch = assignmentStatusFilters[itemStatus];
+            const statusMatch = assignmentStatusFilter === 'All' || itemStatus === assignmentStatusFilter;
             
             if(userRole === 'teacher') {
-                const classMatch = TEACHER_CLASSES.includes(item.class);
                 const subjectMatch = TEACHER_SUBJECTS.includes(item.subject);
+                const classMatch = assignmentClassFilter === 'All' || item.class === assignmentClassFilter;
                 return searchMatch && statusMatch && classMatch && subjectMatch;
             }
             if(userRole === 'student') {
@@ -221,7 +224,7 @@ export default function AcademicsPage() {
             });
         }
         return filtered;
-    }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection, userRole]);
+    }, [assignments, assignmentSearch, assignmentStatusFilter, assignmentClassFilter, assignmentSortColumn, assignmentSortDirection, userRole]);
 
     const filteredResults = useMemo(() => {
         const searchTermLower = resultSearch.toLowerCase();
@@ -293,11 +296,7 @@ export default function AcademicsPage() {
     const handleCreateAssignment = (data: any) => {
         const newAssignmentId = `A${(initialAssignments.length + 1).toString().padStart(3, '0')}`;
         
-        // This is a simplified logic. In a real app, you'd have a list of all students.
-        // Here, we add the assignment for students in the target classes.
-        const studentsToAssign = Object.entries(students)
-            .filter(([className]) => TEACHER_CLASSES.includes(className))
-            .flatMap(([, studentList]) => studentList);
+        const studentsToAssign = students[data.className as keyof typeof students] || [];
         
         const newSubmissions = studentsToAssign.map(student => ({
             studentId: student.id,
@@ -308,7 +307,7 @@ export default function AcademicsPage() {
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
             status: 'Pending',
-            class: '10-A' // This should be dynamic based on student class
+            class: data.className
         }));
 
         setAssignments(prev => [...newSubmissions, ...prev]);
@@ -317,12 +316,12 @@ export default function AcademicsPage() {
             title: data.title,
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
-            class: '10-A', // This should be dynamic
+            class: data.className,
         });
 
         toast({
             title: "Assignment Created",
-            description: `"${data.title}" has been successfully created.`,
+            description: `"${data.title}" has been created for Class ${data.className}.`,
             action: <CheckCircle className="text-green-500" />,
         })
     };
@@ -447,7 +446,7 @@ export default function AcademicsPage() {
                                     <CardDescription>Manage and track student assignments.</CardDescription>
                                 </div>
                                 {(userRole === 'admin' || userRole === 'teacher') && (
-                                    <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
+                                    <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment} teacherClasses={TEACHER_CLASSES}>
                                         <Button>
                                             <PlusCircle className="mr-2 h-4 w-4" />
                                             Create Assignment
@@ -456,27 +455,39 @@ export default function AcademicsPage() {
                                 )}
                             </CardHeader>
                             <CardContent>
-                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
                                     <Input 
                                       placeholder={userRole === 'teacher' ? "Search by title, subject, or student..." : "Search by title or subject..."} 
                                       value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} 
                                       className="max-w-sm" 
                                     />
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="ml-auto">
-                                                Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={() => toggleAllFilters(STATUS_OPTIONS, assignmentStatusFilters, setAssignmentStatusFilters)}>
-                                                {STATUS_OPTIONS.every(s => assignmentStatusFilters[s]) ? 'Unselect All' : 'Select All'}
-                                            </DropdownMenuItem>
-                                            {STATUS_OPTIONS.map(status => (
-                                                <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {userRole === 'teacher' && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" className="ml-auto">
+                                                    Filter by Class: {assignmentClassFilter} <ChevronDown className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuRadioGroup value={assignmentClassFilter} onValueChange={setAssignmentClassFilter}>
+                                                    <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                                                    {TEACHER_CLASSES.map(c => <DropdownMenuRadioItem key={c} value={c}>{c}</DropdownMenuRadioItem>)}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap mb-6">
+                                    {STATUS_OPTIONS.map((status) => (
+                                        <Badge
+                                            key={status}
+                                            onClick={() => setAssignmentStatusFilter(status)}
+                                            variant={assignmentStatusFilter === status ? "default" : "secondary"}
+                                            className="cursor-pointer"
+                                        >
+                                            {status}
+                                        </Badge>
+                                    ))}
                                 </div>
                                 <div className="overflow-x-auto">
                                     <Table>
@@ -503,6 +514,7 @@ export default function AcademicsPage() {
                                             {paginatedAssignments.map(item => {
                                                 const itemStatus = getStatus(item.status, item.dueDate);
                                                 const showTeacherActions = itemStatus === 'Pending' || itemStatus === 'Late' || itemStatus === 'Submitted';
+                                                const isGraded = itemStatus === 'Graded';
                                                 return (
                                                 <TableRow key={item.studentId + item.assignmentId}>
                                                    {userRole === 'teacher' ? (
@@ -551,7 +563,7 @@ export default function AcademicsPage() {
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
-                                                            {userRole === 'teacher' && showTeacherActions && (
+                                                            {userRole === 'teacher' && !isGraded && (
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
@@ -735,3 +747,5 @@ export default function AcademicsPage() {
         </div>
     )
 }
+
+    
