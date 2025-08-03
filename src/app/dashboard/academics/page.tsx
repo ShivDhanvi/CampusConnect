@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { differenceInDays, isPast, parseISO } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getConversations, addConversation } from "@/lib/messages";
+import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog";
 
 
 const initialAssignments = [
@@ -43,17 +44,17 @@ const students = {
 // Create a more realistic set of student submissions
 const initialStudentAssignments = [
     // Teacher's subjects: Mathematics, Biology, Physics
-    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted' },
-    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '11-A', status: 'Pending' },
-    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded' },
-    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-08-15', class: '11-A', status: 'Pending' },
-    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted' },
-    { studentId: 'S-1025', studentName: 'David Brown', initials: 'DB', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending' },
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted', fileUrl: '/assignments/algebra-hw-1.pdf' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '11-A', status: 'Pending', fileUrl: null },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded', fileUrl: '/assignments/lab-report.pdf' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-08-15', class: '11-A', status: 'Pending', fileUrl: null },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted', fileUrl: '/assignments/optics-problems.pdf' },
+    { studentId: 'S-1025', studentName: 'David Brown', initials: 'DB', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending', fileUrl: null },
 
     // Other subjects for student view
-    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted' },
-    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B', status: 'Pending' },
-    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B', status: 'Pending' },
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted', fileUrl: '/assignments/wwii-essay.pdf' },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B', status: 'Pending', fileUrl: null },
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B', status: 'Pending', fileUrl: null },
 ];
 
 
@@ -112,6 +113,8 @@ export default function AcademicsPage() {
     const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
     const [assignmentSortDirection, setAssignmentSortDirection] = useState<SortDirection>(null);
     const [assignmentCurrentPage, setAssignmentCurrentPage] = useState(1);
+    const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     
     // State for Results
     const [results, setResults] = useState(initialResults);
@@ -307,7 +310,8 @@ export default function AcademicsPage() {
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
             status: 'Pending',
-            class: data.className
+            class: data.className,
+            fileUrl: null,
         }));
 
         setAssignments(prev => [...newSubmissions, ...prev]);
@@ -333,13 +337,14 @@ export default function AcademicsPage() {
     
     const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0 && uploadingAssignment) {
+            const file = event.target.files[0];
             const { studentId, assignmentId, dueDate } = uploadingAssignment;
 
             const isLate = isPast(parseISO(dueDate));
 
             setAssignments(prev => prev.map(item =>
                 item.studentId === studentId && item.assignmentId === assignmentId 
-                ? { ...item, status: 'Submitted' } 
+                ? { ...item, status: 'Submitted', fileUrl: URL.createObjectURL(file) } 
                 : item
             ));
             
@@ -417,6 +422,11 @@ export default function AcademicsPage() {
             action: <MessageSquare className="text-blue-500" />,
         });
     };
+
+    const handleViewDetails = (assignment: any) => {
+        setSelectedAssignment(assignment);
+        setIsDetailsOpen(true);
+    };
     
     return (
         <div className="space-y-8">
@@ -427,6 +437,13 @@ export default function AcademicsPage() {
                 className="hidden" 
                 accept=".docx,.pdf,.png,.jpeg,.jpg"
             />
+            {selectedAssignment && (
+                <AssignmentDetailsDialog
+                    isOpen={isDetailsOpen}
+                    onOpenChange={setIsDetailsOpen}
+                    assignment={selectedAssignment}
+                />
+            )}
             <div>
                 <h1 className="text-3xl font-bold font-headline">Academics</h1>
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
@@ -496,8 +513,8 @@ export default function AcademicsPage() {
                                                 {userRole === 'teacher' ? (
                                                      <>
                                                         <TableHead><Button variant="ghost" onClick={() => handleSort('studentName', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Student {renderSortIcon('studentName', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Assignment {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Assignment {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                     </>
                                                 ) : (
                                                     <>
@@ -513,7 +530,6 @@ export default function AcademicsPage() {
                                         <TableBody>
                                             {paginatedAssignments.map(item => {
                                                 const itemStatus = getStatus(item.status, item.dueDate);
-                                                const showTeacherActions = itemStatus === 'Pending' || itemStatus === 'Late' || itemStatus === 'Submitted';
                                                 const isGraded = itemStatus === 'Graded';
                                                 return (
                                                 <TableRow key={item.studentId + item.assignmentId}>
@@ -528,11 +544,13 @@ export default function AcademicsPage() {
                                                                     <div className="font-medium">{item.studentName}</div>
                                                                 </div>
                                                             </TableCell>
-                                                            <TableCell className="hidden md:table-cell">
-                                                                <div>{item.title}</div>
+                                                            <TableCell>
+                                                                <Button variant="link" className="p-0 h-auto" onClick={() => handleViewDetails(item)}>
+                                                                    <div>{item.title}</div>
+                                                                </Button>
                                                                 <div className="text-xs text-muted-foreground">{item.subject}</div>
                                                             </TableCell>
-                                                            <TableCell>{item.dueDate}</TableCell>
+                                                            <TableCell className="hidden md:table-cell">{item.dueDate}</TableCell>
                                                         </>
                                                     ) : (
                                                         <>
