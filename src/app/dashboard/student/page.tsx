@@ -47,7 +47,7 @@ export default function StudentDashboardPage() {
             </div>
             
             {/* Stat Cards */}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Assignments</CardTitle>
@@ -92,7 +92,7 @@ export default function StudentDashboardPage() {
                             config={{}}
                             className="mx-auto aspect-square w-full max-w-[250px]"
                         >
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <ChartTooltip
                                         cursor={false}
