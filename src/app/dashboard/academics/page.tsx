@@ -279,10 +279,14 @@ export default function AcademicsPage() {
     const filteredExams = useMemo(() => {
         const searchTermLower = examSearch.toLowerCase();
         let filtered = exams.filter(item => {
-             let isClassMatch = true;
-            if (userRole === 'student') isClassMatch = item.class === STUDENT_CLASS;
-            else if (userRole === 'teacher') isClassMatch = TEACHER_CLASSES.includes(item.class) && examClassFilters[item.class];
-            else isClassMatch = examClassFilters[item.class];
+            let isClassMatch = true;
+            if (userRole === 'student') {
+                isClassMatch = item.class === STUDENT_CLASS;
+            } else if (userRole === 'teacher') {
+                isClassMatch = TEACHER_CLASSES.includes(item.class) && examClassFilters[item.class];
+            } else {
+                isClassMatch = examClassFilters[item.class];
+            }
 
             return (item.title.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower)) && 
@@ -293,8 +297,8 @@ export default function AcademicsPage() {
             filtered.sort((a, b) => {
                 const aValue = a[examSortColumn as keyof typeof a];
                 const bValue = b[examSortColumn as keyof typeof b];
-                if (aValue < bValue) return assignmentSortDirection === 'asc' ? -1 : 1;
-                if (aValue > bValue) return assignmentSortDirection === 'asc' ? 1 : -1;
+                if (aValue < bValue) return examSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return examSortDirection === 'asc' ? 1 : -1;
                 return 0;
             });
         }
@@ -614,8 +618,8 @@ export default function AcademicsPage() {
                                                 ) : (
                                                     <>
                                                         <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</TableHead>
+                                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</TableHead>
                                                     </>
                                                 )}
                                                 <TableHead><Button variant="ghost" onClick={() => handleSort('status', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Status {renderSortIcon('status', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
@@ -942,5 +946,7 @@ export default function AcademicsPage() {
                 </Tabs>
             </div>
         </div>
-    )
+    );
 }
+
+    
