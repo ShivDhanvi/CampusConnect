@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend, CartesianGrid, Tooltip } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { UserCheck, ClipboardCheck, Users, Award, Star, CheckCircle2, XCircle } from "lucide-react";
+import { UserCheck, ClipboardCheck, Users, Award, Star, CheckCircle2, XCircle, Clock, FileCheck } from "lucide-react";
 
 const teacherData = {
     name: "Mr. Smith",
@@ -19,6 +19,8 @@ const teacherData = {
     assignments: {
         submitted: 45,
         pending: 15,
+        late: 5,
+        graded: 30,
     },
     leaderboard: [
         { name: "Mary Williams", class: "10-A", score: "98%", streak: 5 },
@@ -29,8 +31,10 @@ const teacherData = {
 };
 
 const assignmentChartData = [
-    { name: 'Submitted', value: teacherData.assignments.submitted, fill: 'hsl(var(--chart-1))' },
-    { name: 'Pending', value: teacherData.assignments.pending, fill: 'hsl(var(--chart-2))' },
+    { name: 'Graded', value: teacherData.assignments.graded, fill: 'hsl(var(--chart-1))' },
+    { name: 'Submitted', value: teacherData.assignments.submitted, fill: 'hsl(var(--chart-2))' },
+    { name: 'Pending', value: teacherData.assignments.pending, fill: 'hsl(var(--chart-4))' },
+    { name: 'Late', value: teacherData.assignments.late, fill: 'hsl(var(--destructive))' },
 ];
 
 const attendanceChartData = teacherData.classes.map(c => ({
@@ -120,7 +124,7 @@ export default function TeacherDashboardPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="dot" />} />
-                                    <Pie data={assignmentChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={8} stroke="hsl(var(--card))">
+                                    <Pie data={assignmentChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5} stroke="hsl(var(--card))">
                                         {assignmentChartData.map((entry) => (
                                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                         ))}
@@ -129,14 +133,22 @@ export default function TeacherDashboardPage() {
                             </ResponsiveContainer>
                         </ChartContainer>
                     </CardContent>
-                    <CardContent className="flex justify-center gap-4 text-sm mt-4 pb-4">
+                    <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mt-4 pb-4">
                         <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                            <FileCheck className="h-4 w-4" style={{ color: 'hsl(var(--chart-1))' }} />
+                            <span>Graded ({teacherData.assignments.graded})</span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" style={{ color: 'hsl(var(--chart-2))' }} />
                             <span>Submitted ({teacherData.assignments.submitted})</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-chart-2" />
+                            <Clock className="h-4 w-4" style={{ color: 'hsl(var(--chart-4))' }} />
                             <span>Pending ({teacherData.assignments.pending})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4" style={{ color: 'hsl(var(--destructive))' }} />
+                            <span>Late ({teacherData.assignments.late})</span>
                         </div>
                     </CardContent>
                 </Card>
