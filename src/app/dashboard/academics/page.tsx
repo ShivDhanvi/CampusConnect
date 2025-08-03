@@ -16,12 +16,12 @@ import { cn } from "@/lib/utils";
 import { differenceInDays, parseISO } from 'date-fns';
 
 const initialAssignments = [
-    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending' },
-    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', status: 'Submitted' },
-    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', status: 'Graded' },
-    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', status: 'Pending' },
-    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', status: 'Submitted' },
-    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', status: 'Graded' },
+    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending', class: '10-A' },
+    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', status: 'Submitted', class: '10-A' },
+    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', status: 'Graded', class: '10-B' },
+    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', status: 'Pending', class: '10-B' },
+    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', status: 'Submitted', class: '11-A' },
+    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', status: 'Graded', class: '11-A' },
 ];
 
 const initialResults = [
@@ -44,7 +44,8 @@ const initialExams = [
 
 
 const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
-const CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const TEACHER_CLASSES = ['10-A', '10-B']; // For teacher role
 const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_CLASS = '10-A'; // For student role
@@ -78,7 +79,8 @@ export default function AcademicsPage() {
     // State for Results
     const [results, setResults] = useState(initialResults);
     const [resultSearch, setResultSearch] = useState("");
-    const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [resultClassOptions, setResultClassOptions] = useState(ALL_CLASS_OPTIONS);
+    const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
     const [resultExamFilter, setResultExamFilter] = useState<string>('All');
     const [resultSortColumn, setResultSortColumn] = useState<string | null>(null);
     const [resultSortDirection, setResultSortDirection] = useState<SortDirection>(null);
@@ -87,7 +89,8 @@ export default function AcademicsPage() {
     // State for Exams
     const [exams, setExams] = useState(initialExams);
     const [examSearch, setExamSearch] = useState("");
-    const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [examClassOptions, setExamClassOptions] = useState(ALL_CLASS_OPTIONS);
+    const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
     const [examSortColumn, setExamSortColumn] = useState<string | null>(null);
     const [examSortDirection, setExamSortDirection] = useState<SortDirection>(null);
     const [examCurrentPage, setExamCurrentPage] = useState(1);
@@ -95,6 +98,17 @@ export default function AcademicsPage() {
     useEffect(() => {
         const role = localStorage.getItem('userRole');
         setUserRole(role);
+         if (role === 'teacher') {
+            setExamClassOptions(TEACHER_CLASSES);
+            setResultClassOptions(TEACHER_CLASSES);
+            setExamClassFilters(TEACHER_CLASSES.reduce((acc, c) => ({...acc, [c]: true}), {}));
+            setResultClassFilters(TEACHER_CLASSES.reduce((acc, c) => ({...acc, [c]: true}), {}));
+        } else {
+            setExamClassOptions(ALL_CLASS_OPTIONS);
+            setResultClassOptions(ALL_CLASS_OPTIONS);
+            setExamClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+            setResultClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+        }
     }, []);
 
     // Generic sort handler
@@ -127,11 +141,13 @@ export default function AcademicsPage() {
 
     // Memoized filtered and sorted data
     const filteredAssignments = useMemo(() => {
-        let filtered = assignments.filter(item =>
-            (item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) || 
+        let filtered = assignments.filter(item => {
+            const isClassMatch = userRole === 'teacher' ? TEACHER_CLASSES.includes(item.class) : true;
+            return (item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) || 
              item.subject.toLowerCase().includes(assignmentSearch.toLowerCase())) && 
-             assignmentStatusFilters[item.status]
-        );
+             assignmentStatusFilters[item.status] &&
+             isClassMatch;
+        });
         if (assignmentSortColumn && assignmentSortDirection) {
             filtered.sort((a, b) => {
                 const aValue = a[assignmentSortColumn as keyof typeof a];
@@ -142,13 +158,17 @@ export default function AcademicsPage() {
             });
         }
         return filtered;
-    }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection]);
+    }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection, userRole]);
 
     const filteredResults = useMemo(() => {
         const searchTermLower = resultSearch.toLowerCase();
         let filtered = results.filter(item => {
             const isStudentMatch = userRole === 'student' ? item.student === STUDENT_NAME : true;
-            const isClassMatch = userRole === 'student' ? item.class === STUDENT_CLASS : resultClassFilters[item.class];
+            let isClassMatch = true;
+            if (userRole === 'student') isClassMatch = item.class === STUDENT_CLASS;
+            else if (userRole === 'teacher') isClassMatch = TEACHER_CLASSES.includes(item.class) && resultClassFilters[item.class];
+            else isClassMatch = resultClassFilters[item.class];
+
 
             return (item.student.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower) ||
@@ -174,7 +194,11 @@ export default function AcademicsPage() {
     const filteredExams = useMemo(() => {
         const searchTermLower = examSearch.toLowerCase();
         let filtered = exams.filter(item => {
-            const isClassMatch = userRole === 'student' ? item.class === STUDENT_CLASS : examClassFilters[item.class];
+             let isClassMatch = true;
+            if (userRole === 'student') isClassMatch = item.class === STUDENT_CLASS;
+            else if (userRole === 'teacher') isClassMatch = TEACHER_CLASSES.includes(item.class) && examClassFilters[item.class];
+            else isClassMatch = examClassFilters[item.class];
+
             return (item.title.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower)) && 
              isClassMatch;
@@ -210,6 +234,7 @@ export default function AcademicsPage() {
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
             status: 'Pending',
+            class: '10-A' // Default class, can be improved
         };
         setAssignments(prev => [newAssignment, ...prev]);
         toast({
@@ -258,6 +283,17 @@ export default function AcademicsPage() {
         }
     };
     
+     const handleMarkAsGraded = (assignmentId: string) => {
+        setAssignments(prev => prev.map(item =>
+            item.id === assignmentId ? { ...item, status: 'Graded' } : item
+        ));
+        toast({
+            title: "Assignment Marked as Graded",
+            description: "The assignment status has been updated.",
+            action: <CheckCircle className="text-green-500" />,
+        });
+    };
+    
     return (
         <div className="space-y-8">
             <input 
@@ -285,7 +321,7 @@ export default function AcademicsPage() {
                                     <CardTitle>Assignments</CardTitle>
                                     <CardDescription>Manage and track student assignments.</CardDescription>
                                 </div>
-                                {userRole === 'admin' && (
+                                {(userRole === 'admin' || userRole === 'teacher') && (
                                     <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
                                         <Button>
                                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -321,7 +357,7 @@ export default function AcademicsPage() {
                                                 <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                 <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
                                                 <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                {userRole !== 'admin' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -331,30 +367,43 @@ export default function AcademicsPage() {
                                                     <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
                                                     <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
                                                     <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
-                                                    <TableCell className="text-right">
-                                                         {userRole === 'student' && item.status === 'Pending' && (
-                                                            <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.id, item.dueDate)}>
-                                                                <Upload className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
-                                                        {userRole === 'student' && item.status === 'Submitted' && (
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon">
-                                                                        <MoreHorizontal className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem onClick={() => handleUploadClick(item.id, item.dueDate)}>
-                                                                        Re-upload
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        )}
-                                                         {userRole === 'admin' && (
-                                                            <Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button>
-                                                        )}
-                                                    </TableCell>
+                                                    {userRole !== 'admin' && (
+                                                        <TableCell className="text-right">
+                                                            {userRole === 'student' && item.status === 'Pending' && (
+                                                                <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.id, item.dueDate)}>
+                                                                    <Upload className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                            {userRole === 'student' && item.status === 'Submitted' && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => handleUploadClick(item.id, item.dueDate)}>
+                                                                            Re-upload
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                            {userRole === 'teacher' && item.status === 'Submitted' && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => handleMarkAsGraded(item.id)}>
+                                                                            Mark as Graded
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -380,7 +429,7 @@ export default function AcademicsPage() {
                             <CardContent>
                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
                                     <Input placeholder="Search by title or class..." value={examSearch} onChange={(e) => { setExamSearch(e.target.value); setExamCurrentPage(1); }} className="max-w-sm" />
-                                     {userRole === 'admin' && (
+                                     {(userRole === 'admin' || (userRole === 'teacher' && examClassOptions.length > 1)) && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="outline" className="ml-auto">
@@ -388,10 +437,10 @@ export default function AcademicsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, examClassFilters, setExamClassFilters)}>
-                                                    {CLASS_OPTIONS.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                                <DropdownMenuItem onSelect={() => toggleAllFilters(examClassOptions, examClassFilters, setExamClassFilters)}>
+                                                    {examClassOptions.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
                                                 </DropdownMenuItem>
-                                                {CLASS_OPTIONS.map(c => (
+                                                {examClassOptions.map(c => (
                                                     <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); setExamCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                                 ))}
                                             </DropdownMenuContent>
@@ -439,7 +488,7 @@ export default function AcademicsPage() {
                                 <div className="space-y-4 mb-6">
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
                                         <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
-                                        {userRole === 'admin' && (
+                                        {(userRole === 'admin' || (userRole === 'teacher' && resultClassOptions.length > 1)) && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="outline" className="ml-auto">
@@ -447,10 +496,10 @@ export default function AcademicsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
-                                                        {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                                    <DropdownMenuItem onSelect={() => toggleAllFilters(resultClassOptions, resultClassFilters, setResultClassFilters)}>
+                                                        {resultClassOptions.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
                                                     </DropdownMenuItem>
-                                                    {CLASS_OPTIONS.map(c => (
+                                                    {resultClassOptions.map(c => (
                                                         <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                                     ))}
                                                 </DropdownMenuContent>
