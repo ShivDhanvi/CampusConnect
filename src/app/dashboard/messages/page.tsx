@@ -237,6 +237,7 @@ export default function MessagesPage() {
         const otherParticipantId = conv.participants.find((p: string) => p !== CURRENT_USER_ID);
         if(!otherParticipantId) return false;
         const otherParticipant = users[otherParticipantId as keyof typeof users];
+        if(!otherParticipant) return false; // Fix: Check if participant exists
         return otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
@@ -523,7 +524,7 @@ export default function MessagesPage() {
                                                 </Button>
                                             </div>
                                         </div>
-                                    </form>
+                                     </form>
                                      {editingMessage && (
                                         <div className="text-xs text-muted-foreground mt-2 flex justify-between items-center">
                                             <span>Editing message...</span>
