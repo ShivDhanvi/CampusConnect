@@ -32,11 +32,12 @@ import { getConversations, setConversations as saveConversations } from "@/lib/m
 const users = {
   admin: { id: 'admin', name: 'Admin', avatar: 'https://placehold.co/40x40.png', initials: 'AD', role: 'Admin', online: true },
   teacher1: { id: 'teacher1', name: 'Mr. Smith', avatar: 'https://placehold.co/40x40.png', initials: 'MS', role: 'Teacher', online: true },
-  student1: { id: 'S-1024', name: 'John Doe', avatar: 'https://placehold.co/40x40.png', initials: 'JD', role: 'Student', online: false },
+  'S-1024': { id: 'S-1024', name: 'John Doe', avatar: 'https://placehold.co/40x40.png', initials: 'JD', role: 'Student', online: false },
   parent1: { id: 'parent1', name: 'Jane Doe', avatar: 'https://placehold.co/40x40.png', initials: 'JD', role: 'Parent', online: true },
   teacher2: { id: 'teacher2', name: 'Ms. Jones', avatar: 'https://placehold.co/40x40.png', initials: 'MJ', role: 'Teacher', online: false },
-  student2: { id: 'S-1152', name: 'Peter Jones', avatar: 'https://placehold.co/40x40.png', initials: 'PJ', role: 'Student', online: true },
-  student3: { id: 'S-0987', name: 'Jane Smith', avatar: 'https://placehold.co/40x40.png', initials: 'JS', role: 'Student', online: false },
+  'S-1152': { id: 'S-1152', name: 'Peter Jones', avatar: 'https://placehold.co/40x40.png', initials: 'PJ', role: 'Student', online: true },
+  'S-0987': { id: 'S-0987', name: 'Jane Smith', avatar: 'https://placehold.co/40x40.png', initials: 'JS', role: 'Student', online: false },
+  'S-1056': { id: 'S-1056', name: 'Mary Williams', avatar: 'https://placehold.co/40x40.png', initials: 'MW', role: 'Student', online: false },
 };
 
 // This should be dynamically set based on the logged-in user
@@ -67,7 +68,9 @@ export default function MessagesPage() {
         const initialData = getConversations();
         setConversations(initialData);
         if(!isMobile && initialData.length > 0) {
-            setSelectedConversationId(initialData[0].id);
+            const firstPinned = initialData.find(c => c.pinned);
+            const firstUnpinned = initialData.find(c => !c.pinned);
+            setSelectedConversationId(firstPinned?.id || firstUnpinned?.id || null);
         }
     }, [isMobile]);
 
@@ -218,7 +221,7 @@ export default function MessagesPage() {
     const sortedConversations = useMemo(() => {
         return [...conversations].sort((a, b) => {
             if (a.pinned && !b.pinned) return -1;
-            if (!a.pinned && b.pinned) return 1;
+            if (!b.pinned && b.pinned) return 1;
 
             const aLastMessage = a.messages[a.messages.length - 1];
             const bLastMessage = b.messages[b.messages.length - 1];
@@ -237,7 +240,7 @@ export default function MessagesPage() {
         const otherParticipantId = conv.participants.find((p: string) => p !== CURRENT_USER_ID);
         if(!otherParticipantId) return false;
         const otherParticipant = users[otherParticipantId as keyof typeof users];
-        if(!otherParticipant) return false; // Fix: Check if participant exists
+        if(!otherParticipant) return false;
         return otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
 

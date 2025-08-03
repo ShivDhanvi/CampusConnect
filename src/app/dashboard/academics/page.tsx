@@ -271,8 +271,8 @@ export default function AcademicsPage() {
             filtered.sort((a, b) => {
                 const aValue = a[examSortColumn as keyof typeof a];
                 const bValue = b[examSortColumn as keyof typeof b];
-                if (aValue < bValue) return examSortDirection === 'asc' ? -1 : 1;
-                if (aValue > bValue) return examSortDirection === 'asc' ? 1 : -1;
+                if (aValue < bValue) return assignmentSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return assignmentSortDirection === 'asc' ? 1 : -1;
                 return 0;
             });
         }
@@ -502,6 +502,7 @@ export default function AcademicsPage() {
                                         <TableBody>
                                             {paginatedAssignments.map(item => {
                                                 const itemStatus = getStatus(item.status, item.dueDate);
+                                                const showTeacherActions = itemStatus === 'Pending' || itemStatus === 'Late' || itemStatus === 'Submitted';
                                                 return (
                                                 <TableRow key={item.studentId + item.assignmentId}>
                                                    {userRole === 'teacher' ? (
@@ -550,7 +551,7 @@ export default function AcademicsPage() {
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
-                                                            {userRole === 'teacher' && (
+                                                            {userRole === 'teacher' && showTeacherActions && (
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
@@ -564,7 +565,6 @@ export default function AcademicsPage() {
                                                                                 <CheckCircle className="mr-2 h-4 w-4" /> Mark as Graded
                                                                             </DropdownMenuItem>
                                                                         )}
-                                                                         {itemStatus !== 'Submitted' && itemStatus !== 'Graded' && <DropdownMenuItem disabled>Mark as Graded</DropdownMenuItem>}
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
