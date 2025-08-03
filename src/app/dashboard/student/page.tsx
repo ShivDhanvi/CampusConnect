@@ -98,7 +98,7 @@ export default function StudentDashboardPage() {
                                         cursor={false}
                                         content={<ChartTooltipContent hideLabel indicator="dot" />}
                                     />
-                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5} stroke="hsl(var(--card))">
+                                    <Pie data={attendanceChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={8} stroke="hsl(var(--card))">
                                         {attendanceChartData.map((entry) => (
                                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                         ))}
@@ -107,7 +107,7 @@ export default function StudentDashboardPage() {
                             </ResponsiveContainer>
                         </ChartContainer>
                     </CardContent>
-                    <CardContent className="flex justify-center gap-4 text-sm mt-4">
+                    <CardContent className="flex justify-center gap-4 text-sm mt-4 flex-wrap">
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-chart-1" />
                             <span>Present ({studentData.attendance.present})</span>
@@ -140,7 +140,7 @@ export default function StudentDashboardPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Subject</TableHead>
-                                        <TableHead>Teacher</TableHead>
+                                        <TableHead className="hidden md:table-cell">Teacher</TableHead>
                                         <TableHead>Topic</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -148,7 +148,7 @@ export default function StudentDashboardPage() {
                                     {studentData.upcomingLessons.map((lesson, index) => (
                                         <TableRow key={index}>
                                             <TableCell className="font-medium">{lesson.subject}</TableCell>
-                                            <TableCell>{lesson.teacher}</TableCell>
+                                            <TableCell className="hidden md:table-cell">{lesson.teacher}</TableCell>
                                             <TableCell>{lesson.topic}</TableCell>
                                         </TableRow>
                                     ))}
