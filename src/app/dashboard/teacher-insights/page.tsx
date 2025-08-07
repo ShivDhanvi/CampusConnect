@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Award, BrainCircuit, Users, Target, TrendingUp, BookOpen } from 'lucide-react';
+import { Award, BrainCircuit, Users, Target, TrendingUp, BookOpen, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRoleRedirect } from '@/hooks/use-role-redirect';
@@ -31,10 +31,10 @@ const mockTeacherData = {
   ],
   insights: {
     summary: "Class 10-A is outperforming 10-B in both Mathematics and History. Overall attendance is strong, but 10-B's dip in History scores may correlate with slightly lower engagement.",
-    recommendations: [
-      "Consider peer-tutoring sessions between high-achievers in 10-A and students in 10-B for History.",
-      "Introduce more interactive activities in 10-B's History class to boost engagement.",
-      "Acknowledge top performers publicly to motivate other students.",
+    anomalies: [
+        { type: 'Declining Performance', detail: 'John Doe\'s History score dropped 10% from the previous assessment.' },
+        { type: 'Low Engagement', detail: 'Class 10-B shows 20% lower participation in discussion forums for Science.' },
+        { type: 'Assignment Overdue', detail: '3 students in Class 10-B are more than 5 days overdue on the Math homework.' },
     ],
   }
 };
@@ -75,15 +75,20 @@ export default function TeacherInsightsPage() {
 
              <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><BrainCircuit className="h-6 w-6 text-primary" /> AI Summary & Recommendations</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><BrainCircuit className="h-6 w-6 text-primary" /> AI Summary & Anomalies</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-base leading-relaxed">{mockTeacherData.insights.summary}</p>
                     <div className="p-4 rounded-lg bg-muted/50">
-                        <h4 className="font-semibold mb-2 flex items-center gap-2"><Target className="h-5 w-5 text-red-500" /> Recommendations</h4>
-                        <ul className="list-disc space-y-2 pl-5">
-                            {mockTeacherData.insights.recommendations.map((item, index) => <li key={index}>{item}</li>)}
-                        </ul>
+                        <h4 className="font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Key Anomalies</h4>
+                        <div className="space-y-3">
+                            {mockTeacherData.insights.anomalies.map((item, index) => (
+                                <div key={index} className="flex items-start gap-3">
+                                    <Badge variant="secondary" className="whitespace-nowrap mt-1">{item.type}</Badge>
+                                    <p className="text-sm text-muted-foreground">{item.detail}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
