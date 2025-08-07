@@ -7,50 +7,53 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileDown, ArrowUpDown, ChevronDown, Calendar as CalendarIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { FileDown, ArrowUpDown, ChevronDown, Calendar as CalendarIcon, ArrowUp, ArrowDown, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
-import { addDays, format } from "date-fns";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { addDays, format, isToday } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const today = new Date();
-const studentAttendanceData = [
-  { studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
-  { studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -1), 'yyyy-MM-dd'), status: 'Present' },
-  { studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -2), 'yyyy-MM-dd'), status: 'Late' },
-  { studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -3), 'yyyy-MM-dd'), status: 'Present' },
-  { studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -4), 'yyyy-MM-dd'), status: 'Absent' },
-  { studentId: 'S-0987', name: 'Jane Smith', class: '10-B', date: format(today, 'yyyy-MM-dd'), status: 'Absent' },
-  { studentId: 'S-1152', name: 'Peter Jones', class: '11-A', date: format(addDays(today, -1), 'yyyy-MM-dd'), status: 'Present' },
-  { studentId: 'S-1056', name: 'Mary Williams', class: '11-B', date: format(addDays(today, -8), 'yyyy-MM-dd'), status: 'Late' },
-  { studentId: 'S-1025', name: 'David Brown', class: '10-A', date: format(addDays(today, -32), 'yyyy-MM-dd'), status: 'Present' },
-  { studentId: 'S-0988', name: 'Emily Davis', class: '10-B', date: format(addDays(today, -100), 'yyyy-MM-dd'), status: 'Present' },
+const initialStudentAttendanceData = [
+  { id: 1, studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
+  { id: 2, studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -1), 'yyyy-MM-dd'), status: 'Present' },
+  { id: 3, studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -2), 'yyyy-MM-dd'), status: 'Late' },
+  { id: 4, studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -3), 'yyyy-MM-dd'), status: 'Present' },
+  { id: 5, studentId: 'S-1024', name: 'John Doe', class: '10-A', date: format(addDays(today, -4), 'yyyy-MM-dd'), status: 'Absent' },
+  { id: 6, studentId: 'S-0987', name: 'Jane Smith', class: '10-B', date: format(today, 'yyyy-MM-dd'), status: 'Absent' },
+  { id: 7, studentId: 'S-1152', name: 'Peter Jones', class: '11-A', date: format(addDays(today, -1), 'yyyy-MM-dd'), status: 'Present' },
+  { id: 8, studentId: 'S-1056', name: 'Mary Williams', class: '11-B', date: format(addDays(today, -8), 'yyyy-MM-dd'), status: 'Late' },
+  { id: 9, studentId: 'S-1025', name: 'David Brown', class: '10-A', date: format(addDays(today, -32), 'yyyy-MM-dd'), status: 'Present' },
+  { id: 10, studentId: 'S-0988', name: 'Emily Davis', class: '10-B', date: format(addDays(today, -100), 'yyyy-MM-dd'), status: 'Present' },
 ];
 
-const teacherAttendanceData = [
-  { teacherId: 'T-001', name: 'Mr. Smith', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
-  { teacherId: 'T-002', name: 'Mrs. Jones', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
-  { teacherId: 'T-003', name: 'Mr. Davis', date: format(addDays(today, -5), 'yyyy-MM-dd'), status: 'Absent' },
+const initialTeacherAttendanceData = [
+  { id: 1, teacherId: 'T-001', name: 'Mr. Smith', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
+  { id: 2, teacherId: 'T-002', name: 'Mrs. Jones', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
+  { id: 3, teacherId: 'T-003', name: 'Mr. Davis', date: format(addDays(today, -5), 'yyyy-MM-dd'), status: 'Absent' },
 ];
 
-const staffAttendanceData = [
-  { staffId: 'ST-01', name: 'Admin Clerk', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
-  { staffId: 'ST-02', name: 'Librarian', date: format(addDays(today, -3), 'yyyy-MM-dd'), status: 'Late' },
+const initialStaffAttendanceData = [
+  { id: 1, staffId: 'ST-01', name: 'Admin Clerk', date: format(today, 'yyyy-MM-dd'), status: 'Present' },
+  { id: 2, staffId: 'ST-02', name: 'Librarian', date: format(addDays(today, -3), 'yyyy-MM-dd'), status: 'Late' },
 ];
 
-const CLASS_OPTIONS = ["All", "10-A", "10-B", "11-A", "11-B"];
+const ALL_CLASS_OPTIONS = ["All", "10-A", "10-B", "11-A", "11-B"];
+const TEACHER_CLASSES = ['10-A', '10-B'];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_NAME = 'John Doe';
 type SortDirection = 'asc' | 'desc' | null;
+const STATUS_OPTIONS = ["Present", "Absent", "Late", "Half-day"];
 
 const exportToCsv = (filename: string, rows: any[]) => {
     if (!rows || rows.length === 0) {
         return;
     }
-    const header = Object.keys(rows[0]);
+    const header = Object.keys(rows[0]).filter(key => key !== 'id');
     const csvContent = [
         header.join(','),
         ...rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName])).join(','))
@@ -69,7 +72,14 @@ const exportToCsv = (filename: string, rows: any[]) => {
 
 
 export default function AttendancePage() {
+    const { toast } = useToast();
     const [userRole, setUserRole] = useState<string | null>(null);
+
+    // State for data
+    const [studentAttendance, setStudentAttendance] = useState(initialStudentAttendanceData);
+    const [teacherAttendance, setTeacherAttendance] = useState(initialTeacherAttendanceData);
+    const [staffAttendance, setStaffAttendance] = useState(initialStaffAttendanceData);
+
     // Common state
     const [timeframe, setTimeframe] = useState("today");
     const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: today, to: today });
@@ -80,6 +90,7 @@ export default function AttendancePage() {
     const [studentSortColumn, setStudentSortColumn] = useState<string | null>(null);
     const [studentSortDirection, setStudentSortDirection] = useState<SortDirection>(null);
     const [studentCurrentPage, setStudentCurrentPage] = useState(1);
+    const [studentClassOptions, setStudentClassOptions] = useState(ALL_CLASS_OPTIONS);
 
     // Teachers state
     const [teacherSearch, setTeacherSearch] = useState("");
@@ -96,6 +107,11 @@ export default function AttendancePage() {
      useEffect(() => {
         const role = localStorage.getItem('userRole');
         setUserRole(role);
+        if (role === 'teacher') {
+            setStudentClassOptions(['All', ...TEACHER_CLASSES]);
+        } else {
+            setStudentClassOptions(ALL_CLASS_OPTIONS);
+        }
     }, []);
 
     useEffect(() => {
@@ -146,17 +162,43 @@ export default function AttendancePage() {
             return itemDate >= from && itemDate <= to;
         });
     };
+    
+    const handleUpdateStatus = (id: number, newStatus: string, type: 'student' | 'teacher' | 'staff') => {
+        let setData: React.Dispatch<React.SetStateAction<any[]>>;
+        let data: any[];
+        
+        switch(type) {
+            case 'student':
+                setData = setStudentAttendance;
+                data = studentAttendance;
+                break;
+            case 'teacher':
+                setData = setTeacherAttendance;
+                data = teacherAttendance;
+                break;
+            case 'staff':
+                setData = setStaffAttendance;
+                data = staffAttendance;
+                break;
+        }
+
+        setData(data.map(item => item.id === id ? { ...item, status: newStatus } : item));
+        toast({ title: "Attendance Updated", description: `Status has been updated to ${newStatus}.`});
+    }
 
     // Memoized filtered data for each tab
     const filteredStudents = useMemo(() => {
-        let dataToFilter = userRole === 'student'
-            ? studentAttendanceData.filter(s => s.name === STUDENT_NAME)
-            : studentAttendanceData;
+        let dataToFilter = studentAttendance;
+        if (userRole === 'student') {
+            dataToFilter = studentAttendance.filter(s => s.name === STUDENT_NAME);
+        } else if (userRole === 'teacher') {
+            dataToFilter = studentAttendance.filter(s => TEACHER_CLASSES.includes(s.class));
+        }
 
         let filtered = filterByTimeframe(dataToFilter)
             .filter(item => 
                 (item.name.toLowerCase().includes(studentSearch.toLowerCase()) || item.studentId.toLowerCase().includes(studentSearch.toLowerCase())) && 
-                (userRole !== 'admin' || studentClassFilter === 'All' || item.class === studentClassFilter)
+                (studentClassFilter === 'All' || item.class === studentClassFilter)
             );
             
         if (studentSortColumn && studentSortDirection) {
@@ -169,10 +211,10 @@ export default function AttendancePage() {
             });
         }
         return filtered;
-    }, [studentSearch, studentClassFilter, studentSortColumn, studentSortDirection, dateRange, userRole]);
+    }, [studentSearch, studentClassFilter, studentSortColumn, studentSortDirection, dateRange, userRole, studentAttendance]);
 
     const filteredTeachers = useMemo(() => {
-        let filtered = filterByTimeframe(teacherAttendanceData).filter(item => item.name.toLowerCase().includes(teacherSearch.toLowerCase()));
+        let filtered = filterByTimeframe(teacherAttendance).filter(item => item.name.toLowerCase().includes(teacherSearch.toLowerCase()));
         if (teacherSortColumn && teacherSortDirection) {
             filtered.sort((a, b) => {
                 const aValue = a[teacherSortColumn as keyof typeof a];
@@ -183,10 +225,10 @@ export default function AttendancePage() {
             });
         }
         return filtered;
-    }, [teacherSearch, teacherSortColumn, teacherSortDirection, dateRange]);
+    }, [teacherSearch, teacherSortColumn, teacherSortDirection, dateRange, teacherAttendance]);
 
     const filteredStaff = useMemo(() => {
-        let filtered = filterByTimeframe(staffAttendanceData).filter(item => item.name.toLowerCase().includes(staffSearch.toLowerCase()));
+        let filtered = filterByTimeframe(staffAttendance).filter(item => item.name.toLowerCase().includes(staffSearch.toLowerCase()));
         if (staffSortColumn && staffSortDirection) {
             filtered.sort((a, b) => {
                 const aValue = a[staffSortColumn as keyof typeof a];
@@ -197,7 +239,7 @@ export default function AttendancePage() {
             });
         }
         return filtered;
-    }, [staffSearch, staffSortColumn, staffSortDirection, dateRange]);
+    }, [staffSearch, staffSortColumn, staffSortDirection, dateRange, staffAttendance]);
 
 
     // Pagination logic
@@ -209,6 +251,16 @@ export default function AttendancePage() {
     
     const paginatedStaff = filteredStaff.slice((staffCurrentPage - 1) * ITEMS_PER_PAGE, staffCurrentPage * ITEMS_PER_PAGE);
     const totalStaffPages = Math.ceil(filteredStaff.length / ITEMS_PER_PAGE);
+    
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case 'Present': return 'default';
+            case 'Absent': return 'destructive';
+            case 'Late': return 'secondary';
+            case 'Half-day': return 'secondary';
+            default: return 'outline';
+        }
+    }
 
     const renderDateLabel = () => {
         if (timeframe !== 'custom' || !dateRange) {
@@ -253,10 +305,92 @@ export default function AttendancePage() {
                         </TableHeader>
                         <TableBody>
                             {paginatedStudents.map(r => (
-                                <TableRow key={r.studentId + r.date}>
+                                <TableRow key={r.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{r.date}</TableCell>
                                     <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.class}</TableCell>
-                                    <TableCell className="text-right"><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                    <TableCell className="text-right"><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    {paginatedStudents.length === 0 && <div className="text-center py-10 text-muted-foreground">No records found.</div>}
+                </div>
+                <div className="flex items-center justify-between mt-6">
+                    <div className="text-sm text-muted-foreground">Page {studentCurrentPage} of {totalStudentPages}</div>
+                    <div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setStudentCurrentPage(p => Math.max(p - 1, 1))} disabled={studentCurrentPage === 1}>Previous</Button><Button variant="outline" size="sm" onClick={() => setStudentCurrentPage(p => Math.min(p + 1, totalStudentPages))} disabled={studentCurrentPage === totalStudentPages}>Next</Button></div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+    
+    const studentAttendanceCard = (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Student Attendance</CardTitle>
+                    <CardDescription>Log of student attendance records.</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => exportToCsv('student_attendance.csv', filteredStudents)}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export
+                </Button>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                    <Input placeholder="Search by name or ID..." value={studentSearch} onChange={e => {setStudentSearch(e.target.value); setStudentCurrentPage(1);}} className="max-w-sm" />
+                    {(userRole === 'admin' || (userRole === 'teacher' && TEACHER_CLASSES.length > 1)) && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="ml-auto">
+                                    Filter by Class: {studentClassFilter} <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuRadioGroup value={studentClassFilter} onValueChange={setStudentClassFilter}>
+                                    {studentClassOptions.map(c => <DropdownMenuRadioItem key={c} value={c}>{c}</DropdownMenuRadioItem>)}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead><Button variant="ghost" onClick={() => handleSort('name', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Name {renderSortIcon('name', studentSortColumn, studentSortDirection)}</Button></TableHead>
+                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('studentId', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Student ID {renderSortIcon('studentId', studentSortColumn, studentSortDirection)}</Button></TableHead>
+                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('class', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Class {renderSortIcon('class', studentSortColumn, studentSortDirection)}</Button></TableHead>
+                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Date {renderSortIcon('date', studentSortColumn, studentSortDirection)}</Button></TableHead>
+                                <TableHead>Status</TableHead>
+                                {userRole === 'teacher' && <TableHead className="text-right">Actions</TableHead>}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedStudents.map(r => (
+                                <TableRow key={r.id}>
+                                    <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
+                                    <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.studentId}</TableCell>
+                                    <TableCell className="hidden md:table-cell whitespace-nowrap">{r.class}</TableCell>
+                                    <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
+                                    <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
+                                    {userRole === 'teacher' && (
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" disabled={!isToday(new Date(r.date))}>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    {STATUS_OPTIONS.map(status => (
+                                                        <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(r.id, status, 'student')}>
+                                                            Mark as {status}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -271,6 +405,8 @@ export default function AttendancePage() {
         </Card>
     );
 
+    const teacherView = studentAttendanceCard;
+
     const adminView = (
         <Tabs defaultValue="students">
             <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
@@ -279,69 +415,8 @@ export default function AttendancePage() {
                 <TabsTrigger value="staff">Staff</TabsTrigger>
             </TabsList>
 
-            {/* Students Tab */}
-            <TabsContent value="students">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Student Attendance</CardTitle>
-                            <CardDescription>Log of student attendance records.</CardDescription>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => exportToCsv('student_attendance.csv', filteredStudents)}>
-                            <FileDown className="mr-2 h-4 w-4" />
-                            Export
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                            <Input placeholder="Search by name or ID..." value={studentSearch} onChange={e => {setStudentSearch(e.target.value); setStudentCurrentPage(1);}} className="max-w-sm" />
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="ml-auto">
-                                        Filter by Class: {studentClassFilter} <ChevronDown className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuRadioGroup value={studentClassFilter} onValueChange={setStudentClassFilter}>
-                                        {CLASS_OPTIONS.map(c => <DropdownMenuRadioItem key={c} value={c}>{c}</DropdownMenuRadioItem>)}
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead><Button variant="ghost" onClick={() => handleSort('name', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Name {renderSortIcon('name', studentSortColumn, studentSortDirection)}</Button></TableHead>
-                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('studentId', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Student ID {renderSortIcon('studentId', studentSortColumn, studentSortDirection)}</Button></TableHead>
-                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('class', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Class {renderSortIcon('class', studentSortColumn, studentSortDirection)}</Button></TableHead>
-                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', studentSortColumn, setStudentSortColumn, studentSortDirection, setStudentSortDirection)}>Date {renderSortIcon('date', studentSortColumn, studentSortDirection)}</Button></TableHead>
-                                        <TableHead className="text-right">Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedStudents.map(r => (
-                                        <TableRow key={r.studentId + r.date}>
-                                            <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
-                                            <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.studentId}</TableCell>
-                                            <TableCell className="hidden md:table-cell whitespace-nowrap">{r.class}</TableCell>
-                                            <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                            <TableCell className="text-right"><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            {paginatedStudents.length === 0 && <div className="text-center py-10 text-muted-foreground">No records found.</div>}
-                        </div>
-                        <div className="flex items-center justify-between mt-6">
-                            <div className="text-sm text-muted-foreground">Page {studentCurrentPage} of {totalStudentPages}</div>
-                            <div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setStudentCurrentPage(p => Math.max(p - 1, 1))} disabled={studentCurrentPage === 1}>Previous</Button><Button variant="outline" size="sm" onClick={() => setStudentCurrentPage(p => Math.min(p + 1, totalStudentPages))} disabled={studentCurrentPage === totalStudentPages}>Next</Button></div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
+            <TabsContent value="students">{studentAttendanceCard}</TabsContent>
 
-            {/* Teachers Tab */}
             <TabsContent value="teachers">
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -363,16 +438,33 @@ export default function AttendancePage() {
                                         <TableHead><Button variant="ghost" onClick={() => handleSort('name', teacherSortColumn, setTeacherSortColumn, teacherSortDirection, setTeacherSortDirection)}>Name {renderSortIcon('name', teacherSortColumn, teacherSortDirection)}</Button></TableHead>
                                         <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('teacherId', teacherSortColumn, setTeacherSortColumn, teacherSortDirection, setTeacherSortDirection)}>Teacher ID {renderSortIcon('teacherId', teacherSortColumn, teacherSortDirection)}</Button></TableHead>
                                         <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', teacherSortColumn, setTeacherSortColumn, teacherSortDirection, setTeacherSortDirection)}>Date {renderSortIcon('date', teacherSortColumn, teacherSortDirection)}</Button></TableHead>
-                                        <TableHead className="text-right">Status</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {paginatedTeachers.map(r => (
-                                        <TableRow key={r.teacherId + r.date}>
+                                        <TableRow key={r.id}>
                                             <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.teacherId}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                            <TableCell className="text-right"><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                            <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" disabled={!isToday(new Date(r.date))}>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {STATUS_OPTIONS.map(status => (
+                                                            <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(r.id, status, 'teacher')}>
+                                                                Mark as {status}
+                                                            </DropdownMenuItem>
+                                                        ))}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -387,7 +479,6 @@ export default function AttendancePage() {
                 </Card>
             </TabsContent>
             
-            {/* Staff Tab */}
             <TabsContent value="staff">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -409,16 +500,33 @@ export default function AttendancePage() {
                                         <TableHead><Button variant="ghost" onClick={() => handleSort('name', staffSortColumn, setStaffSortColumn, staffSortDirection, setStaffSortDirection)}>Name {renderSortIcon('name', staffSortColumn, staffSortDirection)}</Button></TableHead>
                                         <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('staffId', staffSortColumn, setStaffSortColumn, staffSortDirection, setStaffSortDirection)}>Staff ID {renderSortIcon('staffId', staffSortColumn, staffSortDirection)}</Button></TableHead>
                                         <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', staffSortColumn, setStaffSortColumn, staffSortDirection, setStaffSortDirection)}>Date {renderSortIcon('date', staffSortColumn, staffSortDirection)}</Button></TableHead>
-                                        <TableHead className="text-right">Status</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {paginatedStaff.map(r => (
-                                        <TableRow key={r.staffId + r.date}>
+                                        <TableRow key={r.id}>
                                             <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.staffId}</TableCell>
                                             <TableCell className="hidden sm:table-cell whitespace-nowrap">{r.date}</TableCell>
-                                            <TableCell className="text-right"><Badge variant={r.status === 'Present' ? 'default' : r.status === 'Late' ? 'secondary' : 'destructive'}>{r.status}</Badge></TableCell>
+                                            <TableCell><Badge variant={getStatusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
+                                            <TableCell className="text-right">
+                                                 <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" disabled={!isToday(new Date(r.date))}>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {STATUS_OPTIONS.map(status => (
+                                                            <DropdownMenuItem key={status} onClick={() => handleUpdateStatus(r.id, status, 'staff')}>
+                                                                Mark as {status}
+                                                            </DropdownMenuItem>
+                                                        ))}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -434,6 +542,15 @@ export default function AttendancePage() {
             </TabsContent>
         </Tabs>
     );
+    
+    const renderViewForRole = () => {
+        switch (userRole) {
+            case 'student': return studentView;
+            case 'teacher': return teacherView;
+            case 'admin': return adminView;
+            default: return null;
+        }
+    }
 
     return (
         <div className="space-y-8">
@@ -441,7 +558,7 @@ export default function AttendancePage() {
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Attendance</h1>
                     <p className="text-muted-foreground">
-                        {userRole === 'student' ? "View your personal attendance record." : "Track student, teacher, and staff attendance."}
+                        {userRole === 'student' ? "View your personal attendance record." : "Track and manage student, teacher, and staff attendance."}
                     </p>
                 </div>
                  <div className="flex items-center gap-2">
@@ -488,9 +605,7 @@ export default function AttendancePage() {
                     </DropdownMenu>
                  </div>
             </div>
-            {userRole === 'student' ? studentView : adminView}
+            {renderViewForRole()}
         </div>
     );
 }
-
-    

@@ -26,6 +26,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 import { StudentSidebar } from '@/components/student-sidebar';
+import { TeacherSidebar } from '@/components/teacher-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -39,6 +40,11 @@ const userRoles = {
         name: "Student",
         email: "student@example.com",
         avatarFallback: "S"
+    },
+    teacher: {
+        name: "Teacher",
+        email: "teacher@example.com",
+        avatarFallback: "T"
     }
 }
 
@@ -54,8 +60,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
-        if (role === 'student' || role === 'admin') {
-            setUserRole(role);
+        if (role === 'student' || role === 'admin' || role === 'teacher') {
+            setUserRole(role as keyof typeof userRoles);
         } else {
             // If no role, redirect to login
             router.push('/');
@@ -101,11 +107,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const currentUser = userRoles[userRole];
 
+    const renderSidebar = () => {
+        switch (userRole) {
+            case 'admin':
+                return <MainSidebar />;
+            case 'student':
+                return <StudentSidebar />;
+            case 'teacher':
+                return <TeacherSidebar />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <SidebarProvider>
             <div className="flex min-h-screen w-full">
                  <Sidebar>
-                    {userRole === 'admin' ? <MainSidebar /> : <StudentSidebar />}
+                    {renderSidebar()}
                 </Sidebar>
                 <div className="flex flex-1 flex-col">
                      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-card px-4 sm:px-6">
@@ -227,5 +246,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarProvider>
     );
 }
-
-    

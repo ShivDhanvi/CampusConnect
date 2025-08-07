@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg", "image/jpg"];
@@ -33,6 +34,7 @@ const assignmentSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   subject: z.string().min(2, { message: "Subject is required." }),
   dueDate: z.date({ required_error: "Due date is required." }),
+  className: z.string({ required_error: "Please select a class." }),
   description: z.string().optional(),
   attachment: z
     .any()
@@ -49,9 +51,10 @@ type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 interface CreateAssignmentDialogProps {
   children: React.ReactNode;
   onAssignmentCreated: (data: AssignmentFormValues) => void;
+  teacherClasses?: string[];
 }
 
-export function CreateAssignmentDialog({ children, onAssignmentCreated }: CreateAssignmentDialogProps) {
+export function CreateAssignmentDialog({ children, onAssignmentCreated, teacherClasses = [] }: CreateAssignmentDialogProps) {
     const [open, setOpen] = useState(false);
     const { register, handleSubmit, control, watch, formState: { errors }, reset } = useForm<AssignmentFormValues>({
         resolver: zodResolver(assignmentSchema),
@@ -99,37 +102,57 @@ export function CreateAssignmentDialog({ children, onAssignmentCreated }: Create
                             {errors.subject && <p className="text-destructive text-sm mt-1">{errors.subject.message}</p>}
                         </div>
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="dueDate">Due Date</Label>
-                        <Controller
-                            control={control}
-                            name="dueDate"
-                            render={({ field }) => (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !field.value && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            )}
-                        />
-                        {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate.message}</p>}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div className="space-y-2">
+                            <Label htmlFor="dueDate">Due Date</Label>
+                            <Controller
+                                control={control}
+                                name="dueDate"
+                                render={({ field }) => (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-full justify-start text-left font-normal",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value}
+                                                onSelect={field.onChange}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            />
+                            {errors.dueDate && <p className="text-destructive text-sm mt-1">{errors.dueDate.message}</p>}
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="className">Class</Label>
+                             <Controller
+                                control={control}
+                                name="className"
+                                render={({ field }) => (
+                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a class" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {teacherClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.className && <p className="text-destructive text-sm mt-1">{errors.className.message}</p>}
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -167,3 +190,4 @@ export function CreateAssignmentDialog({ children, onAssignmentCreated }: Create
     );
 }
 
+    

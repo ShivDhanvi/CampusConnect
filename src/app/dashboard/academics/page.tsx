@@ -7,22 +7,59 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal } from "lucide-react";
+import { Upload, PlusCircle, ArrowUpDown, ChevronDown, CheckCircle, ArrowUp, ArrowDown, Sparkles, MoreHorizontal, MessageSquare, AlertTriangle, FileUp, Trash2, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { CreateAssignmentDialog } from "@/components/create-assignment-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, isPast, parseISO } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getConversations, addConversation } from "@/lib/messages";
+import { AssignmentDetailsDialog } from "@/components/assignment-details-dialog";
+import { CreateExamDialog } from "@/components/create-exam-dialog";
+import { UploadResultsDialog } from "@/components/upload-results-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 
 const initialAssignments = [
-    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', status: 'Pending' },
-    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', status: 'Submitted' },
-    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', status: 'Graded' },
-    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', status: 'Pending' },
-    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', status: 'Submitted' },
-    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', status: 'Graded' },
+    { id: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A' },
+    { id: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A' },
+    { id: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B' },
+    { id: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B' },
+    { id: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-09-20', class: '11-A' },
+    { id: 'A006', title: 'The Cold War Presentation', subject: 'History', dueDate: '2024-09-22', class: '11-A' },
+    { id: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A' },
+    // Add an assignment with a past due date for testing 'Late' status
+    { id: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B' },
 ];
+
+const students = {
+    '10-A': [
+        { id: 'S-1024', name: 'John Doe', initials: 'JD' },
+        { id: 'S-1025', name: 'David Brown', initials: 'DB' },
+    ],
+    '10-B': [{ id: 'S-0987', name: 'Jane Smith', initials: 'JS' }],
+    '11-A': [{ id: 'S-1152', name: 'Peter Jones', initials: 'PJ' }],
+    '11-B': [{ id: 'S-1056', name: 'Mary Williams', initials: 'MW' }],
+}
+
+// Create a more realistic set of student submissions
+const initialStudentAssignments = [
+    // Teacher's subjects: Mathematics, Biology, Physics
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Submitted', fileUrl: '/assignments/algebra-hw-1.pdf' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '11-A', status: 'Pending', fileUrl: null },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A003', title: 'Lab Report: Photosynthesis', subject: 'Biology', dueDate: '2024-09-15', class: '10-B', status: 'Graded', fileUrl: '/assignments/lab-report.pdf' },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A005', title: 'Geometry Proofs', subject: 'Mathematics', dueDate: '2024-08-15', class: '11-A', status: 'Pending', fileUrl: null },
+    { studentId: 'S-1152', studentName: 'Peter Jones', initials: 'PJ', assignmentId: 'A007', title: 'Wave Optics Problems', subject: 'Physics', dueDate: '2024-09-25', class: '11-A', status: 'Submitted', fileUrl: '/assignments/optics-problems.pdf' },
+    { studentId: 'S-1025', studentName: 'David Brown', initials: 'DB', assignmentId: 'A001', title: 'Algebra Homework 1', subject: 'Mathematics', dueDate: '2024-09-10', class: '10-A', status: 'Pending', fileUrl: null },
+
+    // Other subjects for student view
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A002', title: 'World War II Essay', subject: 'History', dueDate: '2024-09-12', class: '10-A', status: 'Submitted', fileUrl: '/assignments/wwii-essay.pdf' },
+    { studentId: 'S-0987', studentName: 'Jane Smith', initials: 'JS', assignmentId: 'A004', title: 'Book Report: "To Kill a Mockingbird"', subject: 'English', dueDate: '2024-09-18', class: '10-B', status: 'Pending', fileUrl: null },
+    { studentId: 'S-1024', studentName: 'John Doe', initials: 'JD', assignmentId: 'A008', title: 'Chemical Reactions Worksheet', subject: 'Chemistry', dueDate: '2024-08-01', class: '11-B', status: 'Pending', fileUrl: null },
+];
+
 
 const initialResults = [
     { student: 'John Doe', class: '10-A', subject: 'Mathematics', examTitle: 'Mid-Term Mathematics', score: '95%', date: '2024-08-20' },
@@ -43,12 +80,16 @@ const initialExams = [
 ];
 
 
-const STATUS_OPTIONS = ["Pending", "Submitted", "Graded"];
-const CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const STATUS_OPTIONS = ["All", "Pending", "Submitted", "Graded", "Late"];
+const ALL_CLASS_OPTIONS = ["10-A", "10-B", "11-A", "11-B"];
+const TEACHER_CLASSES = ['10-A', '10-B']; // For teacher role
+const TEACHER_SUBJECTS = ['Mathematics', 'Biology', 'Physics']; // For teacher role
 const EXAM_TITLE_OPTIONS = [...new Set(initialResults.map(r => r.examTitle))];
 const ITEMS_PER_PAGE = 5;
 const STUDENT_CLASS = '10-A'; // For student role
+const STUDENT_ID = 'S-1024'; // For student role
 const STUDENT_NAME = 'John Doe'; // For student role
+const TEACHER_ID = 'teacher1'; // For messaging
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -65,37 +106,74 @@ export default function AcademicsPage() {
     const { toast } = useToast();
     const [userRole, setUserRole] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [uploadingAssignment, setUploadingAssignment] = useState<{ id: string, dueDate: string } | null>(null);
+    const [uploadingAssignment, setUploadingAssignment] = useState<{ studentId: string, assignmentId: string, dueDate: string } | null>(null);
 
     // State for Assignments
-    const [assignments, setAssignments] = useState(initialAssignments);
+    const [assignments, setAssignments] = useState(initialStudentAssignments);
     const [assignmentSearch, setAssignmentSearch] = useState("");
-    const [assignmentStatusFilters, setAssignmentStatusFilters] = useState<Record<string, boolean>>({ Pending: true, Submitted: true, Graded: true });
+    const [assignmentStatusFilter, setAssignmentStatusFilter] = useState("All");
+    const [assignmentClassFilter, setAssignmentClassFilter] = useState("All");
     const [assignmentSortColumn, setAssignmentSortColumn] = useState<string | null>(null);
     const [assignmentSortDirection, setAssignmentSortDirection] = useState<SortDirection>(null);
     const [assignmentCurrentPage, setAssignmentCurrentPage] = useState(1);
+    const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     
     // State for Results
     const [results, setResults] = useState(initialResults);
     const [resultSearch, setResultSearch] = useState("");
-    const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [resultClassOptions, setResultClassOptions] = useState(ALL_CLASS_OPTIONS);
+    const [resultClassFilters, setResultClassFilters] = useState<Record<string, boolean>>(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
     const [resultExamFilter, setResultExamFilter] = useState<string>('All');
     const [resultSortColumn, setResultSortColumn] = useState<string | null>(null);
     const [resultSortDirection, setResultSortDirection] = useState<SortDirection>(null);
     const [resultCurrentPage, setResultCurrentPage] = useState(1);
+    const [selectedResult, setSelectedResult] = useState<any | null>(null);
+    const [isUploadResultOpen, setIsUploadResultOpen] = useState(false);
 
     // State for Exams
     const [exams, setExams] = useState(initialExams);
     const [examSearch, setExamSearch] = useState("");
-    const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+    const [examClassOptions, setExamClassOptions] = useState(ALL_CLASS_OPTIONS);
+    const [examClassFilters, setExamClassFilters] = useState<Record<string, boolean>>(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
     const [examSortColumn, setExamSortColumn] = useState<string | null>(null);
     const [examSortDirection, setExamSortDirection] = useState<SortDirection>(null);
     const [examCurrentPage, setExamCurrentPage] = useState(1);
+    const [selectedExam, setSelectedExam] = useState<any | null>(null);
+    const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
     
     useEffect(() => {
         const role = localStorage.getItem('userRole');
         setUserRole(role);
+        if (role === 'teacher') {
+            const uniqueTeacherClasses = TEACHER_CLASSES;
+            setExamClassOptions(uniqueTeacherClasses);
+            setResultClassOptions(uniqueTeacherClasses);
+
+            const initialFilters = uniqueTeacherClasses.reduce((acc, c) => ({...acc, [c]: true}), {});
+            setExamClassFilters(initialFilters);
+            setResultClassFilters(initialFilters);
+
+            if (uniqueTeacherClasses.length === 1) {
+                // If only one class, no need to show filter options for it
+                setExamClassFilters({[uniqueTeacherClasses[0]]: true});
+                setResultClassFilters({[uniqueTeacherClasses[0]]: true});
+            }
+        } else {
+            setExamClassOptions(ALL_CLASS_OPTIONS);
+            setResultClassOptions(ALL_CLASS_OPTIONS);
+            setExamClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+            setResultClassFilters(ALL_CLASS_OPTIONS.reduce((acc, c) => ({...acc, [c]: true}), {}));
+        }
     }, []);
+
+
+    const getStatus = (status: string, dueDate: string) => {
+        if (status === 'Pending' && isPast(parseISO(dueDate))) {
+            return 'Late';
+        }
+        return status;
+    }
 
     // Generic sort handler
     const handleSort = (column: string, sortColumn: any, setSortColumn: any, sortDirection: any, setSortDirection: any) => {
@@ -127,28 +205,55 @@ export default function AcademicsPage() {
 
     // Memoized filtered and sorted data
     const filteredAssignments = useMemo(() => {
-        let filtered = assignments.filter(item =>
-            (item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) || 
-             item.subject.toLowerCase().includes(assignmentSearch.toLowerCase())) && 
-             assignmentStatusFilters[item.status]
-        );
+        let filtered = assignments.filter(item => {
+            const searchMatch = (
+                item.title.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                item.subject.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                (userRole === 'teacher' && item.studentName.toLowerCase().includes(assignmentSearch.toLowerCase()))
+            );
+            const itemStatus = getStatus(item.status, item.dueDate);
+            const statusMatch = assignmentStatusFilter === 'All' || itemStatus === assignmentStatusFilter;
+            
+            if(userRole === 'teacher') {
+                const subjectMatch = TEACHER_SUBJECTS.includes(item.subject);
+                const classMatch = assignmentClassFilter === 'All' || item.class === assignmentClassFilter;
+                return searchMatch && statusMatch && classMatch && subjectMatch;
+            }
+            if(userRole === 'student') {
+                return item.studentId === STUDENT_ID && searchMatch && statusMatch;
+            }
+            // Admin view
+            return searchMatch && statusMatch;
+        });
+
         if (assignmentSortColumn && assignmentSortDirection) {
             filtered.sort((a, b) => {
                 const aValue = a[assignmentSortColumn as keyof typeof a];
                 const bValue = b[assignmentSortColumn as keyof typeof b];
+                if (assignmentSortColumn === 'status') {
+                    const aStatus = getStatus(a.status, a.dueDate);
+                    const bStatus = getStatus(b.status, b.dueDate);
+                     if (aStatus < bStatus) return assignmentSortDirection === 'asc' ? -1 : 1;
+                    if (aStatus > bStatus) return assignmentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                }
                 if (aValue < bValue) return assignmentSortDirection === 'asc' ? -1 : 1;
                 if (aValue > bValue) return assignmentSortDirection === 'asc' ? 1 : -1;
                 return 0;
             });
         }
         return filtered;
-    }, [assignments, assignmentSearch, assignmentStatusFilters, assignmentSortColumn, assignmentSortDirection]);
+    }, [assignments, assignmentSearch, assignmentStatusFilter, assignmentClassFilter, assignmentSortColumn, assignmentSortDirection, userRole]);
 
     const filteredResults = useMemo(() => {
         const searchTermLower = resultSearch.toLowerCase();
         let filtered = results.filter(item => {
             const isStudentMatch = userRole === 'student' ? item.student === STUDENT_NAME : true;
-            const isClassMatch = userRole === 'student' ? item.class === STUDENT_CLASS : resultClassFilters[item.class];
+            let isClassMatch = true;
+            if (userRole === 'student') isClassMatch = item.class === STUDENT_CLASS;
+            else if (userRole === 'teacher') isClassMatch = TEACHER_CLASSES.includes(item.class) && resultClassFilters[item.class];
+            else isClassMatch = resultClassFilters[item.class];
+
 
             return (item.student.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower) ||
@@ -174,7 +279,15 @@ export default function AcademicsPage() {
     const filteredExams = useMemo(() => {
         const searchTermLower = examSearch.toLowerCase();
         let filtered = exams.filter(item => {
-            const isClassMatch = userRole === 'student' ? item.class === STUDENT_CLASS : examClassFilters[item.class];
+            let isClassMatch = true;
+            if (userRole === 'student') {
+                isClassMatch = item.class === STUDENT_CLASS;
+            } else if (userRole === 'teacher') {
+                isClassMatch = TEACHER_CLASSES.includes(item.class) && examClassFilters[item.class];
+            } else {
+                isClassMatch = examClassFilters[item.class];
+            }
+
             return (item.title.toLowerCase().includes(searchTermLower) ||
              item.class.toLowerCase().includes(searchTermLower)) && 
              isClassMatch;
@@ -204,58 +317,197 @@ export default function AcademicsPage() {
     const totalExamPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
 
     const handleCreateAssignment = (data: any) => {
-        const newAssignment = {
-            id: `A${(assignments.length + 1).toString().padStart(3, '0')}`,
+        const newAssignmentId = `A${(initialAssignments.length + 1).toString().padStart(3, '0')}`;
+        
+        const studentsToAssign = students[data.className as keyof typeof students] || [];
+        
+        const newSubmissions = studentsToAssign.map(student => ({
+            studentId: student.id,
+            studentName: student.name,
+            initials: student.initials,
+            assignmentId: newAssignmentId,
             title: data.title,
             subject: data.subject,
             dueDate: data.dueDate.toISOString().split('T')[0],
             status: 'Pending',
-        };
-        setAssignments(prev => [newAssignment, ...prev]);
+            class: data.className,
+            fileUrl: null,
+        }));
+
+        setAssignments(prev => [...newSubmissions, ...prev]);
+        initialAssignments.push({
+            id: newAssignmentId,
+            title: data.title,
+            subject: data.subject,
+            dueDate: data.dueDate.toISOString().split('T')[0],
+            class: data.className,
+        });
+
         toast({
             title: "Assignment Created",
-            description: `"${data.title}" has been successfully created.`,
+            description: `"${data.title}" has been created for Class ${data.className}.`,
             action: <CheckCircle className="text-green-500" />,
         })
     };
+    
+    const handleExamSubmit = (data: any) => {
+        if(selectedExam) {
+            // Update
+            setExams(prev => prev.map(e => e.id === selectedExam.id ? { ...e, ...data, date: data.date.toISOString().split('T')[0] } : e));
+            toast({ title: "Exam Updated", description: `"${data.title}" has been updated.` });
 
-    const handleUploadClick = (assignmentId: string, dueDate: string) => {
-        setUploadingAssignment({ id: assignmentId, dueDate });
+        } else {
+            // Create
+            const newExam = {
+                id: `E${(exams.length + 1).toString().padStart(3, '0')}`,
+                title: data.title,
+                class: data.className,
+                date: data.date.toISOString().split('T')[0],
+            };
+            setExams(prev => [newExam, ...prev]);
+            toast({
+                title: "Exam Scheduled",
+                description: `"${data.title}" has been scheduled for Class ${data.className}.`,
+            });
+        }
+        setSelectedExam(null);
+    };
+
+    const handleResultSubmit = (data: any) => {
+         if (selectedResult) {
+            // Update
+             setResults(prev => prev.map(r => 
+                r.student === selectedResult.student && r.examTitle === selectedResult.examTitle 
+                ? { ...r, ...data, date: data.date.toISOString().split('T')[0] } 
+                : r
+            ));
+            toast({ title: "Result Updated", description: `Result for ${data.studentName} has been updated.` });
+        } else {
+            // Create
+            const newResult = {
+                student: data.studentName,
+                class: data.className,
+                subject: data.subject,
+                examTitle: data.examTitle,
+                score: data.score,
+                date: data.date.toISOString().split('T')[0],
+            };
+            setResults(prev => [newResult, ...prev]);
+            toast({
+                title: "Result Uploaded",
+                description: `Result for ${data.studentName} has been uploaded.`,
+            });
+        }
+        setSelectedResult(null);
+    };
+
+    const handleDeleteExam = (examId: string) => {
+        setExams(prev => prev.filter(e => e.id !== examId));
+        toast({ title: "Exam Deleted", description: "The exam has been removed from the schedule." });
+    };
+
+    const handleDeleteResult = (studentName: string, examTitle: string) => {
+        setResults(prev => prev.filter(r => !(r.student === studentName && r.examTitle === examTitle)));
+        toast({ title: "Result Deleted", description: `The result for ${studentName} has been deleted.` });
+    };
+
+
+    const handleUploadClick = (studentId: string, assignmentId: string, dueDate: string) => {
+        setUploadingAssignment({ studentId, assignmentId, dueDate });
         fileInputRef.current?.click();
     };
     
     const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0 && uploadingAssignment) {
-            const { id, dueDate } = uploadingAssignment;
+            const file = event.target.files[0];
+            const { studentId, assignmentId, dueDate } = uploadingAssignment;
+
+            const isLate = isPast(parseISO(dueDate));
 
             setAssignments(prev => prev.map(item =>
-                item.id === id ? { ...item, status: 'Submitted' } : item
+                item.studentId === studentId && item.assignmentId === assignmentId 
+                ? { ...item, status: 'Submitted', fileUrl: URL.createObjectURL(file) } 
+                : item
             ));
             
-            const isSubmittedOnTime = differenceInDays(parseISO(dueDate), new Date()) >= 0;
-
-            if (isSubmittedOnTime) {
+            const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
+            if (!isLate) {
                 toast({
                     title: "Streak Point Earned!",
                     description: "Great job submitting on time. Keep it up!",
                     action: <Sparkles className="text-yellow-500" />,
                 });
-                const currentPoints = parseInt(localStorage.getItem('streakPoints') || '0', 10);
                 localStorage.setItem('streakPoints', (currentPoints + 1).toString());
-                window.dispatchEvent(new Event('storage'));
             } else {
-                toast({
-                    title: "Assignment Submitted",
-                    description: "Your assignment has been submitted.",
-                    action: <CheckCircle className="text-green-500" />,
+                 toast({
+                    title: "Assignment Submitted Late",
+                    description: "Your assignment has been submitted, but 1 streak point was deducted.",
+                    action: <AlertTriangle className="text-destructive" />,
                 });
+                localStorage.setItem('streakPoints', Math.max(0, currentPoints - 1).toString());
             }
+             window.dispatchEvent(new Event('storage'));
         }
         // Reset state and file input
         setUploadingAssignment(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
+    };
+    
+     const handleMarkAsGraded = (studentId: string, assignmentId: string) => {
+        setAssignments(prev => prev.map(item =>
+            item.studentId === studentId && item.assignmentId === assignmentId 
+            ? { ...item, status: 'Graded' } 
+            : item
+        ));
+        toast({
+            title: "Assignment Marked as Graded",
+            description: "The assignment status has been updated.",
+            action: <CheckCircle className="text-green-500" />,
+        });
+    };
+
+    const handleSendReminder = (student: { id: string, name: string }, assignment: { title: string }) => {
+        const conversations = getConversations();
+        const existingConv = conversations.find(c => 
+            c.type === 'dm' && c.participants.includes(student.id) && c.participants.includes(TEACHER_ID)
+        );
+
+        const reminderMessage = `Hi ${student.name}, this is a reminder that the assignment "${assignment.title}" is due. Please submit it as soon as possible.`;
+
+        if (existingConv) {
+            existingConv.messages.push({
+                id: `msg${Date.now()}`,
+                sender: TEACHER_ID,
+                text: reminderMessage,
+                timestamp: new Date()
+            });
+            addConversation(existingConv, true);
+        } else {
+             const newConversation = {
+                id: `conv${Date.now()}`,
+                type: 'dm',
+                participants: [TEACHER_ID, student.id],
+                messages: [{ id: `msg${Date.now()}`, sender: TEACHER_ID, text: reminderMessage, timestamp: new Date() }],
+                lastMessage: reminderMessage,
+                lastMessageTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                unreadCount: 1,
+                pinned: false,
+            };
+            addConversation(newConversation);
+        }
+
+        toast({
+            title: "Reminder Sent",
+            description: `A message has been sent to ${student.name}.`,
+            action: <MessageSquare className="text-blue-500" />,
+        });
+    };
+
+    const handleViewDetails = (assignment: any) => {
+        setSelectedAssignment(assignment);
+        setIsDetailsOpen(true);
     };
     
     return (
@@ -267,6 +519,30 @@ export default function AcademicsPage() {
                 className="hidden" 
                 accept=".docx,.pdf,.png,.jpeg,.jpg"
             />
+            {selectedAssignment && (
+                <AssignmentDetailsDialog
+                    isOpen={isDetailsOpen}
+                    onOpenChange={setIsDetailsOpen}
+                    assignment={selectedAssignment}
+                />
+            )}
+            
+            <CreateExamDialog 
+                isOpen={isCreateExamOpen}
+                onOpenChange={setIsCreateExamOpen}
+                onExamSubmit={handleExamSubmit} 
+                teacherClasses={TEACHER_CLASSES}
+                exam={selectedExam}
+            />
+
+            <UploadResultsDialog
+                isOpen={isUploadResultOpen}
+                onOpenChange={setIsUploadResultOpen}
+                onResultSubmit={handleResultSubmit}
+                teacherClasses={TEACHER_CLASSES}
+                result={selectedResult}
+            />
+
             <div>
                 <h1 className="text-3xl font-bold font-headline">Academics</h1>
                 <p className="text-muted-foreground">Manage assignments, results, and other academic information.</p>
@@ -285,8 +561,8 @@ export default function AcademicsPage() {
                                     <CardTitle>Assignments</CardTitle>
                                     <CardDescription>Manage and track student assignments.</CardDescription>
                                 </div>
-                                {userRole === 'admin' && (
-                                    <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment}>
+                                {(userRole === 'admin' || userRole === 'teacher') && (
+                                    <CreateAssignmentDialog onAssignmentCreated={handleCreateAssignment} teacherClasses={TEACHER_CLASSES}>
                                         <Button>
                                             <PlusCircle className="mr-2 h-4 w-4" />
                                             Create Assignment
@@ -295,68 +571,136 @@ export default function AcademicsPage() {
                                 )}
                             </CardHeader>
                             <CardContent>
-                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-                                    <Input placeholder="Search by title or subject..." value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} className="max-w-sm" />
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="ml-auto">
-                                                Filter by Status <ChevronDown className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={() => toggleAllFilters(STATUS_OPTIONS, assignmentStatusFilters, setAssignmentStatusFilters)}>
-                                                {STATUS_OPTIONS.every(s => assignmentStatusFilters[s]) ? 'Unselect All' : 'Select All'}
-                                            </DropdownMenuItem>
-                                            {STATUS_OPTIONS.map(status => (
-                                                <DropdownMenuCheckboxItem key={status} checked={assignmentStatusFilters[status]} onCheckedChange={(checked) => { setAssignmentStatusFilters(prev => ({...prev, [status]: !!checked})); setAssignmentCurrentPage(1); }}>{status}</DropdownMenuCheckboxItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                                    <Input 
+                                      placeholder={userRole === 'teacher' ? "Search by title, subject, or student..." : "Search by title or subject..."} 
+                                      value={assignmentSearch} onChange={(e) => { setAssignmentSearch(e.target.value); setAssignmentCurrentPage(1); }} 
+                                      className="max-w-sm" 
+                                    />
+                                    {userRole === 'teacher' && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" className="ml-auto">
+                                                    Filter by Class: {assignmentClassFilter} <ChevronDown className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuRadioGroup value={assignmentClassFilter} onValueChange={setAssignmentClassFilter}>
+                                                    <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                                                    {TEACHER_CLASSES.map(c => <DropdownMenuRadioItem key={c} value={c}>{c}</DropdownMenuRadioItem>)}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap mb-6">
+                                    {STATUS_OPTIONS.map((status) => (
+                                        <Badge
+                                            key={status}
+                                            onClick={() => setAssignmentStatusFilter(status)}
+                                            variant={assignmentStatusFilter === status ? "default" : "secondary"}
+                                            className="cursor-pointer"
+                                        >
+                                            {status}
+                                        </Badge>
+                                    ))}
                                 </div>
                                 <div className="overflow-x-auto">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                {userRole === 'teacher' ? (
+                                                     <>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('studentName', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Student {renderSortIcon('studentName', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Assignment {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <TableHead><Button variant="ghost" onClick={() => handleSort('title', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Title {renderSortIcon('title', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('subject', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Subject {renderSortIcon('subject', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                        <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('dueDate', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Due Date {renderSortIcon('dueDate', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                    </>
+                                                )}
+                                                <TableHead><Button variant="ghost" onClick={() => handleSort('status', assignmentSortColumn, setAssignmentSortColumn, assignmentSortDirection, setAssignmentSortDirection)}>Status {renderSortIcon('status', assignmentSortColumn, assignmentSortDirection)}</Button></TableHead>
+                                                {userRole !== 'admin' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {paginatedAssignments.map(item => (
-                                                <TableRow key={item.id}>
-                                                    <TableCell className="font-medium">{item.title}</TableCell>
-                                                    <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
-                                                    <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
-                                                    <TableCell><Badge variant={item.status === 'Graded' ? 'default' : item.status === 'Submitted' ? 'secondary' : 'outline'}>{item.status}</Badge></TableCell>
-                                                    <TableCell className="text-right">
-                                                         {userRole === 'student' && item.status === 'Pending' && (
-                                                            <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.id, item.dueDate)}>
-                                                                <Upload className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
-                                                        {userRole === 'student' && item.status === 'Submitted' && (
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon">
-                                                                        <MoreHorizontal className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem onClick={() => handleUploadClick(item.id, item.dueDate)}>
-                                                                        Re-upload
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        )}
-                                                         {userRole === 'admin' && (
-                                                            <Button variant="ghost" size="icon"><Upload className="h-4 w-4" /></Button>
-                                                        )}
-                                                    </TableCell>
+                                            {paginatedAssignments.map(item => {
+                                                const itemStatus = getStatus(item.status, item.dueDate);
+                                                const isGraded = itemStatus === 'Graded';
+                                                return (
+                                                <TableRow key={item.studentId + item.assignmentId}>
+                                                   {userRole === 'teacher' ? (
+                                                        <>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Avatar className="hidden h-9 w-9 sm:flex">
+                                                                        <AvatarImage src={`https://placehold.co/32x32.png`} alt={item.studentName} data-ai-hint="user avatar" />
+                                                                        <AvatarFallback>{item.initials}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <div className="font-medium">{item.studentName}</div>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Button variant="link" className="p-0 h-auto" onClick={() => handleViewDetails(item)}>
+                                                                    <div>{item.title}</div>
+                                                                </Button>
+                                                                <div className="text-xs text-muted-foreground">{item.subject}</div>
+                                                            </TableCell>
+                                                            <TableCell className="hidden md:table-cell">{item.dueDate}</TableCell>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <TableCell className="font-medium">{item.title}</TableCell>
+                                                            <TableCell className="hidden md:table-cell">{item.subject}</TableCell>
+                                                            <TableCell className="hidden sm:table-cell">{item.dueDate}</TableCell>
+                                                        </>
+                                                    )}
+                                                    <TableCell><Badge variant={itemStatus === 'Graded' ? 'default' : itemStatus === 'Submitted' ? 'secondary' : itemStatus === 'Late' ? 'destructive' : 'outline'}>{itemStatus}</Badge></TableCell>
+                                                    {userRole !== 'admin' && (
+                                                        <TableCell className="text-right">
+                                                            {userRole === 'student' && (itemStatus === 'Pending' || itemStatus === 'Late') && (
+                                                                <Button variant="ghost" size="icon" onClick={() => handleUploadClick(item.studentId, item.assignmentId, item.dueDate)}>
+                                                                    <Upload className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                            {userRole === 'student' && itemStatus === 'Submitted' && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => handleUploadClick(item.studentId, item.assignmentId, item.dueDate)}>
+                                                                            Re-upload
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                            {userRole === 'teacher' && !isGraded && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        {(itemStatus === 'Pending' || itemStatus === 'Late') && (
+                                                                            <DropdownMenuItem onClick={() => handleSendReminder({ id: item.studentId, name: item.studentName }, { title: item.title })}>
+                                                                                <MessageSquare className="mr-2 h-4 w-4" /> Send Reminder
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                        {itemStatus === 'Submitted' && (
+                                                                            <DropdownMenuItem onClick={() => handleMarkAsGraded(item.studentId, item.assignmentId)}>
+                                                                                <CheckCircle className="mr-2 h-4 w-4" /> Mark as Graded
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
-                                            ))}
+                                            )})}
                                         </TableBody>
                                     </Table>
                                     {paginatedAssignments.length === 0 && <div className="text-center py-10 text-muted-foreground">No assignments found.</div>}
@@ -373,14 +717,22 @@ export default function AcademicsPage() {
                     </TabsContent>
                     <TabsContent value="exams">
                          <Card>
-                            <CardHeader>
-                                <CardTitle>Exam Schedule</CardTitle>
-                                <CardDescription>View upcoming exam dates and details.</CardDescription>
+                            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>Exam Schedule</CardTitle>
+                                    <CardDescription>View upcoming exam dates and details.</CardDescription>
+                                </div>
+                                {(userRole === 'admin' || userRole === 'teacher') && (
+                                    <Button onClick={() => { setSelectedExam(null); setIsCreateExamOpen(true); }}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Create Exam
+                                    </Button>
+                                )}
                             </CardHeader>
                             <CardContent>
                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
                                     <Input placeholder="Search by title or class..." value={examSearch} onChange={(e) => { setExamSearch(e.target.value); setExamCurrentPage(1); }} className="max-w-sm" />
-                                     {userRole === 'admin' && (
+                                     {(userRole === 'admin' || (userRole === 'teacher' && examClassOptions.length > 1)) && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="outline" className="ml-auto">
@@ -388,10 +740,10 @@ export default function AcademicsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, examClassFilters, setExamClassFilters)}>
-                                                    {CLASS_OPTIONS.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                                <DropdownMenuItem onSelect={() => toggleAllFilters(examClassOptions, examClassFilters, setExamClassFilters)}>
+                                                    {examClassOptions.every(c => examClassFilters[c]) ? 'Unselect All' : 'Select All'}
                                                 </DropdownMenuItem>
-                                                {CLASS_OPTIONS.map(c => (
+                                                {examClassOptions.map(c => (
                                                     <DropdownMenuCheckboxItem key={c} checked={examClassFilters[c]} onCheckedChange={(checked) => { setExamClassFilters(prev => ({...prev, [c]: !!checked})); setExamCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                                 ))}
                                             </DropdownMenuContent>
@@ -405,6 +757,7 @@ export default function AcademicsPage() {
                                                 <TableHead><Button variant="ghost" onClick={() => handleSort('title', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Exam Title {renderSortIcon('title', examSortColumn, examSortDirection)}</Button></TableHead>
                                                 <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('class', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Class {renderSortIcon('class', examSortColumn, examSortDirection)}</Button></TableHead>
                                                 <TableHead><Button variant="ghost" onClick={() => handleSort('date', examSortColumn, setExamSortColumn, examSortDirection, setExamSortDirection)}>Date {renderSortIcon('date', examSortColumn, examSortDirection)}</Button></TableHead>
+                                                {userRole === 'teacher' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -413,6 +766,39 @@ export default function AcademicsPage() {
                                                     <TableCell className="font-medium">{item.title}</TableCell>
                                                     <TableCell className="hidden sm:table-cell">{item.class}</TableCell>
                                                     <TableCell>{item.date}</TableCell>
+                                                    {userRole === 'teacher' && (
+                                                        <TableCell className="text-right">
+                                                            <AlertDialog>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => { setSelectedExam(item); setIsCreateExamOpen(true); }}>
+                                                                            <Edit className="mr-2 h-4 w-4" /> Update
+                                                                        </DropdownMenuItem>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <DropdownMenuItem className="text-destructive">
+                                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                            </DropdownMenuItem>
+                                                                        </AlertDialogTrigger>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This action cannot be undone. This will permanently delete the exam "{item.title}".
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDeleteExam(item.id)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -431,15 +817,23 @@ export default function AcademicsPage() {
                     </TabsContent>
                     <TabsContent value="results">
                          <Card>
-                            <CardHeader>
-                                <CardTitle>Student Results</CardTitle>
-                                <CardDescription>View and manage student grades.</CardDescription>
+                            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle>Student Results</CardTitle>
+                                    <CardDescription>View and manage student grades.</CardDescription>
+                                </div>
+                                {(userRole === 'admin' || userRole === 'teacher') && (
+                                     <Button onClick={() => { setSelectedResult(null); setIsUploadResultOpen(true); }}>
+                                        <FileUp className="mr-2 h-4 w-4" />
+                                        Upload Results
+                                    </Button>
+                                )}
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4 mb-6">
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
                                         <Input placeholder="Search results..." value={resultSearch} onChange={(e) => { setResultSearch(e.target.value); setResultCurrentPage(1); }} className="max-w-sm" />
-                                        {userRole === 'admin' && (
+                                        {(userRole === 'admin' || (userRole === 'teacher' && resultClassOptions.length > 1)) && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="outline" className="ml-auto">
@@ -447,10 +841,10 @@ export default function AcademicsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onSelect={() => toggleAllFilters(CLASS_OPTIONS, resultClassFilters, setResultClassFilters)}>
-                                                        {CLASS_OPTIONS.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
+                                                    <DropdownMenuItem onSelect={() => toggleAllFilters(resultClassOptions, resultClassFilters, setResultClassFilters)}>
+                                                        {resultClassOptions.every(c => resultClassFilters[c]) ? 'Unselect All' : 'Select All'}
                                                     </DropdownMenuItem>
-                                                    {CLASS_OPTIONS.map(c => (
+                                                    {resultClassOptions.map(c => (
                                                         <DropdownMenuCheckboxItem key={c} checked={resultClassFilters[c]} onCheckedChange={(checked) => { setResultClassFilters(prev => ({...prev, [c]: !!checked})); setResultCurrentPage(1); }}>{c}</DropdownMenuCheckboxItem>
                                                     ))}
                                                 </DropdownMenuContent>
@@ -488,6 +882,7 @@ export default function AcademicsPage() {
                                                 <TableHead className="hidden md:table-cell"><Button variant="ghost" onClick={() => handleSort('examTitle', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Exam Title {renderSortIcon('examTitle', resultSortColumn, resultSortDirection)}</Button></TableHead>
                                                 <TableHead>Score</TableHead>
                                                 <TableHead className="hidden sm:table-cell"><Button variant="ghost" onClick={() => handleSort('date', resultSortColumn, setResultSortColumn, resultSortDirection, setResultSortDirection)}>Date {renderSortIcon('date', resultSortColumn, resultSortDirection)}</Button></TableHead>
+                                                {userRole === 'teacher' && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -499,6 +894,39 @@ export default function AcademicsPage() {
                                                     <TableCell className="hidden md:table-cell">{item.examTitle}</TableCell>
                                                     <TableCell>{item.score}</TableCell>
                                                     <TableCell className="hidden sm:table-cell">{item.date}</TableCell>
+                                                     {userRole === 'teacher' && (
+                                                        <TableCell className="text-right">
+                                                            <AlertDialog>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => { setSelectedResult(item); setIsUploadResultOpen(true); }}>
+                                                                            <Edit className="mr-2 h-4 w-4" /> Update
+                                                                        </DropdownMenuItem>
+                                                                         <AlertDialogTrigger asChild>
+                                                                            <DropdownMenuItem className="text-destructive">
+                                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                                            </DropdownMenuItem>
+                                                                        </AlertDialogTrigger>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This will permanently delete the result for {item.student} in {item.examTitle}.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDeleteResult(item.student, item.examTitle)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -518,5 +946,7 @@ export default function AcademicsPage() {
                 </Tabs>
             </div>
         </div>
-    )
+    );
 }
+
+    
