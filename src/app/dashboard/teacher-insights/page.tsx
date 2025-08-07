@@ -9,6 +9,7 @@ import { Award, BrainCircuit, Users, Target, TrendingUp, BookOpen } from 'lucide
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRoleRedirect } from '@/hooks/use-role-redirect';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const mockTeacherData = {
   classPerformance: [
