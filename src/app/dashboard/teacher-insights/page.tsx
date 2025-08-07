@@ -84,7 +84,7 @@ export default function TeacherInsightsPage() {
                         <div className="space-y-3">
                             {mockTeacherData.insights.anomalies.map((item, index) => (
                                 <div key={index} className="flex items-start gap-3">
-                                    <Badge variant="secondary" className="whitespace-nowrap mt-1">{item.type}</Badge>
+                                    <Badge variant="secondary" className="whitespace-nowrap mt-1 text-sm">{item.type}</Badge>
                                     <p className="text-sm text-muted-foreground">{item.detail}</p>
                                 </div>
                             ))}
