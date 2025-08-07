@@ -20,6 +20,10 @@ const mockTeacherData = {
   subjectPerformance: [
     { subject: 'Mathematics', '10-A': 92, '10-B': 85 },
     { subject: 'History', '10-A': 85, '10-B': 78 },
+    { subject: 'Science', '10-A': 88, '10-B': 90 },
+    { subject: 'English', '10-A': 91, '10-B': 84 },
+    { subject: 'Art', '10-A': 95, '10-B': 93 },
+    { subject: 'P.E.', '10-A': 89, '10-B': 88 },
   ],
   topStudents: [
     { name: 'Mary Williams', class: '10-A', score: '98%' },
